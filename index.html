@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wiki</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ctext y=%2213%22 font-size=%2214%22%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem('wiki-theme'); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t;
+})();
+</script>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <button class="iconbtn menubtn" id="menu" aria-label="Menu">&#9776;</button>
+  <a class="brand" id="brand" data-go="home">Wiki</a>
+  <div class="searchwrap"><input id="q" type="search" placeholder="Search names and aliases" autocomplete="off" aria-label="Search"><div class="results" id="results" role="listbox"></div></div>
+  <div class="spoiler">
+    <label for="n">I'm on chapter</label>
+    <button class="iconbtn step" data-step="-1" aria-label="Previous chapter">&#8249;</button>
+    <b id="nlab"></b>
+    <button class="iconbtn step" data-step="1" aria-label="Next chapter">&#8250;</button>
+    <input type="range" id="n" min="1" max="1" value="1">
+    <span class="ctitle" id="ctitle"></span>
+  </div>
+  <button class="iconbtn themebtn" id="theme" aria-label="Toggle light and dark theme"><span class="sun">&#9728;</span><span class="moon">&#9790;</span></button>
+</header>
+<div class="shell">
+  <aside class="side" id="side"></aside>
+  <main id="main"><p class="muted">Loading...</p></main>
+</div>
+<div class="hover" id="hover" role="tooltip"></div>
+<script src="app.js"></script>
+</body>
+</html>
