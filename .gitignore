@@ -1,0 +1,6 @@
+runs/
+__pycache__/
+*.egg-info/
+build/
+tests/data/cache/
+.claude/worktrees/

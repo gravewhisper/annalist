@@ -1,0 +1,276 @@
+{
+  "chapter": 5,
+  "title": "The Salt Ledger",
+  "href": "OEBPS/text/part-c.xhtml",
+  "extraction": {
+    "synopsis": "Livia breaks the Abbess's seal on the abbey's fair copy of the Salt Ledger, whose Keys Drawn column shows that Sabine Oake drew the master's key at six o'clock on the night of the wreck. At the watch house Odile Marr tells Captain Fenn she saw the master's grey barge leaving the dark lamp tower that night. Confronted in the Guild hall, Sabine Oake confesses she put out the lamp to drown an auditor who would have exposed her theft from the Guild's accounts, and Bram Ostrow confesses he was grappling with Tomas for the key at the top of the stair when Tomas fell. Fenn arrests both, with the key still in Bram's pocket, and that evening Ines and Livia light the harbour lamp together.",
+    "entities": [
+      {
+        "name": "Sabine Oake",
+        "type": "character",
+        "aliases": [
+          {
+            "name": "Master Oake",
+            "unique": false
+          }
+        ],
+        "summary": "Master of the Lamplighters’ Guild who put out the harbour lamp to wreck the Gannet; arrested by Captain Fenn."
+      },
+      {
+        "name": "Bram Ostrow",
+        "type": "character",
+        "aliases": [],
+        "summary": "Former friend of Ines who struggled with Tomas for the key when Tomas fell; arrested for Tomas's death."
+      },
+      {
+        "name": "Salt Ledger",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "The Guild's lamp record; the abbey's uncut copy shows the master's key drawn by S. Oake on the night of the wreck."
+      },
+      {
+        "name": "lamp room key",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "Brass key to the lamp room, still in Bram's pocket when he is arrested."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Livia Hale",
+        "claim": "Livia broke the Abbess's seal on the ledger by candlelight under the chapel.",
+        "quotes": [
+          "Livia Hale broke the Abbess’s seal that night by candlelight, in the stone room under the chapel, with Ines holding the candle."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Salt Ledger",
+        "claim": "The ledger has a Keys Drawn column recording every time a lamp room key left the Guild hall.",
+        "quotes": [
+          "at the far right, a narrow column headed Keys Drawn, where the Guild recorded every time a key to the lamp room left the hall."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Sabine Oake",
+        "claim": "The abbey copy records that S. Oake drew the master's key at six o'clock on the night of the wreck.",
+        "quotes": [
+          "And in the narrow column at the edge of the page: Master’s key drawn at six o’clock, S. Oake."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Salt Ledger",
+        "claim": "Ines concludes the cut page was removed to hide the key entry.",
+        "quotes": [
+          "“That is what she cut out,” Ines said. “Not the lamp. The key.”"
+        ],
+        "asserted_by": "Ines Varro",
+        "status": "belief"
+      },
+      {
+        "entity": "Odile Marr",
+        "claim": "Odile Marr saw the master's grey Guild barge pulling away from the dark lamp tower on the night of the wreck.",
+        "quotes": [
+          "That night, when I came up out of the water with the line in my teeth, the first thing I saw was a grey Guild barge pulling away from the foot of the lamp tower with no light in her.",
+          "It was the master’s.”"
+        ],
+        "asserted_by": "Odile Marr",
+        "status": "stated"
+      },
+      {
+        "entity": "Sabine Oake",
+        "claim": "An auditor coming to examine the Guild's accounts was aboard the Gannet.",
+        "quotes": [
+          "“There was an auditor aboard the Gannet,” she said, in her soft, even voice. “He was coming down from the north to examine the Guild’s accounts."
+        ],
+        "asserted_by": "Sabine Oake",
+        "status": "stated"
+      },
+      {
+        "entity": "Sabine Oake",
+        "claim": "Sabine Oake had been stealing from the Guild's accounts and put out the lamp.",
+        "quotes": [
+          "I had been taking from them for two years, and he would have found it in a week. I put out the lamp."
+        ],
+        "asserted_by": "Sabine Oake",
+        "status": "stated"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Sabine Oake told Bram to get the key from Tomas.",
+        "quotes": [
+          "“She told me to get the key from Tomas,” he said."
+        ],
+        "asserted_by": "Bram Ostrow",
+        "status": "stated"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Bram followed Tomas out of the abbey gate and demanded the key, not believing Tomas did not have it.",
+        "quotes": [
+          "I followed him out of the abbey gate in the fog and asked him for it, and he said he did not have it, and I did not believe him."
+        ],
+        "asserted_by": "Bram Ostrow",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas fell from the top of the stair while pulling away from Bram, who was holding his coat.",
+        "quotes": [
+          "I took hold of his coat. He pulled away from me at the top of the stair and the stone was wet.",
+          "I swear I did not push him. But I was holding his coat when he went.”"
+        ],
+        "asserted_by": "Bram Ostrow",
+        "status": "stated"
+      },
+      {
+        "entity": "Captain Fenn",
+        "claim": "Captain Fenn arrested Sabine Oake for the wreck and twenty-two deaths, and Bram Ostrow for the death of Tomas Hale.",
+        "quotes": [
+          "Captain Fenn arrested Sabine Oake for the wreck of the Gannet and the deaths of twenty-two people, and Bram Ostrow for the death of Tomas Hale."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "lamp room key",
+        "claim": "The lamp room key was still in Bram's pocket when he was led away.",
+        "quotes": [
+          "The brass key to the lamp room was still in Bram’s pocket when the watch led him away."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Ines Varro",
+        "claim": "Ines lit the harbour lamp and recorded both her own and Livia's names as keepers.",
+        "quotes": [
+          "At half past four Ines lit the harbour lamp and wrote the hour in the Salt Ledger",
+          "in the column for the keeper’s name, she wrote both of theirs."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Sabine Oake",
+        "target": "Gannet",
+        "type": "wrecked",
+        "quotes": [
+          "“There was an auditor aboard the Gannet,” she said, in her soft, even voice.",
+          "I put out the lamp."
+        ],
+        "asserted_by": "Sabine Oake",
+        "status": "stated"
+      },
+      {
+        "source": "Captain Fenn",
+        "target": "Sabine Oake",
+        "type": "arrested",
+        "quotes": [
+          "Captain Fenn arrested Sabine Oake for the wreck of the Gannet and the deaths of twenty-two people, and Bram Ostrow for the death of Tomas Hale."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Captain Fenn",
+        "target": "Bram Ostrow",
+        "type": "arrested",
+        "quotes": [
+          "Captain Fenn arrested Sabine Oake for the wreck of the Gannet and the deaths of twenty-two people, and Bram Ostrow for the death of Tomas Hale."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Livia Hale",
+        "target": "harbour lamp",
+        "type": "keeper of",
+        "quotes": [
+          "in the column for the keeper’s name, she wrote both of theirs."
+        ],
+        "asserted_by": "narrator",
+        "status": "implied"
+      },
+      {
+        "source": "Ines Varro",
+        "target": "harbour lamp",
+        "type": "keeper of",
+        "quotes": [
+          "At half past four Ines lit the harbour lamp and wrote the hour in the Salt Ledger",
+          "in the column for the keeper’s name, she wrote both of theirs."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": [
+      {
+        "id": "Q0001-01",
+        "answer": "The cut page recorded that S. Oake drew the master's key at six o'clock that night; Ines concludes that entry is what was cut out.",
+        "quote": "“That is what she cut out,” Ines said. “Not the lamp. The key.”"
+      },
+      {
+        "id": "Q0001-02",
+        "answer": "Sabine Oake, master of the Guild, put out the lamp to drown an auditor who would have exposed her theft.",
+        "quote": "I had been taking from them for two years, and he would have found it in a week. I put out the lamp."
+      },
+      {
+        "id": "Q0001-03",
+        "answer": "She saw the master's grey Guild barge leaving the dark lamp tower that night.",
+        "quote": "That night, when I came up out of the water with the line in my teeth, the first thing I saw was a grey Guild barge pulling away from the foot of the lamp tower with no light in her."
+      },
+      {
+        "id": "Q0003-01",
+        "answer": "He fell from the top of the stair while pulling away from Bram, who was holding his coat; Bram denies pushing him.",
+        "quote": "I took hold of his coat. He pulled away from me at the top of the stair and the stone was wet."
+      },
+      {
+        "id": "Q0003-03",
+        "answer": "Its Keys Drawn column shows the master's key drawn by S. Oake at six o'clock on the night of the wreck.",
+        "quote": "And in the narrow column at the edge of the page: Master’s key drawn at six o’clock, S. Oake."
+      },
+      {
+        "id": "Q0003-04",
+        "answer": "He had followed Tomas out of the abbey gate on Sabine Oake's orders to take the lamp room key.",
+        "quote": "I followed him out of the abbey gate in the fog and asked him for it, and he said he did not have it, and I did not believe him."
+      }
+    ]
+  },
+  "timelines": {
+    "new": [],
+    "erased": [],
+    "labels": {
+      "E1": "main",
+      "E2": "main",
+      "E3": "main",
+      "E4": "main",
+      "F1": "main",
+      "F2": "main",
+      "F3": "main",
+      "F4": "main",
+      "F5": "main",
+      "F6": "main",
+      "F7": "main",
+      "F8": "main",
+      "F9": "main",
+      "F10": "main",
+      "F11": "main",
+      "F12": "main",
+      "F13": "main",
+      "R1": "main",
+      "R2": "main",
+      "R3": "main",
+      "R4": "main",
+      "R5": "main"
+    }
+  }
+}

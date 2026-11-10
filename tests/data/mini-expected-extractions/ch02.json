@@ -1,0 +1,231 @@
+{
+  "chapter": 2,
+  "title": "Nine Winters Ago",
+  "href": "OEBPS/text/part-a.xhtml",
+  "extraction": {
+    "synopsis": "Nine years before the main story, Tomas Hale waits at Corvel Quay for his twelve-year-old daughter Livia, who is sailing home on the Gannet. In a storm the harbour lamp goes out; Tomas runs up the tower and finds the lamp room locked with someone crouching inside behind a lantern, but by the time he fetches his key the room is empty and the Gannet has struck the rocks. Eleven of thirty-four aboard survive, among them the mate Odile Marr, and the sisters of Brannoc Abbey nurse them. Livia is never found; after her green shawl turns up below the abbey the Guild enters her among the drowned, and Tomas keeps his suspicion about the lantern from the Guild master.",
+    "entities": [
+      {
+        "name": "Livia Hale",
+        "type": "character",
+        "aliases": [],
+        "summary": "Tomas Hale's twelve-year-old daughter, a passenger on the Gannet, never found after the wreck."
+      },
+      {
+        "name": "Brannoc Abbey",
+        "type": "place",
+        "aliases": [],
+        "summary": "Abbey on the cliff above Corvel Quay whose sisters nursed the Gannet survivors in their infirmary."
+      },
+      {
+        "name": "Sister Agathe",
+        "type": "character",
+        "aliases": [],
+        "summary": "Sister of Brannoc Abbey who kept the infirmary at the time of the wreck."
+      },
+      {
+        "name": "Gannet",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "Fat-bellied coaster that ran down the coast every fortnight; wrecked on the rocks at the harbour mouth with twenty-two bodies recovered."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Livia Hale",
+        "claim": "Livia Hale, Tomas's daughter, was twelve and sailing home on the Gannet.",
+        "quotes": [
+          "Nine years earlier, on the ninth of Frostmonth, Tomas Hale was fifty-two and his daughter was coming home.",
+          "Livia Hale was twelve that winter.",
+          "Tomas paid for her passage home on the Gannet, a fat-bellied coaster that made the run down the coast every fortnight."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas lit the lamp himself at half past four on the night of the wreck and recorded it in the Salt Ledger.",
+        "quotes": [
+          "Tomas lit it himself at half past four, trimmed the wick, wrote the hour in the Salt Ledger, and went down to the quay to watch for a red-and-white sail."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "harbour lamp",
+        "claim": "The lamp went out a little before seven.",
+        "quotes": [
+          "At a little before seven a boy came running along the harbour wall shouting that the lamp had gone out."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "harbour lamp",
+        "claim": "Tomas found the lamp room locked and saw a lantern moving inside, low down, as if someone were crouching.",
+        "quotes": [
+          "when he reached the top the door of the lamp room was shut and locked",
+          "He knelt and put his eye to the keyhole, and on the other side he saw a small lantern moving, low down, as if someone were crouching on the floor with it."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "harbour lamp",
+        "claim": "The lamp's wick had been deliberately pinched out while the reservoir was still full.",
+        "quotes": [
+          "The wick of the great lamp had been pinched out and the reservoir was full. Whoever had done it had not been in a hurry."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Gannet",
+        "claim": "The Gannet struck the rocks at a quarter past seven; eleven of the thirty-four aboard survived.",
+        "quotes": [
+          "The Gannet went onto the rocks at a quarter past seven. Of the thirty-four souls aboard, eleven came out of the sea alive."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Gannet",
+        "claim": "Twenty-two bodies were recovered from the beach after the wreck.",
+        "quotes": [
+          "Twenty-two bodies were found along the beach in the next three days."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Odile Marr",
+        "claim": "Odile Marr, then a young mate, swam a line ashore and was given a medal by the town.",
+        "quotes": [
+          "One of them was a young mate named Odile Marr, who swam a line ashore through water that should have killed her and was afterwards given a medal by the town."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Livia Hale",
+        "claim": "Livia was found neither among the survivors nor among the dead.",
+        "quotes": [
+          "Livia Hale was not among the living or the dead."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Brannoc Abbey",
+        "claim": "The sisters of Brannoc Abbey took the survivors up to their infirmary.",
+        "quotes": [
+          "The sisters of Brannoc Abbey came down from their cliff with blankets and carts and took the survivors up to the infirmary, because there was nowhere else in Corvel Quay with enough beds."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Sister Agathe",
+        "claim": "Sister Agathe kept the abbey infirmary and comforted Tomas.",
+        "quotes": [
+          "Sister Agathe, who kept the infirmary, held his hands and told him that the sea did not always give back what it took."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Livia Hale",
+        "claim": "Livia's green shawl was found on the rocks below the abbey, and the Guild entered her name in the register of the drowned.",
+        "quotes": [
+          "A week after the wreck they found a small green shawl caught on the rocks below the abbey.",
+          "The Guild entered Livia Hale’s name in the register of the drowned, and the master of the Guild came to the cottage in person to give Tomas her condolences."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas did not tell the Guild master about the lantern behind the locked door.",
+        "quotes": [
+          "He did not tell her about the lantern behind the locked door."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Livia Hale",
+        "target": "Tomas Hale",
+        "type": "daughter of",
+        "quotes": [
+          "Nine years earlier, on the ninth of Frostmonth, Tomas Hale was fifty-two and his daughter was coming home.",
+          "Livia Hale was twelve that winter."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Livia Hale",
+        "target": "Gannet",
+        "type": "passenger of",
+        "quotes": [
+          "Tomas paid for her passage home on the Gannet, a fat-bellied coaster that made the run down the coast every fortnight."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Sister Agathe",
+        "target": "Brannoc Abbey",
+        "type": "member of",
+        "quotes": [
+          "Sister Agathe, who kept the infirmary, held his hands and told him that the sea did not always give back what it took."
+        ],
+        "asserted_by": "narrator",
+        "status": "implied"
+      }
+    ],
+    "questions_raised": [
+      {
+        "question": "What happened to Livia Hale, whose body was never found?",
+        "quote": "Livia Hale was not among the living or the dead."
+      }
+    ],
+    "questions_resolved": []
+  },
+  "timelines": {
+    "new": [
+      {
+        "id": "gannet-night",
+        "kind": "flashback",
+        "label": "the night of the Gannet wreck",
+        "period": "nine years earlier, the ninth of Frostmonth"
+      }
+    ],
+    "erased": [],
+    "labels": {
+      "E1": "gannet-night",
+      "E2": "gannet-night",
+      "E3": "gannet-night",
+      "E4": "gannet-night",
+      "F1": "gannet-night",
+      "F2": "gannet-night",
+      "F3": "gannet-night",
+      "F4": "gannet-night",
+      "F5": "gannet-night",
+      "F6": "gannet-night",
+      "F7": "gannet-night",
+      "F8": "gannet-night",
+      "F9": "gannet-night",
+      "F10": "gannet-night",
+      "F11": "gannet-night",
+      "F12": "gannet-night",
+      "F13": "gannet-night",
+      "R1": "gannet-night",
+      "R2": "gannet-night",
+      "R3": "gannet-night",
+      "Q1": "gannet-night"
+    }
+  }
+}

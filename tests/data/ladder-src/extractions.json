@@ -1,0 +1,316 @@
+{
+  "1": {
+    "synopsis": "Mara Quell climbs Mount Teral, learns the Cinder Breath from Toven Rusk and reaches the Ashwalker realm.",
+    "entities": [
+      {
+        "name": "Mara Quell",
+        "type": "character",
+        "aliases": [],
+        "summary": "A new student who climbed Mount Teral."
+      },
+      {
+        "name": "Toven Rusk",
+        "type": "character",
+        "aliases": [],
+        "summary": "The old man who teaches the students who reach the gate."
+      },
+      {
+        "name": "Mount Teral",
+        "type": "place",
+        "aliases": [],
+        "summary": "The mountain with a black stone gate at its summit."
+      },
+      {
+        "name": "Cinder Breath",
+        "type": "technique",
+        "aliases": [],
+        "summary": "A slow breathing technique that moves heat into the body."
+      },
+      {
+        "name": "Ashwalker",
+        "type": "realm",
+        "aliases": [],
+        "summary": "The realm a body reaches when the warmth stays in the heart."
+      },
+      {
+        "name": "Pyre Sovereign",
+        "type": "realm",
+        "aliases": [],
+        "summary": "A figure of a hearth story whose roof the snow never touched."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Mara Quell",
+        "claim": "Mara reached the top of Mount Teral.",
+        "quotes": [
+          "Mara Quell reached the top of Mount Teral on the ninth morning of the thaw"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Mara Quell",
+        "claim": "Mara stands in the Ashwalker realm.",
+        "quotes": [
+          "Mara stood in the Ashwalker realm, and she could walk barefoot over the banked fires"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Ashwalker",
+        "claim": "Ashwalker is the first step a body takes on the mountain.",
+        "quotes": [
+          "you will stand in the realm we call Ashwalker. It is the first step a body takes on this mountain."
+        ],
+        "asserted_by": "Toven Rusk",
+        "status": "stated"
+      },
+      {
+        "entity": "Pyre Sovereign",
+        "claim": "Nobody would say whether the Pyre Sovereign was a person, a title or a story.",
+        "quotes": [
+          "Nobody would say whether the Pyre Sovereign was a person, a title, or only a story"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Toven Rusk",
+        "target": "Mara Quell",
+        "type": "teacher of",
+        "quotes": [
+          "He taught her the Cinder Breath that same afternoon."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "2": {
+    "synopsis": "Toven Rusk explains that Ashwalker names both the sect and its first realm, and Mara writes her name in the sect ledger.",
+    "entities": [
+      {
+        "name": "Ashwalker",
+        "type": "sect",
+        "aliases": [],
+        "summary": "The sect of Mount Teral, named after its first realm."
+      },
+      {
+        "name": "Toven Rusk",
+        "type": "character",
+        "aliases": [],
+        "summary": "An elder of the Ashwalker sect."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Ashwalker",
+        "claim": "Ashwalker is the name of the sect and of its first realm.",
+        "quotes": [
+          "Ashwalker is the name of our sect, and Ashwalker is also the name of its first realm."
+        ],
+        "asserted_by": "Toven Rusk",
+        "status": "stated"
+      },
+      {
+        "entity": "Ashwalker",
+        "claim": "The sect has fourteen students and two elders.",
+        "quotes": [
+          "The sect had a hall, a library with a leaking roof, fourteen students, two elders, and a goat that nobody owned."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Mara Quell",
+        "claim": "Mara wrote her name in the sect ledger.",
+        "quotes": [
+          "She wrote: Mara Quell, ninth day of the thaw, Ashwalker."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "3": {
+    "synopsis": "Sefa Lind of the Glass Lantern Sect shelters on the mountain, and Mara reaches the Emberheart realm.",
+    "entities": [
+      {
+        "name": "Sefa Lind",
+        "type": "character",
+        "aliases": [],
+        "summary": "A young woman who leads visitors from the Glass Lantern Sect."
+      },
+      {
+        "name": "Glass Lantern Sect",
+        "type": "sect",
+        "aliases": [],
+        "summary": "A sect whose members carry clear glass lanterns that give no light."
+      },
+      {
+        "name": "Clear Pane",
+        "type": "realm",
+        "aliases": [],
+        "summary": "A realm in which one learns to see through a thing."
+      },
+      {
+        "name": "Prism Warden",
+        "type": "realm",
+        "aliases": [],
+        "summary": "The realm of Sefa's teacher, whose name Sefa has not been told."
+      },
+      {
+        "name": "Emberheart",
+        "type": "realm",
+        "aliases": [],
+        "summary": "A realm in which the warmth spreads from the heart through the body."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Clear Pane",
+        "claim": "Clear Pane is the first realm of the Glass Lantern Sect.",
+        "quotes": [
+          "Clear Pane is the first realm of the Glass Lantern Sect."
+        ],
+        "asserted_by": "Sefa Lind",
+        "status": "stated"
+      },
+      {
+        "entity": "Emberheart",
+        "claim": "Emberheart is the second realm of Ashwalker.",
+        "quotes": [
+          "Emberheart is the second realm of Ashwalker, and you reached it before your first winter on the mountain."
+        ],
+        "asserted_by": "Toven Rusk",
+        "status": "stated"
+      },
+      {
+        "entity": "Mara Quell",
+        "claim": "Mara reached Emberheart before her first winter.",
+        "quotes": [
+          "Emberheart is the second realm of Ashwalker, and you reached it before your first winter on the mountain."
+        ],
+        "asserted_by": "Toven Rusk",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Sefa Lind",
+        "target": "Glass Lantern Sect",
+        "type": "member of",
+        "quotes": [
+          "The Glass Lantern Sect sends its greetings,"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "4": {
+    "synopsis": "Toven Rusk takes Mara up the Pyre Stair and tells her that the Pyre Sovereign is the third realm of Ashwalker.",
+    "entities": [
+      {
+        "name": "Pyre Sovereign",
+        "type": "realm",
+        "aliases": [],
+        "summary": "The third and highest realm the sect has written down."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Pyre Sovereign",
+        "claim": "The Pyre Sovereign is the third realm of Ashwalker and the highest one the sect has written down.",
+        "quotes": [
+          "The Pyre Sovereign is the third realm of Ashwalker, and the highest one the sect has ever written down."
+        ],
+        "asserted_by": "Toven Rusk",
+        "status": "stated"
+      },
+      {
+        "entity": "Toven Rusk",
+        "claim": "Toven's teacher's teacher was the Pyre Sovereign.",
+        "quotes": [
+          "She was my teacher's teacher."
+        ],
+        "asserted_by": "Toven Rusk",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "5": {
+    "synopsis": "Hollis Grey, a Dusk Listener, visits the mountain and brings word that the Glass Lantern Sect has closed its gates.",
+    "entities": [
+      {
+        "name": "Hollis Grey",
+        "type": "character",
+        "aliases": [],
+        "summary": "A wandering listener with a wooden flute."
+      },
+      {
+        "name": "Dusk Listener",
+        "type": "realm",
+        "aliases": [],
+        "summary": "A realm of those who walk and listen."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Hollis Grey",
+        "claim": "Hollis Grey is a Dusk Listener.",
+        "quotes": [
+          "I hear it because I am a Dusk Listener."
+        ],
+        "asserted_by": "Hollis Grey",
+        "status": "stated"
+      },
+      {
+        "entity": "Dusk Listener",
+        "claim": "Dusk Listener is the first realm of the Vesper Hollow, a sect that keeps no mountain.",
+        "quotes": [
+          "Dusk Listener is the first realm of the Vesper Hollow, a sect that keeps no mountain and no hall."
+        ],
+        "asserted_by": "Hollis Grey",
+        "status": "stated"
+      },
+      {
+        "entity": "Glass Lantern Sect",
+        "claim": "The Glass Lantern Sect has closed its gates.",
+        "quotes": [
+          "the Glass Lantern Sect has closed its gates."
+        ],
+        "asserted_by": "Hollis Grey",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Hollis Grey",
+        "target": "Vesper Hollow",
+        "type": "member of",
+        "quotes": [
+          "I hear it because I am a Dusk Listener."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": []
+  }
+}

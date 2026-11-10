@@ -1,0 +1,505 @@
+{
+  "schema_version": 1,
+  "book": {
+    "title": "The Salt Ledger",
+    "author": "Annalist test fixture",
+    "epub": "mini.epub",
+    "notes": "Synthetic. Spine order is front matter then chapters 1-5; chapter file names are deliberately out of order. Ch 2 is a flashback set nine years earlier."
+  },
+  "entities": [
+    {
+      "id": "ines",
+      "name": "Ines Varro",
+      "type": "character",
+      "aliases": [],
+      "first_chapter": 1
+    },
+    {
+      "id": "tomas",
+      "name": "Tomas Hale",
+      "type": "character",
+      "aliases": [
+        "Tomas"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "bram",
+      "name": "Bram Ostrow",
+      "type": "character",
+      "aliases": [
+        "Bram"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "sabine",
+      "name": "Sabine Oake",
+      "type": "character",
+      "aliases": [
+        "Master Oake"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "odile",
+      "name": "Odile Marr",
+      "type": "character",
+      "aliases": [
+        "Captain Marr"
+      ],
+      "first_chapter": 1,
+      "notes": "Called 'the Captain' by dockhands in ch 1. That bare title is not an alias."
+    },
+    {
+      "id": "livia",
+      "name": "Livia Hale",
+      "type": "character",
+      "aliases": [
+        "Sister Wren",
+        "Wren"
+      ],
+      "first_chapter": 2,
+      "notes": "Introduced as Livia in the ch 2 flashback and as Sister Wren in ch 3; the two are one person from ch 4."
+    },
+    {
+      "id": "agathe",
+      "name": "Sister Agathe",
+      "type": "character",
+      "aliases": [
+        "Agathe"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "fenn",
+      "name": "Captain Fenn",
+      "type": "character",
+      "aliases": [
+        "Fenn"
+      ],
+      "first_chapter": 3,
+      "notes": "Called 'the Captain' in ch 3 and 5. That bare title is not an alias."
+    },
+    {
+      "id": "corvel_quay",
+      "name": "Corvel Quay",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 1
+    },
+    {
+      "id": "brannoc_abbey",
+      "name": "Brannoc Abbey",
+      "type": "place",
+      "aliases": [
+        "the abbey"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "guild",
+      "name": "Lamplighters’ Guild",
+      "type": "organization",
+      "aliases": [
+        "the Guild"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "salt_ledger",
+      "name": "Salt Ledger",
+      "type": "artifact",
+      "aliases": [],
+      "first_chapter": 1
+    },
+    {
+      "id": "lamp_key",
+      "name": "lamp room key",
+      "type": "artifact",
+      "aliases": [
+        "the brass key",
+        "the key to the lamp room"
+      ],
+      "first_chapter": 3
+    },
+    {
+      "id": "harbour_lamp",
+      "name": "harbour lamp",
+      "type": "artifact",
+      "aliases": [],
+      "first_chapter": 1
+    },
+    {
+      "id": "gannet",
+      "name": "Gannet",
+      "type": "artifact",
+      "aliases": [],
+      "first_chapter": 1
+    },
+    {
+      "id": "kestrel",
+      "name": "Kestrel",
+      "type": "artifact",
+      "aliases": [],
+      "first_chapter": 1
+    }
+  ],
+  "optional_entities": [
+    {
+      "name": "wreck of the Gannet",
+      "type": "event",
+      "notes": "May be modelled as an event entity or folded into Gannet."
+    },
+    {
+      "name": "abbey stair",
+      "type": "place",
+      "aliases": [
+        "the widow-maker"
+      ],
+      "notes": "A feature of Brannoc Abbey; a separate entity is acceptable, not required."
+    }
+  ],
+  "statuses": [
+    {
+      "entity": "tomas",
+      "timeline": [
+        {
+          "chapter": 1,
+          "status": "alive",
+          "quote": {
+            "chapter": 1,
+            "text": "He was sixty-one."
+          }
+        },
+        {
+          "chapter": 3,
+          "status": "dead",
+          "quote": {
+            "chapter": 3,
+            "text": "He had been dead for some time."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "livia",
+      "timeline": [
+        {
+          "chapter": 2,
+          "status": "missing, presumed drowned",
+          "timeline_id": "gannet-night",
+          "quote": {
+            "chapter": 2,
+            "text": "The Guild entered Livia Hale’s name in the register of the drowned"
+          }
+        },
+        {
+          "chapter": 4,
+          "status": "alive",
+          "quote": {
+            "chapter": 4,
+            "text": "My name was Livia Hale. Tomas was my father."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "sabine",
+      "timeline": [
+        {
+          "chapter": 1,
+          "status": "free, Guild master",
+          "quote": {
+            "chapter": 1,
+            "text": "Sabine Oake had been master of the Lamplighters’ Guild for eleven years."
+          }
+        },
+        {
+          "chapter": 5,
+          "status": "arrested",
+          "quote": {
+            "chapter": 5,
+            "text": "Captain Fenn arrested Sabine Oake for the wreck of the Gannet"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "bram",
+      "timeline": [
+        {
+          "chapter": 1,
+          "status": "free",
+          "quote": {
+            "chapter": 1,
+            "text": "Bram was a journeyman of the Guild"
+          }
+        },
+        {
+          "chapter": 5,
+          "status": "arrested",
+          "quote": {
+            "chapter": 5,
+            "text": "and Bram Ostrow for the death of Tomas Hale"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "gannet",
+      "timeline": [
+        {
+          "chapter": 2,
+          "status": "wrecked",
+          "timeline_id": "gannet-night",
+          "quote": {
+            "chapter": 2,
+            "text": "The Gannet went onto the rocks at a quarter past seven."
+          }
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "source": "ines",
+      "target": "tomas",
+      "type": "apprentice_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "Ines was nineteen and had been Tomas’s apprentice for six years."
+      }
+    },
+    {
+      "source": "bram",
+      "target": "ines",
+      "type": "friend_of",
+      "first_chapter": 1,
+      "valid_until_chapter": 3,
+      "superseded_by": "enemy_of",
+      "quote": {
+        "chapter": 1,
+        "text": "and her oldest friend"
+      }
+    },
+    {
+      "source": "bram",
+      "target": "ines",
+      "type": "enemy_of",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "he was her enemy now"
+      }
+    },
+    {
+      "source": "tomas",
+      "target": "guild",
+      "type": "member_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "a sworn member of the Lamplighters’ Guild"
+      }
+    },
+    {
+      "source": "bram",
+      "target": "guild",
+      "type": "member_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "Bram was a journeyman of the Guild"
+      }
+    },
+    {
+      "source": "sabine",
+      "target": "guild",
+      "type": "master_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "Sabine Oake had been master of the Lamplighters’ Guild for eleven years."
+      }
+    },
+    {
+      "source": "odile",
+      "target": "kestrel",
+      "type": "master_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "The ship was the Kestrel out of the north, and her master came ashore herself"
+      }
+    },
+    {
+      "source": "odile",
+      "target": "gannet",
+      "type": "former_mate_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "“I was mate on the Gannet,” said Odile Marr."
+      }
+    },
+    {
+      "source": "livia",
+      "target": "tomas",
+      "type": "daughter_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "Tomas Hale was fifty-two and his daughter was coming home"
+      }
+    },
+    {
+      "source": "agathe",
+      "target": "brannoc_abbey",
+      "type": "member_of",
+      "first_chapter": 2,
+      "lenient": true,
+      "quote": {
+        "chapter": 2,
+        "text": "Sister Agathe, who kept the infirmary"
+      }
+    },
+    {
+      "source": "livia",
+      "target": "brannoc_abbey",
+      "type": "archivist_of",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "The archivist was a young woman of perhaps twenty-one"
+      }
+    },
+    {
+      "source": "bram",
+      "target": "sabine",
+      "type": "agent_of",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "Master Oake has promised me the keepership of the lamp if I bring it to her"
+      }
+    },
+    {
+      "source": "sabine",
+      "target": "gannet",
+      "type": "wrecked",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "I put out the lamp."
+      }
+    },
+    {
+      "source": "fenn",
+      "target": "sabine",
+      "type": "arrested",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "Captain Fenn arrested Sabine Oake for the wreck of the Gannet"
+      }
+    },
+    {
+      "source": "harbour_lamp",
+      "target": "corvel_quay",
+      "type": "located_in",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "The harbour lamp of Corvel Quay had burned every night for two hundred years, except one."
+      }
+    }
+  ],
+  "identity_reveals": [
+    {
+      "entity": "livia",
+      "alias": "Sister Wren",
+      "reveal_chapter": 4,
+      "rule": "Before ch 4, Sister Wren and Livia Hale are two entities. Merging them earlier is a spoiler.",
+      "quote": {
+        "chapter": 4,
+        "text": "My name was Livia Hale. Tomas was my father."
+      }
+    },
+    {
+      "entity": "sabine",
+      "alias": "the person in the lamp room",
+      "reveal_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "I put out the lamp."
+      }
+    }
+  ],
+  "must_not_merge": [
+    {
+      "alias": "the Captain",
+      "entities": [
+        "odile",
+        "fenn"
+      ],
+      "rule": "Bare title used for Odile Marr in ch 1 and for Captain Fenn in ch 3 and 5. It is never an alias, and the two must stay separate.",
+      "quote": {
+        "chapter": 1,
+        "text": "The dockhands called her the Captain and touched their caps to her."
+      }
+    },
+    {
+      "alias": "Master",
+      "entities": [
+        "sabine",
+        "odile"
+      ],
+      "rule": "'her master came ashore' (ch 1) means the ship's master Odile Marr, not Master Oake.",
+      "quote": {
+        "chapter": 1,
+        "text": "her master came ashore herself"
+      }
+    }
+  ],
+  "item_transfers": [
+    {
+      "item": "lamp_key",
+      "chapter": 3,
+      "from": "tomas",
+      "to": "ines",
+      "quote": {
+        "chapter": 3,
+        "text": "He put something into it, cold and heavy: an iron ring with a single long brass key, worn smooth at the bow."
+      }
+    },
+    {
+      "item": "lamp_key",
+      "chapter": 4,
+      "from": "ines",
+      "to": "bram",
+      "quote": {
+        "chapter": 4,
+        "text": "He stood for a moment with the brass key in his hand, breathing hard."
+      }
+    }
+  ],
+  "timelines": [
+    {
+      "id": "gannet-night",
+      "kind": "flashback",
+      "chapters": [
+        2
+      ],
+      "period": "nine years earlier, the ninth of Frostmonth",
+      "rule": "Facts from ch 2 are true of the past. Tomas is fifty-two there and sixty-one in the present; a wiki must not report his current age as fifty-two, and Livia's 'presumed drowned' status is superseded in ch 4."
+    }
+  ],
+  "ambiguities": [
+    "Who cut the page from the Salt Ledger: the text never shows Sabine cutting it. Ines infers it in ch 5 and Sabine's confession makes it near-certain. Accept 'Sabine Oake' with or without hedging.",
+    "Tomas's death: Bram says he did not push him and was holding his coat. 'killed by Bram', 'fell while struggling with Bram', and 'an accident during a struggle' all pass; 'slipped alone' fails after ch 5.",
+    "Fact status labels (stated, belief) for character claims are a judgment call; the eval should not score status exactly.",
+    "Sister Agathe's membership of Brannoc Abbey is implied (she 'kept the infirmary' the abbey sisters ran), not stated."
+  ]
+}

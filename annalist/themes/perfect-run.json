@@ -1,0 +1,40 @@
+{
+  "title": "The Perfect Run",
+  "theme": {
+    "heading_font": "Oxanium",
+    "font_url": [
+      "https://cdn.jsdelivr.net/npm/@fontsource/oxanium@5.0.13/500.css",
+      "https://cdn.jsdelivr.net/npm/@fontsource/oxanium@5.0.13/700.css"
+    ],
+    "light": {
+      "bg": "#f2f5f8",
+      "fg": "#16202b",
+      "muted": "#566476",
+      "line": "#d6dde6",
+      "card": "#ffffff",
+      "hover": "#e8edf3",
+      "accent": "#c8302a",
+      "accentfg": "#ffffff",
+      "link": "#0a5fbf",
+      "heading": "#0f2a44",
+      "quotebg": "#ebf0f6",
+      "glow": "#d6eaff",
+      "glow2": "#ffe1d9"
+    },
+    "dark": {
+      "bg": "#0a0e14",
+      "fg": "#e3e9f0",
+      "muted": "#8a98aa",
+      "line": "#1f2a37",
+      "card": "#111823",
+      "hover": "#1a2432",
+      "accent": "#ff5242",
+      "accentfg": "#0a0e14",
+      "link": "#52c4ff",
+      "heading": "#f2f6fa",
+      "quotebg": "#141d29",
+      "glow": "#0c2a46",
+      "glow2": "#3a1515"
+    }
+  }
+}

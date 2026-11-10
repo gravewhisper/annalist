@@ -1,0 +1,46 @@
+[
+  {
+    "name": "no-unchecked-view",
+    "code": "annalist/read.py extract_chapter builds the prompt from kb instead of with_unchecked(kb, pending), so chapter N is read without chapter N-1",
+    "expect": "ReadAgainstKept",
+    "edits": [
+      ["/\\ out' = [ver |-> ver + 1, saw |-> View]", "/\\ out' = [ver |-> ver + 1, saw |-> mem]"]
+    ]
+  },
+  {
+    "name": "no-deepcopy",
+    "code": "annalist/read.py with_unchecked applies the unchecked extraction to kb itself instead of to copy.deepcopy(kb)",
+    "expect": "OnlyPreviousUnchecked",
+    "edits": [
+      ["/\\ out' = [ver |-> ver + 1, saw |-> View]\n    /\\ pc' = \"afterExtract\"\n    /\\ UNCHANGED <<disk, mem, n, end, pending, stopN, faults, faulted>>",
+       "/\\ out' = [ver |-> ver + 1, saw |-> View]\n    /\\ pc' = \"afterExtract\"\n    /\\ mem' = View\n    /\\ UNCHANGED <<disk, n, end, pending, stopN, faults, faulted>>"]
+    ]
+  },
+  {
+    "name": "gap-check-ignores-pending",
+    "code": "annalist/read.py cmd_read line 68 drops `and not (pending and pending[\"n\"] == n - 1)`, so the chapter after a pending one looks out of order",
+    "expect": "Resumable",
+    "edits": [
+      ["/\\ n > 1 /\\ ~Saved(n - 1) /\\ ~(pending # None /\\ pending.n = n - 1)\n    /\\ pc' = \"errOrder\"", "/\\ n > 1 /\\ ~Saved(n - 1)\n    /\\ pc' = \"errOrder\""],
+      ["/\\ ~(n > 1 /\\ ~Saved(n - 1) /\\ ~(pending # None /\\ pending.n = n - 1))", "/\\ ~(n > 1 /\\ ~Saved(n - 1))"]
+    ]
+  },
+  {
+    "name": "skip-failed-check",
+    "code": "annalist/read.py cmd_read catches a failed save_checked(pending) and moves on to the next chapter instead of calling stop_reading",
+    "expect": "SavedInOrder",
+    "edits": [
+      ["/\\ pc = \"afterExtract\" /\\ pending # None /\\ pending.check = \"failed\"\n    /\\ pc' = \"stop\" /\\ stopN' = n\n    /\\ UNCHANGED <<disk, mem, n, end, out, pending, ver, faults, faulted>>",
+       "/\\ pc = \"afterExtract\" /\\ pending # None /\\ pending.check = \"failed\"\n    /\\ pending' = [n |-> n, ver |-> out.ver, saw |-> out.saw, check |-> \"running\"]\n    /\\ n' = n + 1 /\\ pc' = \"top\"\n    /\\ UNCHANGED <<disk, mem, end, out, stopN, ver, faults, faulted>>"]
+    ]
+  },
+  {
+    "name": "no-final-save",
+    "code": "annalist/read.py cmd_read drops the `if pending: save_checked(...)` after the loop (lines 82-86), so the last chapter of a run is never saved",
+    "expect": "CleanRunFinishes",
+    "edits": [
+      ["/\\ pc = \"final\" /\\ pending # None /\\ pending.check = \"ok\"", "/\\ FALSE"],
+      ["    /\\ \\/ pending = None\n", "    /\\ \\/ TRUE\n"]
+    ]
+  }
+]

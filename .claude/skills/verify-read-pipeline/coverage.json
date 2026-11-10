@@ -1,0 +1,107 @@
+{
+  "sync_commit": "5887ed5",
+  "covers": [
+    {
+      "file": "annalist/read.py",
+      "function": "cmd_read",
+      "fingerprint": "382ffdb205af3f2b",
+      "model": "Run, LoopEnd, SkipSaved, RefuseOrder, RefuseLater, ExtractOk, ExtractFails, NoPendingSubmit, SavePendingThenSubmit, PendingCheckFailed, FinalSave, FinalExits"
+    },
+    {
+      "file": "annalist/read.py",
+      "function": "stop_reading",
+      "fingerprint": "07f1cc7f54f55c42",
+      "model": "StopSaves, StopExits"
+    },
+    {
+      "file": "annalist/read.py",
+      "function": "with_unchecked",
+      "fingerprint": "9ba996e2d9c2b275",
+      "model": "View"
+    },
+    {
+      "file": "annalist/read.py",
+      "function": "extract_chapter",
+      "fingerprint": "d4332c6d61f0e18d",
+      "model": "View, ExtractOk, ExtractFails"
+    },
+    {
+      "file": "annalist/read.py",
+      "function": "checked_state",
+      "fingerprint": "a6ab32a90e72cf0a",
+      "model": "CheckOk, CheckFails"
+    },
+    {
+      "file": "annalist/read.py",
+      "function": "save_checked",
+      "fingerprint": "e7ab153132612753",
+      "model": "SaveDisk, SaveMem"
+    },
+    {
+      "file": "annalist/files.py",
+      "function": "write_atomic",
+      "fingerprint": "3510cae332ae5a78",
+      "model": "Killed (a state file is whole or absent)"
+    },
+    {
+      "file": "annalist/files.py",
+      "function": "write_json",
+      "fingerprint": "ecb67c049d64633f",
+      "model": "SaveDisk"
+    },
+    {
+      "file": "annalist/state.py",
+      "function": "load_states",
+      "fingerprint": "de1993a7e8587ac0",
+      "model": "Loaded (every state file is applied as checked)"
+    },
+    {
+      "file": "annalist/state.py",
+      "function": "Knowledge.apply",
+      "fingerprint": "dd6c226b41763d56",
+      "model": "View (with_unchecked applies out to a kb copy) and SaveMem; assumption: reads out, never writes it"
+    },
+    {
+      "file": "annalist/state.py",
+      "function": "Knowledge.upsert_entity",
+      "fingerprint": "b81d394f95ee108e",
+      "model": "assumption: reads the entity dicts in out, never writes them"
+    },
+    {
+      "file": "annalist/audit.py",
+      "function": "audit_support",
+      "fingerprint": "d2bbb146e849d272",
+      "model": "CheckOk, CheckFails; assumption: the check thread only reads kb and the shared extraction (out)"
+    },
+    {
+      "file": "annalist/audit.py",
+      "function": "reread",
+      "fingerprint": "c255d27123f3eee9",
+      "model": "CheckOk, CheckFails; assumption: the check thread only reads kb and the shared extraction (out)"
+    },
+    {
+      "file": "annalist/audit.py",
+      "function": "reread_context",
+      "fingerprint": "f31768fab6c1e379",
+      "model": "assumption: the check thread only reads kb and the shared extraction (out)"
+    },
+    {
+      "file": "annalist/timelines.py",
+      "function": "label_timelines",
+      "fingerprint": "5b3f769a5e03ed0e",
+      "model": "CheckOk; assumption: the check thread only reads kb and the shared extraction (out)"
+    },
+    {
+      "file": "annalist/timelines.py",
+      "function": "clean_timelines",
+      "fingerprint": "1de3fd33a44d90a0",
+      "model": "assumption: the check thread only reads kb and the shared extraction (out)"
+    },
+    {
+      "file": "annalist/timelines.py",
+      "function": "timeline_items",
+      "fingerprint": "b183dae510cf6014",
+      "model": "assumption: the check thread only reads kb and the shared extraction (out)"
+    }
+  ]
+}

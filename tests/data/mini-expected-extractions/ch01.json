@@ -1,0 +1,377 @@
+{
+  "chapter": 1,
+  "title": "The Missing Page",
+  "href": "OEBPS/text/part-d.xhtml",
+  "extraction": {
+    "synopsis": "In the harbour town of Corvel Quay, lamp-keeper Tomas Hale shows his apprentice Ines Varro that the page of the Salt Ledger for the night of the Gannet wreck, nine years ago, has been cut out. Their friend Bram Ostrow, a Guild journeyman, hears that Tomas asked Guild master Sabine Oake to reopen the inquiry and was refused. Odile Marr, master of the ship Kestrel and a survivor of the Gannet, arrives and asks to speak with Tomas. Tomas tells Ines that on the night of the wreck someone with a key was inside the locked lamp room, and that only the keeper and the Guild master hold keys.",
+    "entities": [
+      {
+        "name": "Ines Varro",
+        "type": "character",
+        "aliases": [],
+        "summary": "Nineteen-year-old apprentice to the harbour lamp-keeper Tomas Hale."
+      },
+      {
+        "name": "Tomas Hale",
+        "type": "character",
+        "aliases": [],
+        "summary": "Sixty-one-year-old keeper of the harbour lamp of Corvel Quay and sworn member of the Lamplighters’ Guild."
+      },
+      {
+        "name": "Bram Ostrow",
+        "type": "character",
+        "aliases": [],
+        "summary": "Journeyman of the Lamplighters’ Guild and Ines's oldest friend."
+      },
+      {
+        "name": "Sabine Oake",
+        "type": "character",
+        "aliases": [
+          {
+            "name": "Master Oake",
+            "unique": false
+          }
+        ],
+        "summary": "Master of the Lamplighters’ Guild for eleven years, who refused to reopen the inquiry into the wreck."
+      },
+      {
+        "name": "Odile Marr",
+        "type": "character",
+        "aliases": [],
+        "summary": "Master of the ship Kestrel and a former mate of the Gannet who survived its wreck."
+      },
+      {
+        "name": "Corvel Quay",
+        "type": "place",
+        "aliases": [],
+        "summary": "Harbour town whose lamp has burned every night for two hundred years except one."
+      },
+      {
+        "name": "Lamplighters’ Guild",
+        "type": "organization",
+        "aliases": [
+          {
+            "name": "the Guild",
+            "unique": true
+          }
+        ],
+        "summary": "Guild that keeps the harbour lamp of Corvel Quay and its records."
+      },
+      {
+        "name": "Salt Ledger",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "The Guild's record of every night the lamp has burned; the page for the night of the Gannet wreck has been cut out."
+      },
+      {
+        "name": "harbour lamp",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "The lamp in the tower of Corvel Quay, dark only on the night the Gannet was wrecked."
+      },
+      {
+        "name": "Gannet",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "Ship wrecked on the rocks on the ninth of Frostmonth nine years ago."
+      },
+      {
+        "name": "Kestrel",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "Red-sailed ship commanded by Odile Marr."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "harbour lamp",
+        "claim": "The harbour lamp of Corvel Quay has burned every night for two hundred years except one.",
+        "quotes": [
+          "The harbour lamp of Corvel Quay had burned every night for two hundred years, except one."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Gannet",
+        "claim": "The Gannet was wrecked on the rocks on the ninth of Frostmonth, the one night the lamp did not burn.",
+        "quotes": [
+          "the ninth of Frostmonth, the night the Gannet broke on the rocks."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Ines Varro",
+        "claim": "Ines is nineteen and has been Tomas Hale's apprentice for six years.",
+        "quotes": [
+          "Ines was nineteen and had been Tomas’s apprentice for six years."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas is the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild.",
+        "quotes": [
+          "Tomas was the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas is sixty-one.",
+        "quotes": [
+          "He was sixty-one."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Salt Ledger",
+        "claim": "The Salt Ledger records each night the lamp burned: hour of lighting, oil, weather, and keeper's name.",
+        "quotes": [
+          "The Salt Ledger was the Guild’s record of every night the lamp had burned: the hour of lighting, the oil used, the weather, the keeper’s name."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Salt Ledger",
+        "claim": "The page for the night of the wreck has been cut out of the Salt Ledger.",
+        "quotes": [
+          "“The page for the night of the wreck,” Ines said. “Someone has cut it out.”"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Bram is a Guild journeyman, two years older than Ines, and her oldest friend.",
+        "quotes": [
+          "Bram was a journeyman of the Guild, two years older than Ines, and her oldest friend; they had learned their letters at the same bench and been beaten for the same broken window."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas asked the Guild master to reopen the inquiry, and she told him the matter was closed.",
+        "quotes": [
+          "I asked her to open the inquiry again.”",
+          "“She told me the matter was closed.”"
+        ],
+        "asserted_by": "Tomas Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Sabine Oake",
+        "claim": "Sabine Oake has been master of the Lamplighters’ Guild for eleven years.",
+        "quotes": [
+          "Sabine Oake had been master of the Lamplighters’ Guild for eleven years."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Odile Marr",
+        "claim": "Odile Marr commands the Kestrel.",
+        "quotes": [
+          "The ship was the Kestrel out of the north, and her master came ashore herself, a broad woman in a blue coat with a silver ring in one ear.",
+          "“Odile Marr,” the woman said"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Odile Marr",
+        "claim": "Odile Marr was mate on the Gannet and one of the eleven survivors of its wreck.",
+        "quotes": [
+          "“I was mate on the Gannet,” said Odile Marr. “I was one of the eleven who came out of the water that night."
+        ],
+        "asserted_by": "Odile Marr",
+        "status": "stated"
+      },
+      {
+        "entity": "Odile Marr",
+        "claim": "Odile Marr has carried a secret about the wreck for nine years and wants to tell Tomas.",
+        "quotes": [
+          "I have carried something in my head for nine years and I am tired of the weight."
+        ],
+        "asserted_by": "Odile Marr",
+        "status": "stated"
+      },
+      {
+        "entity": "harbour lamp",
+        "claim": "On the night of the wreck the lamp was out, the lamp room was locked from the inside, and a lantern was moving within.",
+        "quotes": [
+          "When I reached the top of the tower the lamp was out and the door to the lamp room was locked from the inside, and through the keyhole I saw a lantern moving."
+        ],
+        "asserted_by": "Tomas Hale",
+        "status": "belief"
+      },
+      {
+        "entity": "harbour lamp",
+        "claim": "Only the keeper of the lamp and the master of the Guild have keys to the lamp room.",
+        "quotes": [
+          "“Two people,” said Tomas. “The keeper of the lamp, and the master of the Guild.”"
+        ],
+        "asserted_by": "Tomas Hale",
+        "status": "belief"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Ines Varro",
+        "target": "Tomas Hale",
+        "type": "apprentice of",
+        "quotes": [
+          "Ines was nineteen and had been Tomas’s apprentice for six years."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Tomas Hale",
+        "target": "Lamplighters’ Guild",
+        "type": "member of",
+        "quotes": [
+          "Tomas was the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Tomas Hale",
+        "target": "harbour lamp",
+        "type": "keeper of",
+        "quotes": [
+          "Tomas was the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Bram Ostrow",
+        "target": "Lamplighters’ Guild",
+        "type": "member of",
+        "quotes": [
+          "Bram was a journeyman of the Guild, two years older than Ines, and her oldest friend; they had learned their letters at the same bench and been beaten for the same broken window."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Bram Ostrow",
+        "target": "Ines Varro",
+        "type": "friend of",
+        "quotes": [
+          "Bram was a journeyman of the Guild, two years older than Ines, and her oldest friend; they had learned their letters at the same bench and been beaten for the same broken window."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Sabine Oake",
+        "target": "Lamplighters’ Guild",
+        "type": "master of",
+        "quotes": [
+          "Sabine Oake had been master of the Lamplighters’ Guild for eleven years."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Odile Marr",
+        "target": "Kestrel",
+        "type": "master of",
+        "quotes": [
+          "The ship was the Kestrel out of the north, and her master came ashore herself, a broad woman in a blue coat with a silver ring in one ear.",
+          "“Odile Marr,” the woman said"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Odile Marr",
+        "target": "Gannet",
+        "type": "former mate of",
+        "quotes": [
+          "“I was mate on the Gannet,” said Odile Marr."
+        ],
+        "asserted_by": "Odile Marr",
+        "status": "stated"
+      },
+      {
+        "source": "harbour lamp",
+        "target": "Corvel Quay",
+        "type": "located in",
+        "quotes": [
+          "The harbour lamp of Corvel Quay had burned every night for two hundred years, except one."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [
+      {
+        "question": "Who cut the page for the night of the wreck out of the Salt Ledger, and what did it show?",
+        "quote": "“And I would very much like to know who, and what they did not want us to read.”"
+      },
+      {
+        "question": "Who was inside the locked lamp room and put out the lamp on the night the Gannet was wrecked?",
+        "quote": "Someone was in there, Ines. Someone with a key.”"
+      },
+      {
+        "question": "What has Odile Marr carried in her head about the wreck for nine years?",
+        "quote": "I have carried something in my head for nine years and I am tired of the weight."
+      }
+    ],
+    "questions_resolved": []
+  },
+  "timelines": {
+    "new": [],
+    "erased": [],
+    "labels": {
+      "E1": "main",
+      "E2": "main",
+      "E3": "main",
+      "E4": "main",
+      "E5": "main",
+      "E6": "main",
+      "E7": "main",
+      "E8": "main",
+      "E9": "main",
+      "E10": "main",
+      "E11": "main",
+      "F1": "main",
+      "F2": "main",
+      "F3": "main",
+      "F4": "main",
+      "F5": "main",
+      "F6": "main",
+      "F7": "main",
+      "F8": "main",
+      "F9": "main",
+      "F10": "main",
+      "F11": "main",
+      "F12": "main",
+      "F13": "main",
+      "F14": "main",
+      "F15": "main",
+      "R1": "main",
+      "R2": "main",
+      "R3": "main",
+      "R4": "main",
+      "R5": "main",
+      "R6": "main",
+      "R7": "main",
+      "R8": "main",
+      "R9": "main",
+      "Q1": "main",
+      "Q2": "main",
+      "Q3": "main"
+    }
+  }
+}

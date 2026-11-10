@@ -1,0 +1,10 @@
+{
+ "id": "chatcmpl-3x9u2k8fq1",
+ "object": "chat.completion",
+ "created": 1762500000,
+ "model": "qwen3-8b",
+ "choices": [
+  {"index": 0, "message": {"role": "assistant", "content": "{\"verdict\": \"accept\", \"payoff\": \"The scar ties Wren to the wreck.\"}"}, "finish_reason": "stop"}
+ ],
+ "usage": {"prompt_tokens": 2000, "completion_tokens": 100, "total_tokens": 2100}
+}

@@ -1,0 +1,253 @@
+{
+  "chapter": 3,
+  "title": "The Abbey Stair",
+  "href": "OEBPS/text/part-e.xhtml",
+  "extraction": {
+    "synopsis": "Tomas and Ines climb the cliff stair to Brannoc Abbey to read the abbey's uncut fair copy of the Salt Ledger, but the archivist Sister Wren shows them that every book from the year of the wreck is under the Abbess's seal. After supper Tomas gives Ines the brass key to the lamp room and tells her to give it to no one, not even Master Oake. He walks out to the gate in the fog and is found dead at the foot of the stair. Bram Ostrow appears from the beach path saying he came to help, and Captain Fenn of the town watch rules the death an accident, which Ines does not believe.",
+    "entities": [
+      {
+        "name": "Brannoc Abbey",
+        "type": "place",
+        "aliases": [],
+        "summary": "Abbey on the headland north of Corvel Quay, at the top of a 312-step cliff stair called the widow-maker; it keeps the Guild's fair copies of the Salt Ledger."
+      },
+      {
+        "name": "Sister Wren",
+        "type": "character",
+        "aliases": [],
+        "summary": "Young archivist of Brannoc Abbey, about twenty-one, with a white scar across the back of her left hand."
+      },
+      {
+        "name": "Captain Fenn",
+        "type": "character",
+        "aliases": [],
+        "summary": "Commander of the Corvel Quay town watch, formerly a clerk."
+      },
+      {
+        "name": "lamp room key",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "Long brass key on an iron ring that opens the lamp room; Tomas gives it to Ines."
+      },
+      {
+        "name": "Tomas Hale",
+        "type": "character",
+        "aliases": [],
+        "summary": "Keeper of the harbour lamp, found dead at the foot of the abbey stair."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Brannoc Abbey",
+        "claim": "Brannoc Abbey stands on the headland north of Corvel Quay at the top of 312 steps cut into the cliff.",
+        "quotes": [
+          "Brannoc Abbey stood on the headland north of Corvel Quay, at the top of three hundred and twelve steps cut into the cliff."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Brannoc Abbey",
+        "claim": "The abbey stair is known outside the abbey as the widow-maker.",
+        "quotes": [
+          "The sisters called it the abbey stair. Everyone else called it the widow-maker."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas spoke with Odile Marr for an hour and came out shaken, refusing to say what she told him.",
+        "quotes": [
+          "Tomas had spoken with Odile Marr for an hour that morning in the back room of the harbour inn, and had come out grey in the face and would not say what she had told him."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Salt Ledger",
+        "claim": "The Guild sends a fair copy of the Salt Ledger to the abbey every midsummer, and the abbey's copies are never cut.",
+        "quotes": [
+          "All he would say was that the Guild sent a fair copy of the Salt Ledger up to the abbey every midsummer for safekeeping, and that the abbey’s copies were never cut, because no one but the sisters ever saw them."
+        ],
+        "asserted_by": "Tomas Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Sister Wren",
+        "claim": "Sister Wren is the abbey's archivist, about twenty-one, with a white scar across the back of her left hand.",
+        "quotes": [
+          "The archivist was a young woman of perhaps twenty-one, small and quick, with a white scar across the back of her left hand. The sisters called her Sister Wren."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Salt Ledger",
+        "claim": "The abbey's ledgers from the year of the wreck are under the Abbess's seal.",
+        "quotes": [
+          "Every book from that year is under the Abbess’s seal."
+        ],
+        "asserted_by": "Sister Wren",
+        "status": "stated"
+      },
+      {
+        "entity": "lamp room key",
+        "claim": "Tomas gave Ines the brass key to the lamp room on an iron ring.",
+        "quotes": [
+          "He put something into it, cold and heavy: an iron ring with a single long brass key, worn smooth at the bow.",
+          "It was the key to the lamp room."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas told Ines the lamp would be hers if anything happened to him and warned her not to give the key to the Guild or Master Oake.",
+        "quotes": [
+          "“If anything happens to me, the lamp is yours,” Tomas said.",
+          "Not to the Guild, and not to Master Oake.”"
+        ],
+        "asserted_by": "Tomas Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Ines Varro",
+        "claim": "Ines wears the lamp room key on its ring around her neck under her shirt.",
+        "quotes": [
+          "She put the key on its ring around her neck, under her shirt."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas was found dead at the bottom of the abbey stair.",
+        "quotes": [
+          "They found Tomas himself at the bottom, three hundred steps down, where the stair turned on the last landing above the beach. He had been dead for some time."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Bram came up from the beach path soaked to the knees, saying he had heard the abbey bell.",
+        "quotes": [
+          "And she remembered Bram Ostrow coming up from the beach path, soaked to the knees, saying he had heard the abbey bell and come to help."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Captain Fenn",
+        "claim": "Captain Fenn commands the town watch and was a clerk before he was a soldier.",
+        "quotes": [
+          "Their commander was Captain Fenn, a thin, careful man with ink on his cuffs who had been a clerk before he was a soldier."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Captain Fenn judges that Tomas slipped in the fog.",
+        "quotes": [
+          "“He slipped in the fog,” the Captain said."
+        ],
+        "asserted_by": "Captain Fenn",
+        "status": "belief"
+      },
+      {
+        "entity": "Tomas Hale",
+        "claim": "Ines does not believe Tomas slipped.",
+        "quotes": [
+          "“He climbed stairs every day of his life,” said Ines. “He did not slip.”"
+        ],
+        "asserted_by": "Ines Varro",
+        "status": "belief"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Sister Wren",
+        "target": "Brannoc Abbey",
+        "type": "archivist of",
+        "quotes": [
+          "The archivist was a young woman of perhaps twenty-one, small and quick, with a white scar across the back of her left hand. The sisters called her Sister Wren."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Ines Varro",
+        "target": "lamp room key",
+        "type": "holder of",
+        "quotes": [
+          "She put the key on its ring around her neck, under her shirt."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Brannoc Abbey",
+        "target": "Corvel Quay",
+        "type": "located near",
+        "quotes": [
+          "Brannoc Abbey stood on the headland north of Corvel Quay, at the top of three hundred and twelve steps cut into the cliff."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [
+      {
+        "question": "Did Tomas slip on the abbey stair, or was he pushed?",
+        "quote": "“Then tell me who pushed him,” he said, not unkindly, “and I will go and arrest them.”"
+      },
+      {
+        "question": "What was Sister Wren about to say to Tomas in the archive?",
+        "quote": "Ines thought she was going to say something else."
+      },
+      {
+        "question": "What does the sealed abbey copy of the Salt Ledger show for the night of the wreck?",
+        "quote": "Every book from that year is under the Abbess’s seal."
+      },
+      {
+        "question": "Why was Bram on the beach below the stair the night Tomas died?",
+        "quote": "“What were you doing on the beach in this?” she asked him."
+      }
+    ],
+    "questions_resolved": []
+  },
+  "timelines": {
+    "new": [],
+    "erased": [],
+    "labels": {
+      "E1": "main",
+      "E2": "main",
+      "E3": "main",
+      "E4": "main",
+      "E5": "main",
+      "F1": "main",
+      "F2": "main",
+      "F3": "main",
+      "F4": "main",
+      "F5": "main",
+      "F6": "main",
+      "F7": "main",
+      "F8": "main",
+      "F9": "main",
+      "F10": "main",
+      "F11": "main",
+      "F12": "main",
+      "F13": "main",
+      "F14": "main",
+      "R1": "main",
+      "R2": "main",
+      "R3": "main",
+      "Q1": "main",
+      "Q2": "main",
+      "Q3": "main",
+      "Q4": "main"
+    }
+  }
+}

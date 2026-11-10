@@ -1,0 +1,14 @@
+{
+ "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+ "type": "message",
+ "role": "assistant",
+ "model": "claude-sonnet-5-5",
+ "content": [
+  {"type": "thinking", "thinking": "", "signature": "EqQBCgIYAhIM"},
+  {"type": "text", "text": "{\"verdicts\": [{\"id\": \"F1\", "},
+  {"type": "text", "text": "\"verdict\": \"supported\"}]}"}
+ ],
+ "stop_reason": "end_turn",
+ "stop_details": null,
+ "usage": {"input_tokens": 1200, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 300, "service_tier": "standard"}
+}

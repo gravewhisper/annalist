@@ -1,0 +1,1252 @@
+{
+  "1": {
+    "timelines": {
+      "new": [],
+      "erased": [],
+      "default": "main"
+    },
+    "extraction": {
+      "synopsis": "In the harbour town of Corvel Quay, lamp-keeper Tomas Hale shows his apprentice Ines Varro that the page of the Salt Ledger for the night of the Gannet wreck, nine years ago, has been cut out. Their friend Bram Ostrow, a Guild journeyman, hears that Tomas asked Guild master Sabine Oake to reopen the inquiry and was refused. Odile Marr, master of the ship Kestrel and a survivor of the Gannet, arrives and asks to speak with Tomas. Tomas tells Ines that on the night of the wreck someone with a key was inside the locked lamp room, and that only the keeper and the Guild master hold keys.",
+      "entities": [
+        {
+          "name": "Ines Varro",
+          "type": "character",
+          "aliases": [],
+          "summary": "Nineteen-year-old apprentice to the harbour lamp-keeper Tomas Hale."
+        },
+        {
+          "name": "Tomas Hale",
+          "type": "character",
+          "aliases": [],
+          "summary": "Sixty-one-year-old keeper of the harbour lamp of Corvel Quay and sworn member of the Lamplighters’ Guild."
+        },
+        {
+          "name": "Bram Ostrow",
+          "type": "character",
+          "aliases": [],
+          "summary": "Journeyman of the Lamplighters’ Guild and Ines's oldest friend."
+        },
+        {
+          "name": "Sabine Oake",
+          "type": "character",
+          "aliases": [
+            {
+              "name": "Master Oake",
+              "unique": false
+            }
+          ],
+          "summary": "Master of the Lamplighters’ Guild for eleven years, who refused to reopen the inquiry into the wreck."
+        },
+        {
+          "name": "Odile Marr",
+          "type": "character",
+          "aliases": [],
+          "summary": "Master of the ship Kestrel and a former mate of the Gannet who survived its wreck."
+        },
+        {
+          "name": "Corvel Quay",
+          "type": "place",
+          "aliases": [],
+          "summary": "Harbour town whose lamp has burned every night for two hundred years except one."
+        },
+        {
+          "name": "Lamplighters’ Guild",
+          "type": "organization",
+          "aliases": [
+            {
+              "name": "the Guild",
+              "unique": true
+            }
+          ],
+          "summary": "Guild that keeps the harbour lamp of Corvel Quay and its records."
+        },
+        {
+          "name": "Salt Ledger",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "The Guild's record of every night the lamp has burned; the page for the night of the Gannet wreck has been cut out."
+        },
+        {
+          "name": "harbour lamp",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "The lamp in the tower of Corvel Quay, dark only on the night the Gannet was wrecked."
+        },
+        {
+          "name": "Gannet",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "Ship wrecked on the rocks on the ninth of Frostmonth nine years ago."
+        },
+        {
+          "name": "Kestrel",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "Red-sailed ship commanded by Odile Marr."
+        }
+      ],
+      "facts": [
+        {
+          "entity": "harbour lamp",
+          "claim": "The harbour lamp of Corvel Quay has burned every night for two hundred years except one.",
+          "quotes": [
+            "The harbour lamp of Corvel Quay had burned every night for two hundred years, except one."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Gannet",
+          "claim": "The Gannet was wrecked on the rocks on the ninth of Frostmonth, the one night the lamp did not burn.",
+          "quotes": [
+            "the ninth of Frostmonth, the night the Gannet broke on the rocks."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Ines Varro",
+          "claim": "Ines is nineteen and has been Tomas Hale's apprentice for six years.",
+          "quotes": [
+            "Ines was nineteen and had been Tomas’s apprentice for six years."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas is the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild.",
+          "quotes": [
+            "Tomas was the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild"
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas is sixty-one.",
+          "quotes": [
+            "He was sixty-one."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Salt Ledger",
+          "claim": "The Salt Ledger records each night the lamp burned: hour of lighting, oil, weather, and keeper's name.",
+          "quotes": [
+            "The Salt Ledger was the Guild’s record of every night the lamp had burned: the hour of lighting, the oil used, the weather, the keeper’s name."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Salt Ledger",
+          "claim": "The page for the night of the wreck has been cut out of the Salt Ledger.",
+          "quotes": [
+            "“The page for the night of the wreck,” Ines said. “Someone has cut it out.”"
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Bram is a Guild journeyman, two years older than Ines, and her oldest friend.",
+          "quotes": [
+            "Bram was a journeyman of the Guild, two years older than Ines, and her oldest friend; they had learned their letters at the same bench and been beaten for the same broken window."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas asked the Guild master to reopen the inquiry, and she told him the matter was closed.",
+          "quotes": [
+            "I asked her to open the inquiry again.”",
+            "“She told me the matter was closed.”"
+          ],
+          "asserted_by": "Tomas Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Sabine Oake",
+          "claim": "Sabine Oake has been master of the Lamplighters’ Guild for eleven years.",
+          "quotes": [
+            "Sabine Oake had been master of the Lamplighters’ Guild for eleven years."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Odile Marr",
+          "claim": "Odile Marr commands the Kestrel.",
+          "quotes": [
+            "The ship was the Kestrel out of the north, and her master came ashore herself, a broad woman in a blue coat with a silver ring in one ear.",
+            "“Odile Marr,” the woman said"
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Odile Marr",
+          "claim": "Odile Marr was mate on the Gannet and one of the eleven survivors of its wreck.",
+          "quotes": [
+            "“I was mate on the Gannet,” said Odile Marr. “I was one of the eleven who came out of the water that night."
+          ],
+          "asserted_by": "Odile Marr",
+          "status": "stated"
+        },
+        {
+          "entity": "Odile Marr",
+          "claim": "Odile Marr has carried a secret about the wreck for nine years and wants to tell Tomas.",
+          "quotes": [
+            "I have carried something in my head for nine years and I am tired of the weight."
+          ],
+          "asserted_by": "Odile Marr",
+          "status": "stated"
+        },
+        {
+          "entity": "harbour lamp",
+          "claim": "On the night of the wreck the lamp was out, the lamp room was locked from the inside, and a lantern was moving within.",
+          "quotes": [
+            "When I reached the top of the tower the lamp was out and the door to the lamp room was locked from the inside, and through the keyhole I saw a lantern moving."
+          ],
+          "asserted_by": "Tomas Hale",
+          "status": "belief"
+        },
+        {
+          "entity": "harbour lamp",
+          "claim": "Only the keeper of the lamp and the master of the Guild have keys to the lamp room.",
+          "quotes": [
+            "“Two people,” said Tomas. “The keeper of the lamp, and the master of the Guild.”"
+          ],
+          "asserted_by": "Tomas Hale",
+          "status": "belief"
+        }
+      ],
+      "relations": [
+        {
+          "source": "Ines Varro",
+          "target": "Tomas Hale",
+          "type": "apprentice of",
+          "quotes": [
+            "Ines was nineteen and had been Tomas’s apprentice for six years."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Tomas Hale",
+          "target": "Lamplighters’ Guild",
+          "type": "member of",
+          "quotes": [
+            "Tomas was the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild"
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Tomas Hale",
+          "target": "harbour lamp",
+          "type": "keeper of",
+          "quotes": [
+            "Tomas was the keeper of the harbour lamp and a sworn member of the Lamplighters’ Guild"
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Bram Ostrow",
+          "target": "Lamplighters’ Guild",
+          "type": "member of",
+          "quotes": [
+            "Bram was a journeyman of the Guild, two years older than Ines, and her oldest friend; they had learned their letters at the same bench and been beaten for the same broken window."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Bram Ostrow",
+          "target": "Ines Varro",
+          "type": "friend of",
+          "quotes": [
+            "Bram was a journeyman of the Guild, two years older than Ines, and her oldest friend; they had learned their letters at the same bench and been beaten for the same broken window."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Sabine Oake",
+          "target": "Lamplighters’ Guild",
+          "type": "master of",
+          "quotes": [
+            "Sabine Oake had been master of the Lamplighters’ Guild for eleven years."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Odile Marr",
+          "target": "Kestrel",
+          "type": "master of",
+          "quotes": [
+            "The ship was the Kestrel out of the north, and her master came ashore herself, a broad woman in a blue coat with a silver ring in one ear.",
+            "“Odile Marr,” the woman said"
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Odile Marr",
+          "target": "Gannet",
+          "type": "former mate of",
+          "quotes": [
+            "“I was mate on the Gannet,” said Odile Marr."
+          ],
+          "asserted_by": "Odile Marr",
+          "status": "stated"
+        },
+        {
+          "source": "harbour lamp",
+          "target": "Corvel Quay",
+          "type": "located in",
+          "quotes": [
+            "The harbour lamp of Corvel Quay had burned every night for two hundred years, except one."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        }
+      ],
+      "questions_raised": [
+        {
+          "question": "Who cut the page for the night of the wreck out of the Salt Ledger, and what did it show?",
+          "quote": "“And I would very much like to know who, and what they did not want us to read.”"
+        },
+        {
+          "question": "Who was inside the locked lamp room and put out the lamp on the night the Gannet was wrecked?",
+          "quote": "Someone was in there, Ines. Someone with a key.”"
+        },
+        {
+          "question": "What has Odile Marr carried in her head about the wreck for nine years?",
+          "quote": "I have carried something in my head for nine years and I am tired of the weight."
+        }
+      ],
+      "questions_resolved": []
+    }
+  },
+  "2": {
+    "timelines": {
+      "new": [
+        {
+          "id": "gannet-night",
+          "kind": "flashback",
+          "label": "the night of the Gannet wreck",
+          "period": "nine years earlier, the ninth of Frostmonth"
+        }
+      ],
+      "erased": [],
+      "default": "gannet-night"
+    },
+    "extraction": {
+      "synopsis": "Nine years before the main story, Tomas Hale waits at Corvel Quay for his twelve-year-old daughter Livia, who is sailing home on the Gannet. In a storm the harbour lamp goes out; Tomas runs up the tower and finds the lamp room locked with someone crouching inside behind a lantern, but by the time he fetches his key the room is empty and the Gannet has struck the rocks. Eleven of thirty-four aboard survive, among them the mate Odile Marr, and the sisters of Brannoc Abbey nurse them. Livia is never found; after her green shawl turns up below the abbey the Guild enters her among the drowned, and Tomas keeps his suspicion about the lantern from the Guild master.",
+      "entities": [
+        {
+          "name": "Livia Hale",
+          "type": "character",
+          "aliases": [],
+          "summary": "Tomas Hale's twelve-year-old daughter, a passenger on the Gannet, never found after the wreck."
+        },
+        {
+          "name": "Brannoc Abbey",
+          "type": "place",
+          "aliases": [],
+          "summary": "Abbey on the cliff above Corvel Quay whose sisters nursed the Gannet survivors in their infirmary."
+        },
+        {
+          "name": "Sister Agathe",
+          "type": "character",
+          "aliases": [],
+          "summary": "Sister of Brannoc Abbey who kept the infirmary at the time of the wreck."
+        },
+        {
+          "name": "Gannet",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "Fat-bellied coaster that ran down the coast every fortnight; wrecked on the rocks at the harbour mouth with twenty-two bodies recovered."
+        }
+      ],
+      "facts": [
+        {
+          "entity": "Livia Hale",
+          "claim": "Livia Hale, Tomas's daughter, was twelve and sailing home on the Gannet.",
+          "quotes": [
+            "Nine years earlier, on the ninth of Frostmonth, Tomas Hale was fifty-two and his daughter was coming home.",
+            "Livia Hale was twelve that winter.",
+            "Tomas paid for her passage home on the Gannet, a fat-bellied coaster that made the run down the coast every fortnight."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas lit the lamp himself at half past four on the night of the wreck and recorded it in the Salt Ledger.",
+          "quotes": [
+            "Tomas lit it himself at half past four, trimmed the wick, wrote the hour in the Salt Ledger, and went down to the quay to watch for a red-and-white sail."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "harbour lamp",
+          "claim": "The lamp went out a little before seven.",
+          "quotes": [
+            "At a little before seven a boy came running along the harbour wall shouting that the lamp had gone out."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "harbour lamp",
+          "claim": "Tomas found the lamp room locked and saw a lantern moving inside, low down, as if someone were crouching.",
+          "quotes": [
+            "when he reached the top the door of the lamp room was shut and locked",
+            "He knelt and put his eye to the keyhole, and on the other side he saw a small lantern moving, low down, as if someone were crouching on the floor with it."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "harbour lamp",
+          "claim": "The lamp's wick had been deliberately pinched out while the reservoir was still full.",
+          "quotes": [
+            "The wick of the great lamp had been pinched out and the reservoir was full. Whoever had done it had not been in a hurry."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Gannet",
+          "claim": "The Gannet struck the rocks at a quarter past seven; eleven of the thirty-four aboard survived.",
+          "quotes": [
+            "The Gannet went onto the rocks at a quarter past seven. Of the thirty-four souls aboard, eleven came out of the sea alive."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Gannet",
+          "claim": "Twenty-two bodies were recovered from the beach after the wreck.",
+          "quotes": [
+            "Twenty-two bodies were found along the beach in the next three days."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Odile Marr",
+          "claim": "Odile Marr, then a young mate, swam a line ashore and was given a medal by the town.",
+          "quotes": [
+            "One of them was a young mate named Odile Marr, who swam a line ashore through water that should have killed her and was afterwards given a medal by the town."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Livia Hale",
+          "claim": "Livia was found neither among the survivors nor among the dead.",
+          "quotes": [
+            "Livia Hale was not among the living or the dead."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Brannoc Abbey",
+          "claim": "The sisters of Brannoc Abbey took the survivors up to their infirmary.",
+          "quotes": [
+            "The sisters of Brannoc Abbey came down from their cliff with blankets and carts and took the survivors up to the infirmary, because there was nowhere else in Corvel Quay with enough beds."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Sister Agathe",
+          "claim": "Sister Agathe kept the abbey infirmary and comforted Tomas.",
+          "quotes": [
+            "Sister Agathe, who kept the infirmary, held his hands and told him that the sea did not always give back what it took."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Livia Hale",
+          "claim": "Livia's green shawl was found on the rocks below the abbey, and the Guild entered her name in the register of the drowned.",
+          "quotes": [
+            "A week after the wreck they found a small green shawl caught on the rocks below the abbey.",
+            "The Guild entered Livia Hale’s name in the register of the drowned, and the master of the Guild came to the cottage in person to give Tomas her condolences."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas did not tell the Guild master about the lantern behind the locked door.",
+          "quotes": [
+            "He did not tell her about the lantern behind the locked door."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        }
+      ],
+      "relations": [
+        {
+          "source": "Livia Hale",
+          "target": "Tomas Hale",
+          "type": "daughter of",
+          "quotes": [
+            "Nine years earlier, on the ninth of Frostmonth, Tomas Hale was fifty-two and his daughter was coming home.",
+            "Livia Hale was twelve that winter."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Livia Hale",
+          "target": "Gannet",
+          "type": "passenger of",
+          "quotes": [
+            "Tomas paid for her passage home on the Gannet, a fat-bellied coaster that made the run down the coast every fortnight."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Sister Agathe",
+          "target": "Brannoc Abbey",
+          "type": "member of",
+          "quotes": [
+            "Sister Agathe, who kept the infirmary, held his hands and told him that the sea did not always give back what it took."
+          ],
+          "asserted_by": "narrator",
+          "status": "implied"
+        }
+      ],
+      "questions_raised": [
+        {
+          "question": "What happened to Livia Hale, whose body was never found?",
+          "quote": "Livia Hale was not among the living or the dead."
+        }
+      ],
+      "questions_resolved": []
+    }
+  },
+  "3": {
+    "timelines": {
+      "new": [],
+      "erased": [],
+      "default": "main"
+    },
+    "extraction": {
+      "synopsis": "Tomas and Ines climb the cliff stair to Brannoc Abbey to read the abbey's uncut fair copy of the Salt Ledger, but the archivist Sister Wren shows them that every book from the year of the wreck is under the Abbess's seal. After supper Tomas gives Ines the brass key to the lamp room and tells her to give it to no one, not even Master Oake. He walks out to the gate in the fog and is found dead at the foot of the stair. Bram Ostrow appears from the beach path saying he came to help, and Captain Fenn of the town watch rules the death an accident, which Ines does not believe.",
+      "entities": [
+        {
+          "name": "Brannoc Abbey",
+          "type": "place",
+          "aliases": [],
+          "summary": "Abbey on the headland north of Corvel Quay, at the top of a 312-step cliff stair called the widow-maker; it keeps the Guild's fair copies of the Salt Ledger."
+        },
+        {
+          "name": "Sister Wren",
+          "type": "character",
+          "aliases": [],
+          "summary": "Young archivist of Brannoc Abbey, about twenty-one, with a white scar across the back of her left hand."
+        },
+        {
+          "name": "Captain Fenn",
+          "type": "character",
+          "aliases": [],
+          "summary": "Commander of the Corvel Quay town watch, formerly a clerk."
+        },
+        {
+          "name": "lamp room key",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "Long brass key on an iron ring that opens the lamp room; Tomas gives it to Ines."
+        },
+        {
+          "name": "Tomas Hale",
+          "type": "character",
+          "aliases": [],
+          "summary": "Keeper of the harbour lamp, found dead at the foot of the abbey stair."
+        }
+      ],
+      "facts": [
+        {
+          "entity": "Brannoc Abbey",
+          "claim": "Brannoc Abbey stands on the headland north of Corvel Quay at the top of 312 steps cut into the cliff.",
+          "quotes": [
+            "Brannoc Abbey stood on the headland north of Corvel Quay, at the top of three hundred and twelve steps cut into the cliff."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Brannoc Abbey",
+          "claim": "The abbey stair is known outside the abbey as the widow-maker.",
+          "quotes": [
+            "The sisters called it the abbey stair. Everyone else called it the widow-maker."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas spoke with Odile Marr for an hour and came out shaken, refusing to say what she told him.",
+          "quotes": [
+            "Tomas had spoken with Odile Marr for an hour that morning in the back room of the harbour inn, and had come out grey in the face and would not say what she had told him."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Salt Ledger",
+          "claim": "The Guild sends a fair copy of the Salt Ledger to the abbey every midsummer, and the abbey's copies are never cut.",
+          "quotes": [
+            "All he would say was that the Guild sent a fair copy of the Salt Ledger up to the abbey every midsummer for safekeeping, and that the abbey’s copies were never cut, because no one but the sisters ever saw them."
+          ],
+          "asserted_by": "Tomas Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Sister Wren",
+          "claim": "Sister Wren is the abbey's archivist, about twenty-one, with a white scar across the back of her left hand.",
+          "quotes": [
+            "The archivist was a young woman of perhaps twenty-one, small and quick, with a white scar across the back of her left hand. The sisters called her Sister Wren."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Salt Ledger",
+          "claim": "The abbey's ledgers from the year of the wreck are under the Abbess's seal.",
+          "quotes": [
+            "Every book from that year is under the Abbess’s seal."
+          ],
+          "asserted_by": "Sister Wren",
+          "status": "stated"
+        },
+        {
+          "entity": "lamp room key",
+          "claim": "Tomas gave Ines the brass key to the lamp room on an iron ring.",
+          "quotes": [
+            "He put something into it, cold and heavy: an iron ring with a single long brass key, worn smooth at the bow.",
+            "It was the key to the lamp room."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas told Ines the lamp would be hers if anything happened to him and warned her not to give the key to the Guild or Master Oake.",
+          "quotes": [
+            "“If anything happens to me, the lamp is yours,” Tomas said.",
+            "Not to the Guild, and not to Master Oake.”"
+          ],
+          "asserted_by": "Tomas Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Ines Varro",
+          "claim": "Ines wears the lamp room key on its ring around her neck under her shirt.",
+          "quotes": [
+            "She put the key on its ring around her neck, under her shirt."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas was found dead at the bottom of the abbey stair.",
+          "quotes": [
+            "They found Tomas himself at the bottom, three hundred steps down, where the stair turned on the last landing above the beach. He had been dead for some time."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Bram came up from the beach path soaked to the knees, saying he had heard the abbey bell.",
+          "quotes": [
+            "And she remembered Bram Ostrow coming up from the beach path, soaked to the knees, saying he had heard the abbey bell and come to help."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Captain Fenn",
+          "claim": "Captain Fenn commands the town watch and was a clerk before he was a soldier.",
+          "quotes": [
+            "Their commander was Captain Fenn, a thin, careful man with ink on his cuffs who had been a clerk before he was a soldier."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Captain Fenn judges that Tomas slipped in the fog.",
+          "quotes": [
+            "“He slipped in the fog,” the Captain said."
+          ],
+          "asserted_by": "Captain Fenn",
+          "status": "belief"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Ines does not believe Tomas slipped.",
+          "quotes": [
+            "“He climbed stairs every day of his life,” said Ines. “He did not slip.”"
+          ],
+          "asserted_by": "Ines Varro",
+          "status": "belief"
+        }
+      ],
+      "relations": [
+        {
+          "source": "Sister Wren",
+          "target": "Brannoc Abbey",
+          "type": "archivist of",
+          "quotes": [
+            "The archivist was a young woman of perhaps twenty-one, small and quick, with a white scar across the back of her left hand. The sisters called her Sister Wren."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Ines Varro",
+          "target": "lamp room key",
+          "type": "holder of",
+          "quotes": [
+            "She put the key on its ring around her neck, under her shirt."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Brannoc Abbey",
+          "target": "Corvel Quay",
+          "type": "located near",
+          "quotes": [
+            "Brannoc Abbey stood on the headland north of Corvel Quay, at the top of three hundred and twelve steps cut into the cliff."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        }
+      ],
+      "questions_raised": [
+        {
+          "question": "Did Tomas slip on the abbey stair, or was he pushed?",
+          "quote": "“Then tell me who pushed him,” he said, not unkindly, “and I will go and arrest them.”"
+        },
+        {
+          "question": "What was Sister Wren about to say to Tomas in the archive?",
+          "quote": "Ines thought she was going to say something else."
+        },
+        {
+          "question": "What does the sealed abbey copy of the Salt Ledger show for the night of the wreck?",
+          "quote": "Every book from that year is under the Abbess’s seal."
+        },
+        {
+          "question": "Why was Bram on the beach below the stair the night Tomas died?",
+          "quote": "“What were you doing on the beach in this?” she asked him."
+        }
+      ],
+      "questions_resolved": []
+    }
+  },
+  "4": {
+    "timelines": {
+      "new": [],
+      "erased": [],
+      "default": "main"
+    },
+    "extraction": {
+      "synopsis": "At Tomas's burial in Corvel Quay, Master Sabine Oake announces that the Guild will give the lamp to a senior keeper rather than to Ines. On the harbour wall Sister Wren reveals that she is Livia Hale, Tomas's daughter, who washed up below Brannoc Abbey after the wreck with no memory and was raised by the sisters under a new name. She adds that a tall grey woman, whom she now recognises as Master Oake, came asking whether any child had survived the Gannet, and Sister Agathe lied to protect her. Bram Ostrow then demands the lamp room key for Master Oake, who has promised him the keepership; he knocks Livia down and tears the key from Ines's neck, and Ines understands he is now her enemy.",
+      "entities": [
+        {
+          "name": "Livia Hale",
+          "type": "character",
+          "aliases": [
+            {
+              "name": "Sister Wren",
+              "unique": true
+            },
+            {
+              "name": "Wren",
+              "unique": true
+            }
+          ],
+          "summary": "Tomas Hale's daughter, believed drowned in the Gannet wreck, who survived and lives at Brannoc Abbey as the archivist Sister Wren."
+        },
+        {
+          "name": "Bram Ostrow",
+          "type": "character",
+          "aliases": [],
+          "summary": "Former friend of Ines who now serves Master Oake and has taken the lamp room key from Ines by force."
+        },
+        {
+          "name": "lamp room key",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "Brass key to the lamp room, taken from Ines by Bram Ostrow."
+        },
+        {
+          "name": "Sabine Oake",
+          "type": "character",
+          "aliases": [
+            {
+              "name": "Master Oake",
+              "unique": false
+            }
+          ],
+          "summary": "Master of the Lamplighters’ Guild, who wants the lamp room key back and is suspected by Livia of hunting for Gannet survivors."
+        }
+      ],
+      "facts": [
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas Hale was buried in the Guild plot behind the harbour chapel.",
+          "quotes": [
+            "They buried Tomas Hale in the Guild plot behind the harbour chapel on a grey, windless morning."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Sabine Oake",
+          "claim": "Sabine Oake told Ines the lamp would go to a senior keeper, not to her.",
+          "quotes": [
+            "told Ines afterwards that the lamp would be given to a senior keeper until the Guild could decide what was best.",
+            "“Tomas was not the Guild,” said Master Oake"
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Livia Hale",
+          "claim": "Sister Wren is Livia Hale, Tomas Hale's daughter.",
+          "quotes": [
+            "My name was Livia Hale. Tomas was my father.”"
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Livia Hale",
+          "claim": "She got her scar on the rocks below the abbey on the night of the wreck.",
+          "quotes": [
+            "“I got this on the rocks below the abbey,” she said. “Nine years ago, on the ninth of Frostmonth."
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Livia Hale",
+          "claim": "Sister Agathe found her half dead after the wreck, and she had lost her memory.",
+          "quotes": [
+            "Sister Agathe found me there the morning after the wreck, half dead, with my hand cut to the bone. I did not know my own name."
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Livia Hale",
+          "claim": "The sisters raised her and named her Wren.",
+          "quotes": [
+            "The sisters kept me and taught me and called me Wren, because Agathe said I was small and brown and would not stop chattering once I started."
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Livia Hale",
+          "claim": "She recognised Tomas when he came to the archive but was too frightened to speak.",
+          "quotes": [
+            "When your Tomas walked into my archive three days ago I knew his face before he said a word, and I was so frightened I could not speak."
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Sabine Oake",
+          "claim": "A week after the wreck, a tall grey woman Livia identifies as Master Oake came to the abbey asking whether any child from the Gannet had been brought in.",
+          "quotes": [
+            "A week after the wreck, while I was still in the infirmary and did not know who I was, a tall grey woman came to the abbey and asked Sister Agathe whether any child had been brought in from the Gannet.",
+            "I saw the same woman yesterday, reading over my father’s grave.”"
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "belief"
+        },
+        {
+          "entity": "Sister Agathe",
+          "claim": "Sister Agathe lied to the woman, saying no child had been brought in.",
+          "quotes": [
+            "Agathe said no. Afterwards she told me she had lied because she did not like the woman’s hands."
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "stated"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Master Oake promised Bram the keepership of the lamp if he brought her the key.",
+          "quotes": [
+            "The Guild wants it back, and Master Oake has promised me the keepership of the lamp if I bring it to her."
+          ],
+          "asserted_by": "Bram Ostrow",
+          "status": "stated"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Bram knew Tomas gave Ines the key in the cloister.",
+          "quotes": [
+            "Tomas gave it to you in the cloister. I know he did."
+          ],
+          "asserted_by": "Bram Ostrow",
+          "status": "stated"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Ines realises Bram was on the beach below the stair before the bell rang on the night Tomas died.",
+          "quotes": [
+            "“You were on the beach that night,” she said slowly. “Below the stair. Before the bell rang.”"
+          ],
+          "asserted_by": "Ines Varro",
+          "status": "belief"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Bram shoved Livia down and tore the key from Ines's neck.",
+          "quotes": [
+            "Livia threw herself at his arm and he shoved her down onto the stones without looking at her.",
+            "Then he reached into the neck of Ines’s shirt, closed his fist round the iron ring, and pulled until the cord broke."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "lamp room key",
+          "claim": "Bram took the brass key from Ines.",
+          "quotes": [
+            "He stood for a moment with the brass key in his hand, breathing hard."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        }
+      ],
+      "relations": [
+        {
+          "source": "Livia Hale",
+          "target": "Tomas Hale",
+          "type": "daughter of",
+          "quotes": [
+            "My name was Livia Hale. Tomas was my father.”"
+          ],
+          "asserted_by": "Livia Hale",
+          "status": "stated"
+        },
+        {
+          "source": "Bram Ostrow",
+          "target": "Ines Varro",
+          "type": "enemy of",
+          "quotes": [
+            "Ines knelt beside Livia and helped her sit up, and watched the boy she had learned her letters beside go up the hill towards the Guild hall, and understood that whatever he had been to her before, he was her enemy now."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Bram Ostrow",
+          "target": "Sabine Oake",
+          "type": "agent of",
+          "quotes": [
+            "The Guild wants it back, and Master Oake has promised me the keepership of the lamp if I bring it to her."
+          ],
+          "asserted_by": "Bram Ostrow",
+          "status": "stated"
+        },
+        {
+          "source": "Bram Ostrow",
+          "target": "lamp room key",
+          "type": "holder of",
+          "quotes": [
+            "He stood for a moment with the brass key in his hand, breathing hard."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        }
+      ],
+      "questions_raised": [],
+      "questions_resolved": [
+        {
+          "id": "Q0002-01",
+          "answer": "Livia survived the wreck, washed up below Brannoc Abbey without her memory, and lives there as Sister Wren.",
+          "quote": "My name was Livia Hale. Tomas was my father.”"
+        },
+        {
+          "id": "Q0003-02",
+          "answer": "She had recognised Tomas as her father and was too frightened to tell him.",
+          "quote": "When your Tomas walked into my archive three days ago I knew his face before he said a word, and I was so frightened I could not speak."
+        }
+      ]
+    }
+  },
+  "5": {
+    "timelines": {
+      "new": [],
+      "erased": [],
+      "default": "main"
+    },
+    "extraction": {
+      "synopsis": "Livia breaks the Abbess's seal on the abbey's fair copy of the Salt Ledger, whose Keys Drawn column shows that Sabine Oake drew the master's key at six o'clock on the night of the wreck. At the watch house Odile Marr tells Captain Fenn she saw the master's grey barge leaving the dark lamp tower that night. Confronted in the Guild hall, Sabine Oake confesses she put out the lamp to drown an auditor who would have exposed her theft from the Guild's accounts, and Bram Ostrow confesses he was grappling with Tomas for the key at the top of the stair when Tomas fell. Fenn arrests both, with the key still in Bram's pocket, and that evening Ines and Livia light the harbour lamp together.",
+      "entities": [
+        {
+          "name": "Sabine Oake",
+          "type": "character",
+          "aliases": [
+            {
+              "name": "Master Oake",
+              "unique": false
+            }
+          ],
+          "summary": "Master of the Lamplighters’ Guild who put out the harbour lamp to wreck the Gannet; arrested by Captain Fenn."
+        },
+        {
+          "name": "Bram Ostrow",
+          "type": "character",
+          "aliases": [],
+          "summary": "Former friend of Ines who struggled with Tomas for the key when Tomas fell; arrested for Tomas's death."
+        },
+        {
+          "name": "Salt Ledger",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "The Guild's lamp record; the abbey's uncut copy shows the master's key drawn by S. Oake on the night of the wreck."
+        },
+        {
+          "name": "lamp room key",
+          "type": "artifact",
+          "aliases": [],
+          "summary": "Brass key to the lamp room, still in Bram's pocket when he is arrested."
+        }
+      ],
+      "facts": [
+        {
+          "entity": "Livia Hale",
+          "claim": "Livia broke the Abbess's seal on the ledger by candlelight under the chapel.",
+          "quotes": [
+            "Livia Hale broke the Abbess’s seal that night by candlelight, in the stone room under the chapel, with Ines holding the candle."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Salt Ledger",
+          "claim": "The ledger has a Keys Drawn column recording every time a lamp room key left the Guild hall.",
+          "quotes": [
+            "at the far right, a narrow column headed Keys Drawn, where the Guild recorded every time a key to the lamp room left the hall."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Sabine Oake",
+          "claim": "The abbey copy records that S. Oake drew the master's key at six o'clock on the night of the wreck.",
+          "quotes": [
+            "And in the narrow column at the edge of the page: Master’s key drawn at six o’clock, S. Oake."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Salt Ledger",
+          "claim": "Ines concludes the cut page was removed to hide the key entry.",
+          "quotes": [
+            "“That is what she cut out,” Ines said. “Not the lamp. The key.”"
+          ],
+          "asserted_by": "Ines Varro",
+          "status": "belief"
+        },
+        {
+          "entity": "Odile Marr",
+          "claim": "Odile Marr saw the master's grey Guild barge pulling away from the dark lamp tower on the night of the wreck.",
+          "quotes": [
+            "That night, when I came up out of the water with the line in my teeth, the first thing I saw was a grey Guild barge pulling away from the foot of the lamp tower with no light in her.",
+            "It was the master’s.”"
+          ],
+          "asserted_by": "Odile Marr",
+          "status": "stated"
+        },
+        {
+          "entity": "Sabine Oake",
+          "claim": "An auditor coming to examine the Guild's accounts was aboard the Gannet.",
+          "quotes": [
+            "“There was an auditor aboard the Gannet,” she said, in her soft, even voice. “He was coming down from the north to examine the Guild’s accounts."
+          ],
+          "asserted_by": "Sabine Oake",
+          "status": "stated"
+        },
+        {
+          "entity": "Sabine Oake",
+          "claim": "Sabine Oake had been stealing from the Guild's accounts and put out the lamp.",
+          "quotes": [
+            "I had been taking from them for two years, and he would have found it in a week. I put out the lamp."
+          ],
+          "asserted_by": "Sabine Oake",
+          "status": "stated"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Sabine Oake told Bram to get the key from Tomas.",
+          "quotes": [
+            "“She told me to get the key from Tomas,” he said."
+          ],
+          "asserted_by": "Bram Ostrow",
+          "status": "stated"
+        },
+        {
+          "entity": "Bram Ostrow",
+          "claim": "Bram followed Tomas out of the abbey gate and demanded the key, not believing Tomas did not have it.",
+          "quotes": [
+            "I followed him out of the abbey gate in the fog and asked him for it, and he said he did not have it, and I did not believe him."
+          ],
+          "asserted_by": "Bram Ostrow",
+          "status": "stated"
+        },
+        {
+          "entity": "Tomas Hale",
+          "claim": "Tomas fell from the top of the stair while pulling away from Bram, who was holding his coat.",
+          "quotes": [
+            "I took hold of his coat. He pulled away from me at the top of the stair and the stone was wet.",
+            "I swear I did not push him. But I was holding his coat when he went.”"
+          ],
+          "asserted_by": "Bram Ostrow",
+          "status": "stated"
+        },
+        {
+          "entity": "Captain Fenn",
+          "claim": "Captain Fenn arrested Sabine Oake for the wreck and twenty-two deaths, and Bram Ostrow for the death of Tomas Hale.",
+          "quotes": [
+            "Captain Fenn arrested Sabine Oake for the wreck of the Gannet and the deaths of twenty-two people, and Bram Ostrow for the death of Tomas Hale."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "lamp room key",
+          "claim": "The lamp room key was still in Bram's pocket when he was led away.",
+          "quotes": [
+            "The brass key to the lamp room was still in Bram’s pocket when the watch led him away."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "entity": "Ines Varro",
+          "claim": "Ines lit the harbour lamp and recorded both her own and Livia's names as keepers.",
+          "quotes": [
+            "At half past four Ines lit the harbour lamp and wrote the hour in the Salt Ledger",
+            "in the column for the keeper’s name, she wrote both of theirs."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        }
+      ],
+      "relations": [
+        {
+          "source": "Sabine Oake",
+          "target": "Gannet",
+          "type": "wrecked",
+          "quotes": [
+            "“There was an auditor aboard the Gannet,” she said, in her soft, even voice.",
+            "I put out the lamp."
+          ],
+          "asserted_by": "Sabine Oake",
+          "status": "stated"
+        },
+        {
+          "source": "Captain Fenn",
+          "target": "Sabine Oake",
+          "type": "arrested",
+          "quotes": [
+            "Captain Fenn arrested Sabine Oake for the wreck of the Gannet and the deaths of twenty-two people, and Bram Ostrow for the death of Tomas Hale."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Captain Fenn",
+          "target": "Bram Ostrow",
+          "type": "arrested",
+          "quotes": [
+            "Captain Fenn arrested Sabine Oake for the wreck of the Gannet and the deaths of twenty-two people, and Bram Ostrow for the death of Tomas Hale."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        },
+        {
+          "source": "Livia Hale",
+          "target": "harbour lamp",
+          "type": "keeper of",
+          "quotes": [
+            "in the column for the keeper’s name, she wrote both of theirs."
+          ],
+          "asserted_by": "narrator",
+          "status": "implied"
+        },
+        {
+          "source": "Ines Varro",
+          "target": "harbour lamp",
+          "type": "keeper of",
+          "quotes": [
+            "At half past four Ines lit the harbour lamp and wrote the hour in the Salt Ledger",
+            "in the column for the keeper’s name, she wrote both of theirs."
+          ],
+          "asserted_by": "narrator",
+          "status": "stated"
+        }
+      ],
+      "questions_raised": [],
+      "questions_resolved": [
+        {
+          "id": "Q0001-01",
+          "answer": "The cut page recorded that S. Oake drew the master's key at six o'clock that night; Ines concludes that entry is what was cut out.",
+          "quote": "“That is what she cut out,” Ines said. “Not the lamp. The key.”"
+        },
+        {
+          "id": "Q0001-02",
+          "answer": "Sabine Oake, master of the Guild, put out the lamp to drown an auditor who would have exposed her theft.",
+          "quote": "I had been taking from them for two years, and he would have found it in a week. I put out the lamp."
+        },
+        {
+          "id": "Q0001-03",
+          "answer": "She saw the master's grey Guild barge leaving the dark lamp tower that night.",
+          "quote": "That night, when I came up out of the water with the line in my teeth, the first thing I saw was a grey Guild barge pulling away from the foot of the lamp tower with no light in her."
+        },
+        {
+          "id": "Q0003-01",
+          "answer": "He fell from the top of the stair while pulling away from Bram, who was holding his coat; Bram denies pushing him.",
+          "quote": "I took hold of his coat. He pulled away from me at the top of the stair and the stone was wet."
+        },
+        {
+          "id": "Q0003-03",
+          "answer": "Its Keys Drawn column shows the master's key drawn by S. Oake at six o'clock on the night of the wreck.",
+          "quote": "And in the narrow column at the edge of the page: Master’s key drawn at six o’clock, S. Oake."
+        },
+        {
+          "id": "Q0003-04",
+          "answer": "He had followed Tomas out of the abbey gate on Sabine Oake's orders to take the lamp room key.",
+          "quote": "I followed him out of the abbey gate in the fog and asked him for it, and he said he did not have it, and I did not believe him."
+        }
+      ]
+    }
+  }
+}

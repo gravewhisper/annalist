@@ -1,0 +1,973 @@
+{
+  "schema_version": 1,
+  "book": {
+    "title": "The Hound of the Baskervilles",
+    "author": "Arthur Conan Doyle",
+    "source": "Project Gutenberg eBook #2852",
+    "epub": "hound.epub",
+    "notes": "Spine order: wrap0000 (cover), h-0 (Gutenberg header), h-1 (dedication), h-2 (contents), h-3..h-17 (chapters 1-15). h-17 ends with THE END and then the Gutenberg license, which is not chapter text; the checker cuts it at '*** END OF THE PROJECT GUTENBERG'. Entity types follow Annalist's vocabulary (character, place, organization, artifact); the hound has no exact type, so accepted_types lists what passes. Compare names with apostrophes folded: the text uses U+2019."
+  },
+  "chapters": [
+    {
+      "index": 1,
+      "title": "Mr. Sherlock Holmes",
+      "href": "OEBPS/3035790325129856491_2852-h-3.htm.html"
+    },
+    {
+      "index": 2,
+      "title": "The Curse of the Baskervilles",
+      "href": "OEBPS/3035790325129856491_2852-h-4.htm.html"
+    },
+    {
+      "index": 3,
+      "title": "The Problem",
+      "href": "OEBPS/3035790325129856491_2852-h-5.htm.html"
+    },
+    {
+      "index": 4,
+      "title": "Sir Henry Baskerville",
+      "href": "OEBPS/3035790325129856491_2852-h-6.htm.html"
+    },
+    {
+      "index": 5,
+      "title": "Three Broken Threads",
+      "href": "OEBPS/3035790325129856491_2852-h-7.htm.html"
+    },
+    {
+      "index": 6,
+      "title": "Baskerville Hall",
+      "href": "OEBPS/3035790325129856491_2852-h-8.htm.html"
+    },
+    {
+      "index": 7,
+      "title": "The Stapletons of Merripit House",
+      "href": "OEBPS/3035790325129856491_2852-h-9.htm.html"
+    },
+    {
+      "index": 8,
+      "title": "First Report of Dr. Watson",
+      "href": "OEBPS/3035790325129856491_2852-h-10.htm.html"
+    },
+    {
+      "index": 9,
+      "title": "The Light upon the Moor [Second Report of Dr. Watson]",
+      "href": "OEBPS/3035790325129856491_2852-h-11.htm.html"
+    },
+    {
+      "index": 10,
+      "title": "Extract from the Diary of Dr. Watson",
+      "href": "OEBPS/3035790325129856491_2852-h-12.htm.html"
+    },
+    {
+      "index": 11,
+      "title": "The Man on the Tor",
+      "href": "OEBPS/3035790325129856491_2852-h-13.htm.html"
+    },
+    {
+      "index": 12,
+      "title": "Death on the Moor",
+      "href": "OEBPS/3035790325129856491_2852-h-14.htm.html"
+    },
+    {
+      "index": 13,
+      "title": "Fixing the Nets",
+      "href": "OEBPS/3035790325129856491_2852-h-15.htm.html"
+    },
+    {
+      "index": 14,
+      "title": "The Hound of the Baskervilles",
+      "href": "OEBPS/3035790325129856491_2852-h-16.htm.html"
+    },
+    {
+      "index": 15,
+      "title": "A Retrospection",
+      "href": "OEBPS/3035790325129856491_2852-h-17.htm.html"
+    }
+  ],
+  "non_chapter_spine_items": [
+    {
+      "href": "OEBPS/wrap0000.html",
+      "kind": "cover"
+    },
+    {
+      "href": "OEBPS/3035790325129856491_2852-h-0.htm.html",
+      "kind": "gutenberg_header"
+    },
+    {
+      "href": "OEBPS/3035790325129856491_2852-h-1.htm.html",
+      "kind": "dedication"
+    },
+    {
+      "href": "OEBPS/3035790325129856491_2852-h-2.htm.html",
+      "kind": "table_of_contents"
+    }
+  ],
+  "entities": [
+    {
+      "id": "holmes",
+      "name": "Sherlock Holmes",
+      "type": "character",
+      "aliases": [
+        "Holmes",
+        "Mr. Holmes",
+        "Mr. Sherlock Holmes"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "watson",
+      "name": "Dr. Watson",
+      "type": "character",
+      "aliases": [
+        "Watson",
+        "Dr. John Watson"
+      ],
+      "first_chapter": 1,
+      "notes": "Narrator. The forename John is not in this text; only accept 'Watson' and 'Dr. Watson' as required aliases."
+    },
+    {
+      "id": "mortimer",
+      "name": "Dr. James Mortimer",
+      "type": "character",
+      "aliases": [
+        "Mortimer",
+        "Dr. Mortimer",
+        "James Mortimer"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "sir_charles",
+      "name": "Sir Charles Baskerville",
+      "type": "character",
+      "aliases": [
+        "Sir Charles",
+        "Charles Baskerville"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "sir_henry",
+      "name": "Sir Henry Baskerville",
+      "type": "character",
+      "aliases": [
+        "Sir Henry",
+        "Henry Baskerville",
+        "Mr. Henry Baskerville",
+        "the baronet"
+      ],
+      "first_chapter": 2,
+      "notes": "'the baronet' is a title, not a name; from ch 4 on it means Sir Henry, but in ch 2 Sir Charles holds the baronetcy."
+    },
+    {
+      "id": "hugo",
+      "name": "Hugo Baskerville",
+      "type": "character",
+      "aliases": [
+        "Hugo",
+        "old Hugo"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "rodger_elder",
+      "name": "Rodger Baskerville (Sir Charles's brother)",
+      "type": "character",
+      "aliases": [
+        "Rodger Baskerville"
+      ],
+      "first_chapter": 3,
+      "notes": "Must stay distinct from both Hugo's son Rodger (ch 2 legend) and Stapleton, whose real name is also Rodger Baskerville (ch 15)."
+    },
+    {
+      "id": "stapleton",
+      "name": "Stapleton",
+      "type": "character",
+      "aliases": [
+        "Jack Stapleton",
+        "Mr. Stapleton",
+        "Jack",
+        "the naturalist",
+        "Vandeleur",
+        "Rodger Baskerville"
+      ],
+      "first_chapter": 2,
+      "notes": "Vandeleur is linkable from ch 13; Rodger Baskerville from ch 15. See identity_reveals."
+    },
+    {
+      "id": "beryl",
+      "name": "Beryl Stapleton",
+      "type": "character",
+      "aliases": [
+        "Miss Stapleton",
+        "Beryl",
+        "Mrs. Stapleton",
+        "Mrs. Vandeleur",
+        "Beryl Garcia"
+      ],
+      "first_chapter": 6,
+      "notes": "First referred to as Stapleton's 'sister' in ch 6; named Beryl in ch 7."
+    },
+    {
+      "id": "barrymore",
+      "name": "Barrymore",
+      "type": "character",
+      "aliases": [
+        "John Barrymore",
+        "the butler"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "mrs_barrymore",
+      "name": "Mrs. Barrymore",
+      "type": "character",
+      "aliases": [
+        "Eliza",
+        "Eliza Barrymore",
+        "the housekeeper"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "selden",
+      "name": "Selden",
+      "type": "character",
+      "aliases": [
+        "the convict",
+        "the Notting Hill murderer",
+        "the escaped convict"
+      ],
+      "first_chapter": 6
+    },
+    {
+      "id": "frankland",
+      "name": "Mr. Frankland",
+      "type": "character",
+      "aliases": [
+        "Frankland",
+        "Frankland of Lafter Hall",
+        "old Frankland"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "laura_lyons",
+      "name": "Laura Lyons",
+      "type": "character",
+      "aliases": [
+        "Mrs. Laura Lyons",
+        "Mrs. Lyons",
+        "L. L."
+      ],
+      "first_chapter": 10
+    },
+    {
+      "id": "cartwright",
+      "name": "Cartwright",
+      "type": "character",
+      "aliases": [
+        "the boy"
+      ],
+      "first_chapter": 4,
+      "notes": "'the boy' is generic; only link it to Cartwright for the moor boy from ch 12."
+    },
+    {
+      "id": "lestrade",
+      "name": "Lestrade",
+      "type": "character",
+      "aliases": [],
+      "first_chapter": 13
+    },
+    {
+      "id": "clayton",
+      "name": "John Clayton",
+      "type": "character",
+      "aliases": [
+        "Clayton",
+        "the cabman"
+      ],
+      "first_chapter": 5
+    },
+    {
+      "id": "desmond",
+      "name": "James Desmond",
+      "type": "character",
+      "aliases": [
+        "Mr. James Desmond"
+      ],
+      "first_chapter": 5
+    },
+    {
+      "id": "hound",
+      "name": "The Hound of the Baskervilles",
+      "type": "creature",
+      "aliases": [
+        "the hound",
+        "the Hound",
+        "the beast",
+        "the creature"
+      ],
+      "first_chapter": 2,
+      "notes": "The legendary hound (ch 2) and Stapleton's real dog (ch 14) are presented as one creature in the narrative; a wiki may split legend and real animal. Accept either.",
+      "accepted_types": [
+        "creature",
+        "animal",
+        "artifact",
+        "concept"
+      ]
+    },
+    {
+      "id": "baskerville_hall",
+      "name": "Baskerville Hall",
+      "type": "place",
+      "aliases": [
+        "the Hall"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "merripit_house",
+      "name": "Merripit House",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 7
+    },
+    {
+      "id": "grimpen_mire",
+      "name": "Grimpen Mire",
+      "type": "place",
+      "aliases": [
+        "the great Grimpen Mire",
+        "the mire"
+      ],
+      "first_chapter": 7
+    },
+    {
+      "id": "coombe_tracey",
+      "name": "Coombe Tracey",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 10
+    },
+    {
+      "id": "lafter_hall",
+      "name": "Lafter Hall",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 2
+    },
+    {
+      "id": "dartmoor",
+      "name": "Dartmoor",
+      "type": "place",
+      "aliases": [
+        "the moor"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "princetown",
+      "name": "Princetown",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 3
+    },
+    {
+      "id": "charing_cross_hospital",
+      "name": "Charing Cross Hospital",
+      "type": "organization",
+      "aliases": [
+        "C.C.H."
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "boot",
+      "name": "Sir Henry's stolen boots",
+      "type": "artifact",
+      "aliases": [
+        "the new brown boot",
+        "the old black boot",
+        "the missing boot"
+      ],
+      "first_chapter": 4
+    },
+    {
+      "id": "warning_letter",
+      "name": "The warning letter",
+      "type": "artifact",
+      "aliases": [
+        "the printed letter"
+      ],
+      "first_chapter": 4
+    },
+    {
+      "id": "stick",
+      "name": "Dr. Mortimer's walking stick",
+      "type": "artifact",
+      "aliases": [
+        "Penang lawyer",
+        "the stick"
+      ],
+      "first_chapter": 1
+    }
+  ],
+  "statuses": [
+    {
+      "entity": "sir_charles",
+      "timeline": [
+        {
+          "chapter": 2,
+          "status": "dead",
+          "quote": {
+            "chapter": 2,
+            "text": "whose sudden and tragic death some three months ago created so much excitement in Devonshire"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "selden",
+      "timeline": [
+        {
+          "chapter": 6,
+          "status": "at large (escaped convict)",
+          "quote": {
+            "chapter": 6,
+            "text": "“There’s a convict escaped from Princetown, sir."
+          }
+        },
+        {
+          "chapter": 12,
+          "status": "dead",
+          "quote": {
+            "chapter": 12,
+            "text": "“It is Selden, the man who escaped from Princetown.”"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "stapleton",
+      "timeline": [
+        {
+          "chapter": 7,
+          "status": "alive",
+          "quote": {
+            "chapter": 7,
+            "text": "I am Stapleton, of Merripit House.”"
+          }
+        },
+        {
+          "chapter": 14,
+          "status": "fled; presumed dead in Grimpen Mire",
+          "quote": {
+            "chapter": 14,
+            "text": "this cold and cruel-hearted man is forever buried"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "hound",
+      "timeline": [
+        {
+          "chapter": 14,
+          "status": "dead (shot by Holmes)",
+          "quote": {
+            "chapter": 14,
+            "text": "Holmes had emptied five barrels of his revolver into the creature’s flank"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "sir_henry",
+      "timeline": [
+        {
+          "chapter": 4,
+          "status": "alive",
+          "quote": {
+            "chapter": 4,
+            "text": "“Sir Henry Baskerville, Northumberland Hotel,”"
+          }
+        },
+        {
+          "chapter": 14,
+          "status": "alive; ill with fever, nerves shattered",
+          "quote": {
+            "chapter": 14,
+            "text": "before morning he lay delirious in a high fever under the care of Dr. Mortimer"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "rodger_elder",
+      "timeline": [
+        {
+          "chapter": 3,
+          "status": "dead (1876, yellow fever)",
+          "quote": {
+            "chapter": 3,
+            "text": "fled to Central America, and died there in 1876 of yellow fever"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "hugo",
+      "timeline": [
+        {
+          "chapter": 2,
+          "status": "dead (legend)",
+          "quote": {
+            "chapter": 2,
+            "text": "the thing tore the throat out of Hugo Baskerville"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "beryl",
+      "timeline": [
+        {
+          "chapter": 14,
+          "status": "rescued after being tied up by Stapleton",
+          "quote": {
+            "chapter": 14,
+            "text": "In a minute we had torn off the gag, unswathed the bonds, and Mrs. Stapleton sank upon the floor in front of us."
+          }
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "source": "sir_henry",
+      "target": "sir_charles",
+      "type": "nephew_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "the son of Sir Charles Baskerville’s younger brother"
+      }
+    },
+    {
+      "source": "sir_henry",
+      "target": "sir_charles",
+      "type": "heir_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "It is understood that the next of kin is Mr. Henry Baskerville"
+      }
+    },
+    {
+      "source": "barrymore",
+      "target": "baskerville_hall",
+      "type": "butler_at",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "the husband acting as butler and the wife as housekeeper"
+      }
+    },
+    {
+      "source": "barrymore",
+      "target": "mrs_barrymore",
+      "type": "married_to",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "a married couple named Barrymore"
+      }
+    },
+    {
+      "source": "mrs_barrymore",
+      "target": "selden",
+      "type": "sister_of",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "my name was Selden, and he is my younger brother"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "beryl",
+      "type": "presented_as_brother_of",
+      "first_chapter": 6,
+      "valid_until_chapter": 11,
+      "superseded_by": "married_to",
+      "quote": {
+        "chapter": 6,
+        "text": "There is this naturalist, Stapleton, and there is his sister"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "beryl",
+      "type": "married_to",
+      "first_chapter": 12,
+      "quote": {
+        "chapter": 12,
+        "text": "The lady who has passed here as Miss Stapleton is in reality his wife."
+      }
+    },
+    {
+      "source": "laura_lyons",
+      "target": "frankland",
+      "type": "daughter_of",
+      "first_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "“She is Frankland’s daughter.”"
+      }
+    },
+    {
+      "source": "mortimer",
+      "target": "sir_charles",
+      "type": "friend_and_physician_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "For this reason I saw a good deal of Sir Charles Baskerville."
+      }
+    },
+    {
+      "source": "mortimer",
+      "target": "sir_charles",
+      "type": "executor_of",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "a trustee and executor of Sir Charles’s will"
+      }
+    },
+    {
+      "source": "cartwright",
+      "target": "holmes",
+      "type": "assistant_of",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "Let me have a report by wire at Baker Street before evening."
+      },
+      "lenient": true
+    },
+    {
+      "source": "watson",
+      "target": "sir_henry",
+      "type": "guardian_of",
+      "first_chapter": 6,
+      "quote": {
+        "chapter": 6,
+        "text": "These are the folk who must be your very special study.”"
+      },
+      "lenient": true
+    },
+    {
+      "source": "sir_henry",
+      "target": "beryl",
+      "type": "suitor_of",
+      "first_chapter": 8,
+      "quote": {
+        "chapter": 8,
+        "text": "From the first moment that he saw her he appeared to be strongly attracted by her"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "laura_lyons",
+      "type": "promised_marriage_to",
+      "first_chapter": 12,
+      "quote": {
+        "chapter": 12,
+        "text": "regarding Stapleton as an unmarried man, she counted no doubt upon becoming his wife"
+      }
+    },
+    {
+      "source": "laura_lyons",
+      "target": "sir_charles",
+      "type": "wrote_letter_to",
+      "first_chapter": 11,
+      "quote": {
+        "chapter": 11,
+        "text": "“Yes, I did write it,” she cried"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "laura_lyons",
+      "type": "dictated_letter_of",
+      "first_chapter": 13,
+      "quote": {
+        "chapter": 13,
+        "text": "“He dictated it.”"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "hound",
+      "type": "owner_of",
+      "first_chapter": 14,
+      "quote": {
+        "chapter": 14,
+        "text": "There is an old tin mine on an island in the heart of the mire. It was there that he kept his hound"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "rodger_elder",
+      "type": "son_of",
+      "first_chapter": 15,
+      "quote": {
+        "chapter": 15,
+        "text": "He was a son of that Rodger Baskerville, the younger brother of Sir Charles"
+      }
+    },
+    {
+      "source": "rodger_elder",
+      "target": "sir_charles",
+      "type": "brother_of",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "Rodger Baskerville, the youngest of three brothers of whom poor Sir Charles was the elder"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "merripit_house",
+      "type": "lives_at",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "I am Stapleton, of Merripit House.”"
+      }
+    },
+    {
+      "source": "frankland",
+      "target": "lafter_hall",
+      "type": "lives_at",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "Mr. Frankland, of Lafter Hall"
+      }
+    },
+    {
+      "source": "laura_lyons",
+      "target": "coombe_tracey",
+      "type": "lives_at",
+      "first_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "but she lives in Coombe Tracey"
+      }
+    },
+    {
+      "source": "selden",
+      "target": "princetown",
+      "type": "escaped_from",
+      "first_chapter": 6,
+      "quote": {
+        "chapter": 6,
+        "text": "“There’s a convict escaped from Princetown, sir."
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "sir_charles",
+      "type": "killed",
+      "first_chapter": 12,
+      "lenient": true,
+      "quote": {
+        "chapter": 12,
+        "text": "“It is he, then, who is our enemy"
+      }
+    },
+    {
+      "source": "stapleton",
+      "target": "sir_henry",
+      "type": "enemy_of",
+      "first_chapter": 12,
+      "quote": {
+        "chapter": 12,
+        "text": "“It is he, then, who is our enemy—it is he who dogged us in London?”"
+      }
+    },
+    {
+      "source": "lestrade",
+      "target": "holmes",
+      "type": "assists",
+      "first_chapter": 13,
+      "quote": {
+        "chapter": 13,
+        "text": "Wire received. Coming down with unsigned warrant. Arrive five-forty. Lestrade."
+      }
+    },
+    {
+      "source": "mortimer",
+      "target": "charing_cross_hospital",
+      "type": "former_house_surgeon_at",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "House-surgeon, from 1882 to 1884, at Charing Cross Hospital."
+      }
+    }
+  ],
+  "identity_reveals": [
+    {
+      "entity": "beryl",
+      "alias": "Mrs. Stapleton",
+      "reveal_chapter": 12,
+      "rule": "Before ch 12, 'Miss Stapleton' must be modelled as Stapleton's sister; no 'wife' or 'Mrs. Stapleton' link.",
+      "quote": {
+        "chapter": 12,
+        "text": "The lady who has passed here as Miss Stapleton is in reality his wife."
+      }
+    },
+    {
+      "entity": "stapleton",
+      "alias": "Vandeleur",
+      "reveal_chapter": 13,
+      "rule": "No Vandeleur alias before ch 13.",
+      "quote": {
+        "chapter": 13,
+        "text": "It is indorsed ‘Mr. and Mrs. Vandeleur,’"
+      }
+    },
+    {
+      "entity": "beryl",
+      "alias": "Mrs. Vandeleur",
+      "reveal_chapter": 13,
+      "quote": {
+        "chapter": 13,
+        "text": "It is indorsed ‘Mr. and Mrs. Vandeleur,’"
+      }
+    },
+    {
+      "entity": "stapleton",
+      "alias": "Rodger Baskerville",
+      "reveal_chapter": 15,
+      "rule": "Before ch 15 'Rodger Baskerville' is only Sir Charles's dead brother (and Hugo's son in the legend); linking it to Stapleton is a spoiler.",
+      "quote": {
+        "chapter": 15,
+        "text": "this fellow, whose real name is the same as his father’s"
+      }
+    },
+    {
+      "entity": "beryl",
+      "alias": "Beryl Garcia",
+      "reveal_chapter": 15,
+      "quote": {
+        "chapter": 15,
+        "text": "He married Beryl Garcia, one of the beauties of Costa Rica"
+      }
+    },
+    {
+      "entity": "holmes",
+      "alias": "the man on the tor",
+      "reveal_chapter": 12,
+      "lenient_reveal_chapter": 11,
+      "rule": "The unknown watcher of ch 9-11 must not be linked to Holmes before ch 11's final line; ch 12 names him.",
+      "quote": {
+        "chapter": 12,
+        "text": "You saw me, perhaps, on the night of the convict hunt"
+      }
+    },
+    {
+      "entity": "stapleton",
+      "alias": "the bearded man in the cab",
+      "reveal_chapter": 12,
+      "quote": {
+        "chapter": 12,
+        "text": "it is he who dogged us in London?” “So I read the riddle.”"
+      }
+    },
+    {
+      "entity": "laura_lyons",
+      "alias": "L. L.",
+      "reveal_chapter": 10,
+      "rule": "Mortimer proposes the match in ch 10; she confirms in ch 11.",
+      "quote": {
+        "chapter": 10,
+        "text": "“There is Laura Lyons—her initials are L. L.—but she lives in Coombe Tracey.”"
+      }
+    },
+    {
+      "entity": "selden",
+      "alias": "the man Barrymore signals",
+      "reveal_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "This, then, was the explanation of the stealthy expeditions at night and the light at the window."
+      }
+    },
+    {
+      "entity": "cartwright",
+      "alias": "the boy on the moor",
+      "reveal_chapter": 12,
+      "quote": {
+        "chapter": 12,
+        "text": "I brought Cartwright down with me"
+      }
+    }
+  ],
+  "must_not_merge": [
+    {
+      "alias": "Sherlock Holmes (name given to the cabman)",
+      "entities": [
+        "holmes",
+        "stapleton"
+      ],
+      "rule": "The cab fare told Clayton his name was Sherlock Holmes. That was Stapleton lying. Never add 'Sherlock Holmes' as a Stapleton alias, and never record Holmes as the cab passenger.",
+      "quote": {
+        "chapter": 5,
+        "text": "Snap goes our third thread, and we end where we began"
+      }
+    },
+    {
+      "alias": "Rodger Baskerville",
+      "entities": [
+        "rodger_elder",
+        "stapleton"
+      ],
+      "rule": "Same name, father and son. Keep two entities even after ch 15; Hugo's son Rodger in the ch 2 legend is a third person."
+    },
+    {
+      "alias": "the baronet",
+      "entities": [
+        "sir_charles",
+        "sir_henry"
+      ],
+      "rule": "Generic title. Do not merge Sir Charles and Sir Henry through it."
+    },
+    {
+      "alias": "Barrymore (as bearded spy)",
+      "entities": [
+        "barrymore",
+        "stapleton"
+      ],
+      "rule": "Watson suspects Barrymore was the man in the cab (ch 7). The suspicion is wrong; never record it as fact."
+    }
+  ],
+  "ambiguities": [
+    "Man on the tor: ch 11 ends with 'a well-known voice' at the hut; ch 12 names Holmes. Accept reveal at ch 11 or 12.",
+    "Bearded man in the cab: ch 12 identifies Stapleton by Holmes's reasoning ('So I read the riddle'); ch 15 states the beard disguise as fact. Accept 12 or 15.",
+    "L. L.: Mortimer suggests Laura Lyons in ch 10; she admits authorship in ch 11. Accept 10 or 11.",
+    "Who killed Sir Charles: no one touched him. He died of heart failure from fright at the hound Stapleton set on him. Accept 'Stapleton' or 'heart failure caused by Stapleton's hound'; reject 'the hound bit him'.",
+    "Stapleton's fate: presumed drowned in Grimpen Mire, body never found. 'Dead' and 'presumed dead' both pass; 'arrested' or 'escaped' fail.",
+    "The hound: legend (ch 2) versus real dog (ch 14). Either one entity or two linked entities passes.",
+    "Stapleton's real name: 'whose real name is the same as his father's' implies Rodger Baskerville; the text never spells 'Rodger Baskerville' for the son directly.",
+    "Watson's forename (John) does not appear in this book; do not require it.",
+    "Sir Charles's death is first reported in ch 2, not ch 1. Ch 1 only deduces Mortimer from his stick.",
+    "Relation stapleton killed sir_charles: ch 12 makes Stapleton 'our enemy' and the planner; the full mechanism is ch 15. Lenient on first_chapter (12 to 15).",
+    "Cartwright as Holmes's assistant: errand boy in ch 4 (hotel search), hidden helper on the moor revealed ch 12. Accept first_chapter 4 or 12.",
+    "Beryl's first mention: 'his sister' in ch 6 (Holmes's list), first named Beryl in ch 7. Accept 6 or 7."
+  ]
+}

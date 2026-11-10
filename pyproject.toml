@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "annalist"
+version = "1.0.3"
+description = "Turn a novel into a spoiler-safe wiki, one chapter at a time"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/gravewhisper/annalist"
+
+[project.scripts]
+annalist = "annalist.cli:main"
+
+[tool.setuptools]
+packages = ["annalist"]
+
+[tool.setuptools.package-data]
+annalist = ["site/*", "themes/*"]

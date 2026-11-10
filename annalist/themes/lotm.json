@@ -1,0 +1,40 @@
+{
+  "title": "Lord of the Mysteries",
+  "theme": {
+    "heading_font": "Cinzel",
+    "font_url": [
+      "https://cdn.jsdelivr.net/npm/@fontsource/cinzel@5.0.13/500.css",
+      "https://cdn.jsdelivr.net/npm/@fontsource/cinzel@5.0.13/700.css"
+    ],
+    "light": {
+      "bg": "#f6f1e7",
+      "fg": "#2a2233",
+      "muted": "#6f6480",
+      "line": "#e2d8c6",
+      "card": "#fffdf8",
+      "hover": "#f1e9da",
+      "accent": "#9a7434",
+      "accentfg": "#ffffff",
+      "link": "#6b3fa0",
+      "heading": "#3b2a5c",
+      "quotebg": "#f5eedf",
+      "glow": "#eadff7",
+      "glow2": "#f3e6c8"
+    },
+    "dark": {
+      "bg": "#0d0b12",
+      "fg": "#e6e1f0",
+      "muted": "#8e86a3",
+      "line": "#2a2438",
+      "card": "#16131f",
+      "hover": "#221d30",
+      "accent": "#b38b4d",
+      "accentfg": "#0d0b12",
+      "link": "#c9a8ff",
+      "heading": "#f3e8c8",
+      "quotebg": "#1d1828",
+      "glow": "#2a1a45",
+      "glow2": "#1a2238"
+    }
+  }
+}

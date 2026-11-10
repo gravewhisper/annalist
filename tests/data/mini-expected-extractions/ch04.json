@@ -1,0 +1,262 @@
+{
+  "chapter": 4,
+  "title": "Two Names",
+  "href": "OEBPS/text/part-b.xhtml",
+  "extraction": {
+    "synopsis": "At Tomas's burial in Corvel Quay, Master Sabine Oake announces that the Guild will give the lamp to a senior keeper rather than to Ines. On the harbour wall Sister Wren reveals that she is Livia Hale, Tomas's daughter, who washed up below Brannoc Abbey after the wreck with no memory and was raised by the sisters under a new name. She adds that a tall grey woman, whom she now recognises as Master Oake, came asking whether any child had survived the Gannet, and Sister Agathe lied to protect her. Bram Ostrow then demands the lamp room key for Master Oake, who has promised him the keepership; he knocks Livia down and tears the key from Ines's neck, and Ines understands he is now her enemy.",
+    "entities": [
+      {
+        "name": "Livia Hale",
+        "type": "character",
+        "aliases": [
+          {
+            "name": "Sister Wren",
+            "unique": true
+          },
+          {
+            "name": "Wren",
+            "unique": true
+          }
+        ],
+        "summary": "Tomas Hale's daughter, believed drowned in the Gannet wreck, who survived and lives at Brannoc Abbey as the archivist Sister Wren."
+      },
+      {
+        "name": "Bram Ostrow",
+        "type": "character",
+        "aliases": [],
+        "summary": "Former friend of Ines who now serves Master Oake and has taken the lamp room key from Ines by force."
+      },
+      {
+        "name": "lamp room key",
+        "type": "artifact",
+        "aliases": [],
+        "summary": "Brass key to the lamp room, taken from Ines by Bram Ostrow."
+      },
+      {
+        "name": "Sabine Oake",
+        "type": "character",
+        "aliases": [
+          {
+            "name": "Master Oake",
+            "unique": false
+          }
+        ],
+        "summary": "Master of the Lamplighters’ Guild, who wants the lamp room key back and is suspected by Livia of hunting for Gannet survivors."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Tomas Hale",
+        "claim": "Tomas Hale was buried in the Guild plot behind the harbour chapel.",
+        "quotes": [
+          "They buried Tomas Hale in the Guild plot behind the harbour chapel on a grey, windless morning."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Sabine Oake",
+        "claim": "Sabine Oake told Ines the lamp would go to a senior keeper, not to her.",
+        "quotes": [
+          "told Ines afterwards that the lamp would be given to a senior keeper until the Guild could decide what was best.",
+          "“Tomas was not the Guild,” said Master Oake"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Livia Hale",
+        "claim": "Sister Wren is Livia Hale, Tomas Hale's daughter.",
+        "quotes": [
+          "My name was Livia Hale. Tomas was my father.”"
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Livia Hale",
+        "claim": "She got her scar on the rocks below the abbey on the night of the wreck.",
+        "quotes": [
+          "“I got this on the rocks below the abbey,” she said. “Nine years ago, on the ninth of Frostmonth."
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Livia Hale",
+        "claim": "Sister Agathe found her half dead after the wreck, and she had lost her memory.",
+        "quotes": [
+          "Sister Agathe found me there the morning after the wreck, half dead, with my hand cut to the bone. I did not know my own name."
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Livia Hale",
+        "claim": "The sisters raised her and named her Wren.",
+        "quotes": [
+          "The sisters kept me and taught me and called me Wren, because Agathe said I was small and brown and would not stop chattering once I started."
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Livia Hale",
+        "claim": "She recognised Tomas when he came to the archive but was too frightened to speak.",
+        "quotes": [
+          "When your Tomas walked into my archive three days ago I knew his face before he said a word, and I was so frightened I could not speak."
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Sabine Oake",
+        "claim": "A week after the wreck, a tall grey woman Livia identifies as Master Oake came to the abbey asking whether any child from the Gannet had been brought in.",
+        "quotes": [
+          "A week after the wreck, while I was still in the infirmary and did not know who I was, a tall grey woman came to the abbey and asked Sister Agathe whether any child had been brought in from the Gannet.",
+          "I saw the same woman yesterday, reading over my father’s grave.”"
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "belief"
+      },
+      {
+        "entity": "Sister Agathe",
+        "claim": "Sister Agathe lied to the woman, saying no child had been brought in.",
+        "quotes": [
+          "Agathe said no. Afterwards she told me she had lied because she did not like the woman’s hands."
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "stated"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Master Oake promised Bram the keepership of the lamp if he brought her the key.",
+        "quotes": [
+          "The Guild wants it back, and Master Oake has promised me the keepership of the lamp if I bring it to her."
+        ],
+        "asserted_by": "Bram Ostrow",
+        "status": "stated"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Bram knew Tomas gave Ines the key in the cloister.",
+        "quotes": [
+          "Tomas gave it to you in the cloister. I know he did."
+        ],
+        "asserted_by": "Bram Ostrow",
+        "status": "stated"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Ines realises Bram was on the beach below the stair before the bell rang on the night Tomas died.",
+        "quotes": [
+          "“You were on the beach that night,” she said slowly. “Below the stair. Before the bell rang.”"
+        ],
+        "asserted_by": "Ines Varro",
+        "status": "belief"
+      },
+      {
+        "entity": "Bram Ostrow",
+        "claim": "Bram shoved Livia down and tore the key from Ines's neck.",
+        "quotes": [
+          "Livia threw herself at his arm and he shoved her down onto the stones without looking at her.",
+          "Then he reached into the neck of Ines’s shirt, closed his fist round the iron ring, and pulled until the cord broke."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "lamp room key",
+        "claim": "Bram took the brass key from Ines.",
+        "quotes": [
+          "He stood for a moment with the brass key in his hand, breathing hard."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Livia Hale",
+        "target": "Tomas Hale",
+        "type": "daughter of",
+        "quotes": [
+          "My name was Livia Hale. Tomas was my father.”"
+        ],
+        "asserted_by": "Livia Hale",
+        "status": "stated"
+      },
+      {
+        "source": "Bram Ostrow",
+        "target": "Ines Varro",
+        "type": "enemy of",
+        "quotes": [
+          "Ines knelt beside Livia and helped her sit up, and watched the boy she had learned her letters beside go up the hill towards the Guild hall, and understood that whatever he had been to her before, he was her enemy now."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "source": "Bram Ostrow",
+        "target": "Sabine Oake",
+        "type": "agent of",
+        "quotes": [
+          "The Guild wants it back, and Master Oake has promised me the keepership of the lamp if I bring it to her."
+        ],
+        "asserted_by": "Bram Ostrow",
+        "status": "stated"
+      },
+      {
+        "source": "Bram Ostrow",
+        "target": "lamp room key",
+        "type": "holder of",
+        "quotes": [
+          "He stood for a moment with the brass key in his hand, breathing hard."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": [
+      {
+        "id": "Q0002-01",
+        "answer": "Livia survived the wreck, washed up below Brannoc Abbey without her memory, and lives there as Sister Wren.",
+        "quote": "My name was Livia Hale. Tomas was my father.”"
+      },
+      {
+        "id": "Q0003-02",
+        "answer": "She had recognised Tomas as her father and was too frightened to tell him.",
+        "quote": "When your Tomas walked into my archive three days ago I knew his face before he said a word, and I was so frightened I could not speak."
+      }
+    ]
+  },
+  "timelines": {
+    "new": [],
+    "erased": [],
+    "labels": {
+      "E1": "main",
+      "E2": "main",
+      "E3": "main",
+      "E4": "main",
+      "F1": "main",
+      "F2": "main",
+      "F3": "main",
+      "F4": "main",
+      "F5": "main",
+      "F6": "main",
+      "F7": "main",
+      "F8": "main",
+      "F9": "main",
+      "F10": "main",
+      "F11": "main",
+      "F12": "main",
+      "F13": "main",
+      "F14": "main",
+      "R1": "main",
+      "R2": "main",
+      "R3": "main",
+      "R4": "main"
+    }
+  }
+}
