@@ -261,7 +261,7 @@ def without_word(name, word):
 def typed_page(wiki, n, name, etype):
     form = without_word(name, etype)
     for eid, e in sorted(wiki.entities.items(), key=lambda p: p[1]["first"]):
-        if e["type"] == etype and wiki.visible(eid, n) and any(
+        if wiki.types.is_a(e["type"], (etype,)) and wiki.visible(eid, n) and any(
                 without_word(x, etype) == form for x in [e["name"]] + [a["name"] for a in e["aliases"] if a["chapter"] <= n]):
             return eid
     return None
@@ -272,13 +272,13 @@ def present_check(wiki, wiki_data, names, n, s):
     groups = {wiki.page_id(l["group"], n) for l in ladders if wiki.visible(wiki.page_id(l["group"], n), n)}
     what = str(s.get("what", "")).strip().lower()
     etype = next((t for t in sorted({e["type"] for e in wiki.entities.values()}) if what in (t, plural(t))), None)
-    count = sum(1 for eid, e in wiki.entities.items() if e["type"] == etype and wiki.visible(eid, n))
+    count = sum(1 for eid, e in wiki.entities.items() if wiki.types.is_a(e["type"], (etype,)) and wiki.visible(eid, n))
     evidence = [f"{count} {etype} entries at ch{n}" if etype else f"no entry type is named {what}", f"{len(groups)} ladder groups at ch{n}"]
     missing = []
     for name in s["min_expected"]:
         hit = names.find(name)
         page = (etype and typed_page(wiki, n, name, etype)) or (wiki.page_id(hit.eid, n) if hit else None)
-        if page and wiki.visible(page, n) and (wiki.all[page]["type"] == etype or page in groups):
+        if page and wiki.visible(page, n) and (wiki.types.is_a(wiki.all[page]["type"], (etype,)) or page in groups):
             steps = ladder_steps(wiki, ladders, page, n)
             evidence.append(f"present: {name} as \"{wiki.display(page, n)}\" [{wiki.all[page]['type']}]"
                             + (f"; ladder: {', '.join(steps)}" if steps else ""))
@@ -296,7 +296,7 @@ def types_check(wiki, wiki_data, names, n, s):
             continue
         page = wiki.page_id(hit.eid, n)
         etype = wiki.all[page]["type"]
-        ok = etype in allowed or ("any" in allowed and etype != s.get("none_of_type"))
+        ok = wiki.types.is_a(etype, allowed) or ("any" in allowed and etype != s.get("none_of_type"))
         evidence.append(f"{name} is \"{wiki.display(page, n)}\" [{etype}]")
         if not ok:
             wrong.append(f"{name} is {etype}, expected {' or '.join(allowed)}")

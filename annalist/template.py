@@ -55,9 +55,13 @@ def book_types(raw):
     return {k: book_type(k, v) for k, v in (raw or {}).items() if k not in BASE_TYPES}
 
 
+def type_parents(raw):
+    return {k: spec["parent"] for k, spec in book_types(raw).items()}
+
+
 class Types:
-    def __init__(self, book_types):
-        self.parents = {name: spec["parent"] for name, spec in book_types.items()}
+    def __init__(self, parents):
+        self.parents = dict(parents)
 
     def kind(self, etype):
         return self.parents.get(etype, etype)

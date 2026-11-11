@@ -25,7 +25,7 @@ def resolved(chapter, answer, quote):
 
 
 WIKI = {
-    "book": {"title": "Harbour Tales", "max": 12, "ladder": {"group_type": "school", "step_type": "rank"}},
+    "book": {"title": "Harbour Tales", "max": 12, "ladder": {"group_type": "school", "step_type": "rank"}, "parents": {"warding relic": "artifact"}},
     "chapters": [{"n": n, "title": f"Chapter {n}", "synopsis": ""} for n in range(1, 13)],
     "timelines": [],
     "entities": [
@@ -36,6 +36,7 @@ WIKI = {
         entity("hood", "Hooded Stranger", "character", 4,
                possibly=[{"id": "tobin", "chapter": 7, "quote": "The stranger limped exactly as Tobin did."}]),
         entity("lamp", "Brass Lantern", "artifact", 2),
+        entity("bell", "Tide Bell", "warding relic", 2),
         entity("ash", "Order of Ash", "organization", 1),
         entity("ember", "Ember School", "school", 2),
         entity("tide", "Tide School", "school", 3),
@@ -142,6 +143,7 @@ KEY = {
          "must_not_link_to": "Gale (deity)"},
         {"what": "common word", "check": "no_link", "entry": "Tobin Vale", "chapter": 3, "text": "He knelt and prayed to the Gale.",
          "must_not_link_to": "Gale (deity)"},
+        {"what": "items are items", "check": "types", "expected_types": {"Tide Bell": ["artifact"]}},
     ],
     "expected_relation_kinds": [{"pair": ["Tobin Vale", "Mara Quill"], "wording": "employs"}],
 }
@@ -335,7 +337,13 @@ class ReaderKeyEvalTest(unittest.TestCase):
         self.assertIn("1 Coral ch4", self.text(item))
         self.assertIn('Reef School as "Reef"', self.text(item))
 
+    def test_a_type_check_accepts_a_book_type_whose_parent_is_the_expected_type(self):
+        item = self.item("structure", 12)
+        self.assertEqual(item["outcome"], "pass", self.text(item))
+        self.assertIn("[warding relic]", self.text(item))
+
     def test_a_type_check_fails_an_entry_of_another_type_and_names_it(self):
+
         item = self.item("structure", 5)
         self.assertEqual(item["outcome"], "fail", self.text(item))
         self.assertIn("Grey Wraith", item["detail"])
@@ -375,8 +383,8 @@ class ReaderKeyEvalTest(unittest.TestCase):
         self.assertEqual(totals["merges"]["pass"], 6)
         self.assertEqual(totals["merges"]["lead_only"], 1)
         self.assertEqual(totals["merges"]["name_missing"], 1)
-        self.assertEqual(totals["structure"]["pass"], 2 + 2)
-        self.assertEqual(totals["all"]["pass"], 5 + 6 + 1 + 2 + 2)
+        self.assertEqual(totals["structure"]["pass"], 2 + 3)
+        self.assertEqual(totals["all"]["pass"], 5 + 6 + 1 + 2 + 3)
         self.assertEqual(self.report["judge_spend_usd"], 0)
 
     def test_the_judge_model_flag_reaches_the_backend(self):

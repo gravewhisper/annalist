@@ -6,7 +6,7 @@ from pathlib import Path
 from .book import ladder_types
 from .files import read_json, read_jsonl, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
-from .template import book_types, INDIVIDUALS, Types
+from .template import INDIVIDUALS, type_parents, Types
 from .text import distinctive_words, QUOTE_CHARS
 from .wordings import read_wordings, worded
 
@@ -111,7 +111,7 @@ def name_within(a, b):
 class Knowledge:
     def __init__(self, ladder=None, wordings=None, power_types=None):
         self.wordings = wordings or {}
-        self.types = Types(book_types(power_types))
+        self.types = Types(type_parents(power_types))
         self.power_types = set(self.types.parents)
         self.ladder = set(ladder_types(ladder))
         self.rank_name = re.compile(rf"{re.escape(ladder['step_type'])}\s*\d+") if ladder and ladder.get("rank") == "number" else None

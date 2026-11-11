@@ -7,6 +7,7 @@ from pathlib import Path
 from .families import read_families, relation_family, signals, terms, wording_key
 from .files import read_json, write_json
 from .names import name_key
+from .template import type_parents, Types
 
 NEAR = 1
 
@@ -71,6 +72,8 @@ class Item:
 
 class Wiki:
     def __init__(self, data):
+        book = data["book"]
+        self.types = Types(book.get("parents") or type_parents(dict.fromkeys(book.get("power_types") or [], "")))
         self.chapters = [c["n"] for c in data["chapters"]]
         self.all = {e["id"]: e for e in data["entities"]}
         self.entities = {k: e for k, e in self.all.items() if not e.get("merged")}
@@ -250,7 +253,7 @@ def entity_items(gold, wiki, match):
         owner = match.owner[eid]
         if owner != gid:
             items.append(Item("entities", iid, "fail", f"merged into the page for gold {owner}", evidence))
-        elif e["type"] not in gold.types(gid):
+        elif not wiki.types.is_a(e["type"], gold.types(gid)):
             items.append(Item("entities", iid, "fail", f"type {e['type']} is not accepted", evidence))
         elif wiki.first(eid) > g["first_chapter"] + NEAR:
             items.append(Item("entities", iid, "fail", f"first appears in ch{wiki.first(eid)}, gold ch{g['first_chapter']}", evidence))

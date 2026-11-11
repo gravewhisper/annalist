@@ -61,7 +61,25 @@ class EvalMiniTest(unittest.TestCase):
     def entity(self, wiki, name):
         return next(e for e in wiki["entities"] if e["name"] == name)
 
+    def test_a_book_type_whose_parent_is_artifact_passes_where_the_gold_expects_an_artifact(self):
+        self.assertEqual(self.wiki["book"]["parents"], {"ward": "artifact"})
+        wiki = copy.deepcopy(self.wiki)
+        self.entity(wiki, "Salt Ledger")["type"] = "ward"
+        self.assertEqual(self.rescore(wiki)["entity:salt_ledger"], "pass")
+        wiki["book"]["parents"] = {"ward": "concept"}
+        self.assertEqual(self.rescore(wiki)["entity:salt_ledger"], "fail")
+
+    def test_an_older_export_without_parents_gives_its_book_types_the_parent_their_name_names(self):
+        wiki = copy.deepcopy(self.wiki)
+        del wiki["book"]["parents"]
+        wiki["book"]["power_types"] = ["warding item", "ward"]
+        self.entity(wiki, "Salt Ledger")["type"] = "warding item"
+        self.entity(wiki, "Gannet")["type"] = "ward"
+        found = self.rescore(wiki)
+        self.assertEqual((found["entity:salt_ledger"], found["entity:gannet"]), ("pass", "fail"))
+
     def test_the_mini_built_from_its_expected_extractions_passes_every_scored_item(self):
+
         self.assertEqual(self.proc.returncode, 0, self.proc.stderr)
         self.assertEqual(self.ids("fail"), set())
         reveal = next(i for i in self.report["items"] if i["id"] == "reveal:livia:Sister Wren")

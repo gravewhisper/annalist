@@ -15,6 +15,7 @@ from .profile import page_profiles
 from .render import checkpoint_prompts, closed_arcs, history_prompts, PERSONALITY_PROMPT, summary_prompt
 from .state import MAIN_TIMELINE
 from .status import spoken_appearances
+from .template import type_parents
 from .text import chapter_text, mention_quote, verified_quotes
 from .titles import page_title, revealed_name
 
@@ -359,7 +360,8 @@ def build(workdir, theme):
     return {
         "book": {"title": title, "max": last,
                  "public_domain": book.get("public_domain") is True, "theme": book.get("theme") or stored_theme(title),
-                 "power_types": sorted((book.get("power_types") or {}).keys()), "ladder": book.get("ladder")},
+                 "power_types": sorted((book.get("power_types") or {}).keys()), "parents": type_parents(book.get("power_types")),
+                 "ladder": book.get("ladder")},
         "chapters": chapters,
         "timelines": list(timelines.values()),
         "entities": out_entities,
