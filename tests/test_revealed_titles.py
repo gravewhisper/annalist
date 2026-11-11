@@ -122,11 +122,26 @@ def written_about(*subjects):
         {"purpose": "history", "contains": f'History of "{s}"', "reply": {"paragraph": f"History of {s}."}})]}
 
 
+def named_by_a_merge(root):
+    for n in (3, 4):
+        path = root / "state" / f"{n:04d}.json"
+        state = json.loads(path.read_text(encoding="utf-8"))
+        state["extraction"]["entities"] = [e for e in state["extraction"]["entities"] if e["name"] != "Tide Reader expert"]
+        state["extraction"]["entities"].append({"name": "Mirela Danescu", "type": "character", "aliases": []})
+        path.write_text(json.dumps(state), encoding="utf-8")
+    merges = json.loads((root / "merges.json").read_text(encoding="utf-8"))
+    merges["pairs"].append({"a": "Tide Reader expert", "b": "Mirela Danescu", "canonical": "Tide Reader expert", "same": True,
+                            "revealed": {"basis": "text", "chapter": 4}})
+    (root / "merges.json").write_text(json.dumps(merges), encoding="utf-8")
+
+
 @contextlib.contextmanager
-def prose_run():
+def prose_run(merged=False):
     with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {k: v for k, v in os.environ.items() if not k.startswith("ANNALIST_")}, clear=True):
         root = Path(tmp)
         seed(root)
+        if merged:
+            named_by_a_merge(root)
         for n, entity in ((1, "Tide Reader expert"), (4, "Tide Reader expert"), (1, "Mr. Q")):
             path = root / "state" / f"{n:04d}.json"
             state = json.loads(path.read_text(encoding="utf-8"))
@@ -155,6 +170,13 @@ def calls(root):
 class RevealedProse(unittest.TestCase):
     def test_a_described_page_s_prose_uses_the_description_before_the_reveal_and_the_real_name_from_it(self):
         with prose_run() as root:
+            self.assertEqual(render(root), {
+                "summary": "Summary of Mirela Danescu.",
+                "summaries": [(1, "Summary of Tide Reader expert."), (4, "Summary of Mirela Danescu.")],
+                "history": [("Gate", 2, "History of Tide Reader expert."), ("Tide", 4, "History of Mirela Danescu.")]})
+
+    def test_a_described_page_that_absorbs_a_named_page_uses_that_name_in_its_prose_from_the_merge(self):
+        with prose_run(merged=True) as root:
             self.assertEqual(render(root), {
                 "summary": "Summary of Mirela Danescu.",
                 "summaries": [(1, "Summary of Tide Reader expert."), (4, "Summary of Mirela Danescu.")],
