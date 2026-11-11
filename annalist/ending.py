@@ -8,6 +8,7 @@ from pathlib import Path
 from .audit import reread
 from .book import load_book
 from .corpus import Corpus, match_score, question_terms, stems
+from .corrections import QUESTIONS
 from .files import log, read_json, write_json
 from .llm import cached_llm, LLMError, spent_since
 from .names import name_pattern, names_of
@@ -196,7 +197,7 @@ def cmd_ending(args):
     if refusal:
         sys.exit(f"annalist ending: {refusal}; the end-of-book pass runs only on a complete book read to its last chapter")
     started = time.strftime("%Y-%m-%dT%H:%M:%S")
-    kb = load_states(workdir)
+    kb = load_states(workdir, corrections=(QUESTIONS,))
     last = max(kb.synopses)
     path = workdir / "ending.json"
     opened = {q["id"] for q in kb.open_questions()}

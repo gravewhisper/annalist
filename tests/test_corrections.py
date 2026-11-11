@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from annalist.corrections import correct_profiles, Corrections, EVERY_CORRECTION, load_corrections, reader_notes
+from annalist.corrections import correct_profiles, Corrections, EVERY_CORRECTION, load_corrections, QUESTIONS, reader_notes
 from annalist.export import build
 from annalist.state import Knowledge, load_states
 
@@ -37,10 +37,13 @@ STORY = {
         "facts": [fact("Mira Vale", "Mira Vale walked into Northmarch at dawn."), fact("Hood", "A hooded figure followed her.")]},
     2: {"entities": [entity("Grey Stranger"), entity("The Veil")],
         "facts": [fact("Grey Stranger", "A grey stranger watched Mira Vale from the bridge."), fact("The Veil", "The Veil kept her face hidden.")],
-        "relations": [tie("Grey Stranger", "Mira Vale", "watches", "A grey stranger watched Mira Vale from the bridge.")]},
+        "relations": [tie("Grey Stranger", "Mira Vale", "watches", "A grey stranger watched Mira Vale from the bridge.")],
+        "questions_raised": [{"question": "Who is the grey stranger?", "quote": "A grey stranger watched Mira Vale from the bridge."}]},
     3: {"entities": [entity("Grey Stranger", aliases=["Old Grey"]), entity("The Veil")],
-        "facts": [fact("Grey Stranger", "Old Grey said nothing."), fact("The Veil", "The Veil spoke of the old king, and the hood fell back.")]},
-    4: {"entities": [entity("Mira Vale")], "facts": [fact("Mira Vale", "He pushed his spectacles up, the way Mira's brother always did.")]},
+        "facts": [fact("Grey Stranger", "Old Grey said nothing."), fact("The Veil", "The Veil spoke of the old king, and the hood fell back.")],
+        "questions_raised": [{"question": "What does the Veil hide?", "quote": "The Veil spoke of the old king"}]},
+    4: {"entities": [entity("Mira Vale")], "facts": [fact("Mira Vale", "He pushed his spectacles up, the way Mira's brother always did.")],
+        "questions_resolved": [{"id": "Q0003-01", "answer": "A pair of spectacles.", "quote": "He pushed his spectacles up"}]},
     5: {"entities": [entity("Mira Vale")], "facts": [fact("Mira Vale", "Mira Vale lit a candle for her brother.")]},
     6: {"entities": [entity("Grey Stranger"), entity("Mira Vale")], "facts": [fact("Grey Stranger", "The grey stranger returned to Northmarch.")],
         "relations": [tie("Grey Stranger", "Mira Vale", "watches", "The grey stranger returned to Northmarch.")]},
@@ -48,6 +51,8 @@ STORY = {
 
 MERGES = [{"a": "Mira Vale", "b": "The Veil", "canonical": "Mira Vale", "same": True, "revealed": {"basis": "text", "chapter": 5}},
           {"a": "Grey Stranger", "b": "Hood", "canonical": "Grey Stranger", "same": True, "revealed": {"basis": "text", "chapter": 3}}]
+
+REREADS = {4: {"Q0003-01": {"verdict": "accept", "payoff": "The spectacles."}}}
 
 SAME = {"name": "Grey Stranger", "same_as": "Mira Vale", "chapter": 4, "quotes": ["He pushed his spectacles up"]}
 
@@ -61,14 +66,14 @@ class Story:
         (self.workdir / "state").mkdir()
         for n, text in TEXT.items():
             (self.workdir / "chapters" / f"{n:04d}.txt").write_text(text, encoding="utf-8")
-            (self.workdir / "state" / f"{n:04d}.json").write_text(json.dumps({"chapter": n, "extraction": {"synopsis": text, **STORY[n]}}),
-                                                                  encoding="utf-8")
+            state = {"chapter": n, "extraction": {"synopsis": text, **STORY[n]}, "rereads": REREADS.get(n, {})}
+            (self.workdir / "state" / f"{n:04d}.json").write_text(json.dumps(state), encoding="utf-8")
         (self.workdir / "chapters.json").write_text(json.dumps([{"index": n, "title": str(n)} for n in TEXT]), encoding="utf-8")
         (self.workdir / "merges.json").write_text(json.dumps({"pairs": merges}), encoding="utf-8")
         (self.workdir / "corrections.json").write_text(json.dumps({"entries": [], **corrections}), encoding="utf-8")
 
-    def kb(self, until=None):
-        return load_states(self.workdir, until=until, corrections=EVERY_CORRECTION)
+    def kb(self, until=None, corrections=EVERY_CORRECTION):
+        return load_states(self.workdir, until=until, corrections=corrections)
 
     def site(self):
         return build(self.workdir, {})
@@ -187,6 +192,56 @@ class TypesTitlesAndTies(unittest.TestCase):
         self.assertEqual((kb.entities, kb.facts, kb.relations, kb.questions), (plain.entities, plain.facts, plain.relations, plain.questions))
 
 
+ANSWER = {"id": "Q0002-01", "chapter": 5, "answer": "Mira's brother.", "quotes": ["Mira Vale lit a candle for her brother."]}
+
+
+class Questions(unittest.TestCase):
+    def test_an_answered_question_is_open_before_its_chapter_and_resolved_by_the_reader_from_it(self):
+        story = Story(self, {"questions": [ANSWER]})
+        self.assertEqual(story.kb(until=4).questions["Q0002-01"]["status"], "open")
+        q = story.kb().questions["Q0002-01"]
+        self.assertEqual((q["status"], q["resolved_chapter"], q["answer"], q["resolve_quote"], q["found_by"]),
+                         ("resolved", 5, "Mira's brother.", "Mira Vale lit a candle for her brother.", "reader"))
+
+    def test_a_question_is_also_named_by_its_exact_text(self):
+        row = {**ANSWER, "question": "Who is the grey stranger?"}
+        del row["id"]
+        self.assertEqual(Story(self, {"questions": [row]}).kb().questions["Q0002-01"]["resolved_chapter"], 5)
+
+    def test_the_reader_s_answer_replaces_the_pipeline_s_in_every_view(self):
+        row = {"id": "Q0003-01", "chapter": 6, "answer": "Mira, risen.", "quotes": ["She rose from the grave and walked home."]}
+        story = Story(self, {"questions": [row]})
+        self.assertEqual(load_states(story.workdir).questions["Q0003-01"]["resolved_chapter"], 4)
+        early = story.kb(until=5).questions["Q0003-01"]
+        self.assertEqual((early["status"], "answer" in early), ("open", False))
+        self.assertEqual(story.kb().questions["Q0003-01"]["answer"], "Mira, risen.")
+
+    def test_a_dismissed_question_is_gone_from_every_chapter(self):
+        story = Story(self, {"questions": [{"question": "What does the Veil hide?", "dismiss": True}]})
+        for until in (3, 4, None):
+            self.assertNotIn("Q0003-01", story.kb(until=until).questions)
+
+    def test_the_question_stages_treat_a_settled_question_as_settled_and_see_no_page_correction(self):
+        story = Story(self, {"entries": [SAME], "questions": [ANSWER, {"id": "Q0003-01", "dismiss": True}]})
+        kb = story.kb(corrections=(QUESTIONS,))
+        self.assertEqual(kb.open_questions(), [])
+        self.assertIn("Grey Stranger", kb.entities)
+
+    def test_a_bad_quote_an_early_chapter_or_an_unknown_question_is_skipped_with_a_warning(self):
+        rows = [{**ANSWER, "quotes": ["A line the book never has."]}, {**ANSWER, "chapter": 1, "quotes": ["Mira Vale walked into Northmarch"]},
+                {"id": "Q0009-01", "dismiss": True}]
+        kb = Story(self, {"questions": rows}).kb()
+        self.assertEqual(kb.questions["Q0002-01"]["status"], "open")
+        self.assertEqual(kb.problems, ["correction Q0002-01 ch5 has no quote found in that chapter, skipped",
+                                       "correction Q0002-01 is answered in chapter 1, before chapter 2 raises it, skipped",
+                                       "corrections.json names question 'Q0009-01', which matches no question, skipped"])
+
+    def test_a_question_row_needs_a_name_and_an_answer_or_a_dismissal(self):
+        for row in ({"chapter": 5, "answer": "x", "quotes": ["y"]}, {"id": "Q0002-01", "answer": "x"}):
+            with self.assertRaises(SystemExit):
+                load_corrections(Story(self, {"questions": [row]}).workdir)
+
+
 STATUS = {"chapter": 6, "value": "revived", "quotes": ["She rose from the grave and walked home."]}
 
 
@@ -264,7 +319,7 @@ class Reader(unittest.TestCase):
         row = {"chapter": 7, "value": "revived", "quotes": ["She rose."]}
         self.corrections = Corrections(entries=[{"name": "Mira Vale", "type": "deity", "fields": {"status": [row]}},
                                                 {"name": "Grey Stranger", "same_as": "Mira Vale", "chapter": 4, "quotes": ["q"]}],
-                                       relations=[], dropped=[], problems=[])
+                                       relations=[], dropped=[], questions=[], problems=[])
 
     def notes(self, chapter):
         return reader_notes(self.kb, self.corrections, chapter)

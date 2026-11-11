@@ -40,6 +40,28 @@ A top-level `relations` list adds ties the wiki missed:
 
 A top-level `drop_relations` list removes a wrong tie. Each row gives the tie's `source`, `target`, `type`, and `chapter` exactly as the wiki has them, and `export` warns about a row that matches nothing.
 
+## Settle a question
+
+A top-level `questions` list settles the wiki's open questions. Name a question by its id, such as `Q0190-02`, or by its exact text as the wiki shows it.
+
+To answer a question the wiki left open, give the chapter that answers it, the answer, and a quote from that chapter:
+
+```json
+{"questions": [{"id": "Q0190-02", "chapter": 230, "answer": "The letter was forged by her steward.", "quotes": ["The steward's hand shook as he sealed it."]}]}
+```
+
+The site then shows the question resolved from that chapter, like an answer the pipeline found, and open before it. Your answer replaces any answer the pipeline gave, so a wrong pipeline answer no longer shows at any chapter. An optional `payoff` explains how the answer pays off the setup. An answer with no matching quote, or with a chapter before the question is raised, is skipped with a warning.
+
+To remove a question that is not a real mystery, dismiss it:
+
+```json
+{"questions": [{"question": "What will they eat tonight?", "dismiss": true}]}
+```
+
+A dismissed question disappears from the mysteries pages and the chapter pages at every chapter, not only from some chapter on. It never was a mystery, so no chapter should list it, and hiding it partway would tell a reader that the story stopped caring about it.
+
+The stages that look for answers, `sweep`, `answers`, and `ending`, treat a question you answered or dismissed as settled and ask the model nothing more about it. `export` warns about an id or text that matches no question.
+
 ## A correction rewrites the text of the pages it affects
 
 Corrections are part of what the wiki knows. When `render` and `export` load the run, corrections enter with the pipeline's own decisions, such as `merges.json` and `types.json`, each from its chapter. So the page summaries, the summaries as of earlier chapters, History, Personality, the infobox, relations, the Markdown wiki, and the site all reflect them. A joined page's summary and History are written again from the facts of both pages from the chapter of the link.
@@ -54,19 +76,20 @@ A correction changes only the prompts of the pages it affects, so every other pa
 | `type` | The entry's summaries, since the prompt names the type, and its History when it becomes a character. |
 | `relations`, `drop_relations` | The History of both ends for the arc that holds the tie's chapter. |
 | `title`, `fields` | None. The title renames the page from `title_chapter`, and field values go into the infobox. |
+| `questions` | None. `sweep`, `answers`, and `ending` ask about fewer questions. |
 
 So a run with N corrections asks the model at most a few prompts per corrected page, never for a page no correction names. The `profile` stage does not read corrections: a joined page takes the other page's infobox values from the chapter of the link, and a `type` correction does not build an infobox for an entry the pipeline did not profile.
 
 ## Apply your corrections
 
-After an edit, run `annalist build` on the run again. It sees that `corrections.json` changed and reruns `render` and `export`. `render` asks the model for the pages your corrections changed, so check the cost with `--dry-run` first and pass `--budget`:
+After an edit, run `annalist build` on the run again. It sees that `corrections.json` changed and reruns `render` and `export`, and also `sweep`, `answers`, and `ending` when the `questions` list changed. `render` asks the model for the pages your corrections changed, so check the cost with `--dry-run` first and pass `--budget`:
 
 ```sh
 python3 -m annalist build book.epub runs/book --dry-run
 python3 -m annalist build book.epub runs/book --budget 1
 ```
 
-`annalist export runs/book runs/book/site` alone also applies the corrections, but it only reads replies that `render` already has, so a rewritten page shows no summary until the next build. If the pipeline code has changed since the last build, `export` refuses to run until you rebuild. Add `--allow-stale` to export anyway. `export` warns about any correction whose quote is not in its chapter or whose name no longer matches an entry.
+`annalist export runs/book runs/book/site` alone also applies the corrections, but it only reads replies that `render` already has, so a rewritten page shows no summary until the next build. If the pipeline code has changed since the last build, `export` refuses to run until you rebuild. Add `--allow-stale` to export anyway. `export` warns about any correction whose quote is not in its chapter or whose name or id no longer matches an entry or a question.
 
 Later volumes keep your corrections:
 

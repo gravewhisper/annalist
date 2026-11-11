@@ -210,7 +210,7 @@ STAGES = (
     Stage("leads", lambda run: cmd_leads(namespace(run)), ("state", "types.json", "merges.json"),
           lambda run: ["leads.json"], ("repeats", "leads"), code=("leads",)),
     Stage("sweep", lambda run: cmd_sweep(namespace(run, batch=6, limit=None, only=None, budget=None)),
-          ("state", "types.json", "merges.json", "leads.json"), lambda run: ["sweep.json"], ("sweep",), code=("sweep",),
+          ("state", "types.json", "merges.json", "leads.json", "corrections.json#questions"), lambda run: ["sweep.json"], ("sweep",), code=("sweep",),
           failed=failed_items("sweep.json")),
     Stage("tiers", lambda run: cmd_tiers(namespace(run)),
           STATE + ("types.json", "merges.json", "leads.json", "sweep.json"), lambda run: ["tiers.json"], ("tiers",), code=("tiers",)),
@@ -225,12 +225,12 @@ STAGES = (
           ("families",), code=("families",)),
     Stage("answers", lambda run: cmd_answers(namespace(run, batch=3, to=run.last)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "profiles.json", "volumes.json",
-                   "answers.json"),
+                   "answers.json", "corrections.json#questions"),
           lambda run: ["answers.json"], ("answers", "reread", "premise"),
           skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}", code=("answers",), failed=failed_answers),
     Stage("ending", lambda run: cmd_ending(namespace(run, batch=5)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json",
-                   "answers.json", "ending.json"),
+                   "answers.json", "ending.json", "corrections.json#questions"),
           lambda run: ["ending.json"], ("ending", "reread"), skip=lambda run: ending_status(run.workdir, run.last, len(run.chapters)), code=("ending",),
           failed=failed_items("ending.json")),
     Stage("volumes", run_volumes,
@@ -271,7 +271,11 @@ def digest(run, stage):
         book = read_json(run.workdir / "book.json", {})
         h.update(json.dumps({k: book.get(k) for k in DISPLAY_BOOK_KEYS}, sort_keys=True).encode())
     for rel in stage.inputs:
+        rel, _, key = rel.partition("#")
         path = run.workdir / rel
+        if key:
+            h.update(f"{rel}#{key} {json.dumps(read_json(path, {}).get(key), sort_keys=True)}\n".encode())
+            continue
         files = sorted(p for p in path.rglob("*") if p.is_file()) if path.is_dir() else [path] if path.exists() else []
         h.update(f"{rel}:{len(files)}\n".encode())
         for f in files:

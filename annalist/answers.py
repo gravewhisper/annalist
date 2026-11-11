@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .audit import reread_context
+from .corrections import QUESTIONS
 from .ending import checked_quotes, Finder
 from .files import log, read_json, write_json
 from .llm import cached_llm, LLMError, spent_since
@@ -195,7 +196,7 @@ def cmd_answers(args):
     asked = 0
     for v in volumes:
         key = str(v["to"])
-        kb = load_states(workdir, until=v["to"], answers_before=v["to"])
+        kb = load_states(workdir, until=v["to"], answers_before=v["to"], corrections=(QUESTIONS,))
         earlier = boundaries[key]["questions"]
         keep, work = pending(workdir, kb, v, earlier)
         boundaries[key] = {"name": v["name"], "to": v["to"], "questions": keep}

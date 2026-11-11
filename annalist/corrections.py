@@ -8,8 +8,8 @@ from .template import PROFILE_FIELDS, PROFILE_LISTS
 from .text import check_quote
 
 
-PAGES = "pages"
-EVERY_CORRECTION = (PAGES,)
+PAGES, QUESTIONS = "pages", "questions"
+EVERY_CORRECTION = (PAGES, QUESTIONS)
 
 
 @dataclass(frozen=True)
@@ -17,6 +17,7 @@ class Corrections:
     entries: list
     relations: list
     dropped: list
+    questions: list
     problems: list
 
 
@@ -30,10 +31,10 @@ def load_corrections(workdir):
     problems = []
 
     def quoted(label, row):
-        if any(check_quote(str(workdir), row["chapter"], q)["ok"] for q in row.get("quotes", [])):
-            return True
-        problems.append(f"correction {label} ch{row['chapter']} has no quote found in that chapter, skipped")
-        return False
+        quote = next((q for q in row.get("quotes", []) if check_quote(str(workdir), row["chapter"], q)["ok"]), None)
+        if quote is None:
+            problems.append(f"correction {label} ch{row['chapter']} has no quote found in that chapter, skipped")
+        return quote
 
     entries = raw.get("entries", [])
     require(all(isinstance(e, dict) and e.get("name") for e in entries), "every entry needs a name")
@@ -43,9 +44,18 @@ def load_corrections(workdir):
     dropped = raw.get("drop_relations", [])
     require(all(isinstance(r, dict) and r.get("source") and r.get("target") and r.get("type") and r.get("chapter") for r in dropped),
             "every dropped relation needs a source, target, type and chapter")
+    questions = raw.get("questions", [])
+    require(all(isinstance(q, dict) and (q.get("id") or q.get("question")) for q in questions), "every question needs an id or its question text")
+    require(all(q.get("dismiss") is True or (isinstance(q.get("chapter"), int) and str(q.get("answer") or "").strip()) for q in questions),
+            'every question needs "dismiss": true, or a chapter and an answer')
+    questions = [q if q.get("dismiss") is True else {**q, "quote": quoted(question_label(q), q)} for q in questions]
     return Corrections(entries=[checked_entry(e, quoted) for e in entries],
                        relations=[r for r in relations if quoted(f"{r['source']} -> {r['target']}.{r['type']}", r)],
-                       dropped=dropped, problems=problems)
+                       dropped=dropped, questions=[q for q in questions if q.get("dismiss") is True or q["quote"]], problems=problems)
+
+
+def question_label(row):
+    return row.get("id") or row["question"]
 
 
 def checked_entry(entry, quoted):
@@ -135,6 +145,35 @@ def correct_pages(kb, corrections, until):
         problems += add_relation(kb, row, k, until)
     for row in corrections.dropped:
         problems += drop_relation(kb, row)
+    return problems
+
+
+RESOLUTION = ("resolved_chapter", "resolved_shown", "answer", "resolve_quote", "payoff", "found_by", "context_found", "premise", "ending")
+
+
+def find_question(questions, row):
+    if row.get("id"):
+        return questions.get(row["id"])
+    return next((q for q in questions.values() if q["question"] == row["question"].strip()), None)
+
+
+def settle_questions(kb, corrections, until):
+    problems = []
+    for row in corrections.questions:
+        q = find_question(kb.questions, row)
+        if q is None:
+            problems.append(f"corrections.json names question {question_label(row)!r}, which matches no question, skipped")
+        elif row.get("dismiss") is True:
+            del kb.questions[q["id"]]
+        elif row["chapter"] < q["chapter"]:
+            problems.append(f"correction {question_label(row)} is answered in chapter {row['chapter']}, before chapter {q['chapter']} raises it, skipped")
+        else:
+            for key in RESOLUTION:
+                q.pop(key, None)
+            q["status"] = "partial" if q["leads"] else "open"
+            if row["chapter"] <= until:
+                q.update(status="resolved", resolved_chapter=row["chapter"], resolved_shown=row["chapter"], answer=row["answer"].strip(),
+                         resolve_quote=row["quote"], payoff=str(row.get("payoff") or "").strip(), found_by="reader")
     return problems
 
 

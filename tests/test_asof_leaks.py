@@ -25,7 +25,9 @@ ECHOED = {
 
 SAME_PERSON = {"entries": [{"name": "Captain Fenn", "same_as": "Odile Marr", "chapter": 4,
                              "quotes": ["They buried Tomas Hale in the Guild plot behind the harbour chapel on a grey, windless morning."]},
-                            {"name": "Bram Ostrow", "same_as": "Sabine Oake", "chapter": 5, "quotes": ["It was Bram who broke."]}]}
+                            {"name": "Bram Ostrow", "same_as": "Sabine Oake", "chapter": 5, "quotes": ["It was Bram who broke."]}],
+               "questions": [{"id": "Q0003-04", "chapter": 5, "answer": "Bram carried the drawn key home wrapped in oilcloth.",
+                              "quotes": ["It was Bram who broke."]}]}
 
 
 TWO_ARCS = {"arcs": [{"name": ECHO, "start": 1}, {"name": ECHO, "start": 4}]}
@@ -107,6 +109,8 @@ class AsOfLeakTest(unittest.TestCase):
                          ({"into": ids["Odile Marr"], "chapter": 4}, {"into": ids["Sabine Oake"], "chapter": 5}))
         bram = next(e for e in self.wiki["entities"] if e["name"] == "Bram Ostrow")
         self.assertTrue([s for s in bram["summaries"] if s["chapter"] < 5])
+        answered = next(q["resolved"] for q in self.wiki["questions"] if q["id"] == "Q0003-04")
+        self.assertEqual((answered["shown"], "oilcloth" in answered["answer"]), (5, True))
 
     def test_the_fake_model_writes_its_prompt_words_into_every_echoed_field(self):
         v = self.wiki["volumes"][0]

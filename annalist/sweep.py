@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .audit import reread
 from .corpus import chapter_scores, Corpus, question_terms
+from .corrections import QUESTIONS
 from .files import log, read_json, write_json
 from .llm import llm, LLMError, spent_since
 from .names import name_pattern, names_of
@@ -96,7 +97,7 @@ def judge_answer(workdir, kb, q, reply, candidates):
 def cmd_sweep(args):
     workdir = Path(args.workdir).resolve()
     started = time.strftime("%Y-%m-%dT%H:%M:%S")
-    kb = load_states(workdir)
+    kb = load_states(workdir, corrections=(QUESTIONS,))
     path = workdir / "sweep.json"
     corpus = Corpus(workdir, kb)
     asked = {q["id"]: (q, sweep_candidates(corpus, q)) for q in kb.open_questions() if q["chapter"] < corpus.last}
