@@ -8,7 +8,8 @@ import zipfile
 from argparse import Namespace
 from pathlib import Path
 
-from annalist.epub import cmd_extract, story_end
+from annalist.boundaries import from_toc
+from annalist.epub import cmd_extract, extract_book, story_end
 
 HOUND = Path(os.environ.get("ANNALIST_HOUND_EPUB", Path(__file__).resolve().parent / "data" / "cache" / "hound.epub"))
 
@@ -16,16 +17,28 @@ CONTAINER = """<?xml version="1.0"?><container xmlns="urn:oasis:names:tc:opendoc
 <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>"""
 
 
-def write_epub(path, docs):
+def nav_list(toc):
+    return "<ol>" + "".join(f'<li><a href="{href}">{label}</a>{nav_list(children) if children else ""}</li>'
+                            for label, href, children in toc) + "</ol>"
+
+
+def write_epub(path, docs, toc=None):
+    """docs: (title, paragraphs); a paragraph given as (anchor, text) carries that id.
+    toc: nested (label, href, children) entries, written as an EPUB 3 nav document."""
     manifest = "".join(f'<item id="d{i}" href="d{i}.html" media-type="application/xhtml+xml"/>' for i in range(len(docs)))
+    if toc is not None:
+        manifest += '<item id="nav" href="nav.html" media-type="application/xhtml+xml" properties="nav"/>'
     spine = "".join(f'<itemref idref="d{i}"/>' for i in range(len(docs)))
     opf = (f'<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0">'
            f"<manifest>{manifest}</manifest><spine>{spine}</spine></package>")
     with zipfile.ZipFile(path, "w") as zf:
         zf.writestr("META-INF/container.xml", CONTAINER)
         zf.writestr("OEBPS/content.opf", opf)
+        if toc is not None:
+            zf.writestr("OEBPS/nav.html", '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">'
+                        f'<body><nav epub:type="toc">{nav_list(toc)}</nav></body></html>')
         for i, (title, paragraphs) in enumerate(docs):
-            body = "".join(f"<p>{p}</p>" for p in paragraphs)
+            body = "".join(f'<p id="{p[0]}">{p[1]}</p>' if isinstance(p, tuple) else f"<p>{p}</p>" for p in paragraphs)
             zf.writestr(f"OEBPS/d{i}.html", f"<html><head><title>{title}</title></head><body>{body}</body></html>")
 
 
@@ -92,6 +105,47 @@ class FrontMatterTest(unittest.TestCase):
             chapters, texts, _ = extract(Path(tmp) / "book.epub", Path(tmp) / "work")
         self.assertEqual([t.split("\n\n")[0] for t in texts], ["Prologue", "Chapter 1", "Chapter 2"])
         self.assertEqual([c["index"] for c in chapters], [1, 2, 3])
+
+
+class TocAnchorTest(unittest.TestCase):
+    def test_a_document_holding_several_toc_chapters_splits_at_their_anchors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_epub(Path(tmp) / "book.epub", [
+                ("Opening", [("p1", "Part One"), ("c1", "Chapter 1"), STORY]),
+                ("Middle", ["The end of the first chapter spills over here.", ("p2", "Part Two"), ("c2", "Chapter 2"), STORY,
+                            ("c3", "Chapter 3"), STORY]),
+                ("Closing", [("p3", "Part Three"), ("c4", "Chapter 4"), STORY]),
+            ], toc=[("Part One", "d0.html#p1", [("One", "d0.html#c1", [])]),
+                    ("Part Two", "d1.html#p2", [("Two", "d1.html#c2", []), ("Three", "d1.html#c3", [])]),
+                    ("Part Three", "d2.html#p3", [("Four", "d2.html#c4", [])])])
+            chapters, texts, _ = extract(Path(tmp) / "book.epub", Path(tmp) / "work")
+            volumes = from_toc(extract_book(Path(tmp) / "book.epub", min_words=5))
+        self.assertEqual([(c["title"], c["href"]) for c in chapters], [
+            ("Opening", "OEBPS/d0.html"), ("Two", "OEBPS/d1.html#c2"), ("Three", "OEBPS/d1.html#c3"), ("Closing", "OEBPS/d2.html")])
+        self.assertTrue(texts[0].rstrip().endswith("spills over here."))
+        self.assertEqual([t.rstrip().split("\n\n")[:2] for t in texts[1:3]], [["Part Two", "Chapter 2"], ["Chapter 3", STORY]])
+        self.assertEqual([c["words"] for c in chapters], [len(t.split()) for t in texts])
+        self.assertEqual([(v["from"], v["to"]) for v in volumes], [(1, 1), (2, 3), (4, 4)])
+
+    def test_text_before_the_first_anchor_joins_the_first_piece_when_no_chapter_precedes_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_epub(Path(tmp) / "book.epub", [
+                ("Whole", ["A few opening words before any chapter.", ("c1", "Chapter 1"), STORY, ("c2", "Chapter 2"), STORY]),
+            ], toc=[("One", "d0.html#c1", []), ("Two", "d0.html#c2", [])])
+            chapters, texts, _ = extract(Path(tmp) / "book.epub", Path(tmp) / "work")
+        self.assertEqual([c["href"] for c in chapters], ["OEBPS/d0.html#c1", "OEBPS/d0.html#c2"])
+        self.assertTrue(texts[0].startswith("A few opening words before any chapter.\n\nChapter 1"))
+
+    def test_a_chapter_that_starts_late_in_one_document_keeps_its_rest_from_the_next(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            opening = "It began on a grey morning when nobody in the house was awake yet."
+            write_epub(Path(tmp) / "book.epub", [
+                ("First", [("c1", "Chapter 1"), STORY, STORY, ("c2", "Chapter 2"), opening]),
+                ("Second", [STORY, STORY, ("c3", "Chapter 3"), STORY, STORY, ("c4", "Chapter 4"), STORY, STORY]),
+            ], toc=[(n, f"d{(n - 1) // 2}.html#c{n}", []) for n in range(1, 5)])
+            chapters, texts, _ = extract(Path(tmp) / "book.epub", Path(tmp) / "work", min_words=20)
+        self.assertEqual([c["href"] for c in chapters], [f"OEBPS/d{(n - 1) // 2}.html#c{n}" for n in range(1, 5)])
+        self.assertEqual(texts[1], f"Chapter 2\n\n{opening}\n\n{STORY}\n\n{STORY}\n")
 
 
 class ReextractTest(unittest.TestCase):

@@ -22,6 +22,7 @@ BOOKS = {
     "dracula": {"gutenberg": 345, "to": 10, "stresses": "journals and letters by several narrators"},
     "eyre": {"gutenberg": 1260, "to": 13, "stresses": "first-person narrator, a stranger named later"},
     "cristo": {"gutenberg": 1184, "to": 16, "stresses": "prisoner numbers as names, a father under another surname"},
+    "pride": {"gutenberg": 1342, "to": 12, "stresses": "sisters who share 'Miss Bennet', titles, marriages"},
 }
 
 

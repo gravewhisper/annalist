@@ -68,7 +68,8 @@ def doc_chapters(book):
 
 
 def toc_chapters(entry, by_href):
-    found = {by_href[entry.href]} if entry.href in by_href else set()
+    href = next((h for h in (f"{entry.href}#{entry.anchor}", entry.href) if h in by_href), None)
+    found = {by_href[href]} if href else set()
     for child in entry.children:
         found |= toc_chapters(child, by_href)
     return found

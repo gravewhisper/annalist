@@ -22,8 +22,10 @@ BLOCK_TAGS = {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "br", "block
 
 
 class TextExtractor(HTMLParser):
-    def __init__(self):
+    def __init__(self, anchors=()):
         super().__init__(convert_charrefs=True)
+        self.anchors = set(anchors)
+        self.starts = []
         self.paragraphs = []
         self.current = []
         self.title = ""
@@ -37,6 +39,10 @@ class TextExtractor(HTMLParser):
         self.current = []
 
     def handle_starttag(self, tag, attrs):
+        for name, value in attrs:
+            if name in ("id", "name") and value in self.anchors:
+                self.anchors.discard(value)
+                self.starts.append((value, len(self.paragraphs)))
         if tag in ("script", "style"):
             self.skip_depth += 1
         elif tag == "title":
@@ -59,15 +65,15 @@ class TextExtractor(HTMLParser):
             self.current.append(data)
 
 
-def html_to_text(markup):
-    parser = TextExtractor()
+def html_to_text(markup, anchors=()):
+    parser = TextExtractor(anchors)
     body = re.search(r"<body[^>]*>(.*)</body>", markup, re.S | re.I)
     head_title = re.search(r"<title[^>]*>(.*?)</title>", markup, re.S | re.I)
     parser.feed(body.group(1) if body else markup)
     parser.close()
     parser.flush()
     title = html.unescape(re.sub(r"\s+", " ", head_title.group(1))).strip() if head_title else ""
-    return title, parser.paragraphs
+    return title, parser.paragraphs, parser.starts
 
 
 DC_NS = {"dc": "http://purl.org/dc/elements/1.1/"}
@@ -83,6 +89,7 @@ XHTML_NS = "{http://www.w3.org/1999/xhtml}"
 class TocEntry:
     label: str
     href: str
+    anchor: str
     children: tuple
 
 
@@ -93,8 +100,10 @@ class Package:
     toc: tuple
 
 
-def toc_href(base, href):
-    return posixpath.normpath(posixpath.join(posixpath.dirname(base), href.split("#")[0])) if href else ""
+def toc_entry(label, base, href, children):
+    path, _, anchor = (href or "").partition("#")
+    return TocEntry(re.sub(r"\s+", " ", label).strip(),
+                    posixpath.normpath(posixpath.join(posixpath.dirname(base), path)) if path else "", anchor, children)
 
 
 def ncx_entries(node, base):
@@ -102,8 +111,8 @@ def ncx_entries(node, base):
     for point in node.findall("ncx:navPoint", NCX_NS):
         label = point.find("ncx:navLabel/ncx:text", NCX_NS)
         content = point.find("ncx:content", NCX_NS)
-        out.append(TocEntry(re.sub(r"\s+", " ", label.text or "").strip() if label is not None else "",
-                            toc_href(base, content.get("src") if content is not None else ""), ncx_entries(point, base)))
+        out.append(toc_entry((label.text or "") if label is not None else "", base,
+                             content.get("src") if content is not None else "", ncx_entries(point, base)))
     return tuple(out)
 
 
@@ -114,9 +123,8 @@ def nav_entries(ol, base):
         if link is None:
             link = li.find(f"{XHTML_NS}span")
         child = li.find(f"{XHTML_NS}ol")
-        out.append(TocEntry(re.sub(r"\s+", " ", "".join(link.itertext())).strip() if link is not None else "",
-                            toc_href(base, link.get("href") if link is not None else ""),
-                            nav_entries(child, base) if child is not None else ()))
+        out.append(toc_entry("".join(link.itertext()) if link is not None else "", base,
+                             link.get("href") if link is not None else "", nav_entries(child, base) if child is not None else ()))
     return tuple(out)
 
 
@@ -169,14 +177,65 @@ ENDING_TITLE = re.compile(r"\b(?:epilogue|afterword|the end|finale)\b", re.I)
 ENDING_TEXT = re.compile(r"\b(?:THE END|The End|FINIS)\W*$")
 
 
-def strip_gutenberg(docs):
-    flat = [(i, p) for i, (_, _, paragraphs) in enumerate(docs) for p in paragraphs]
+def cut(items, at):
+    bounds = [0, *at, len(items)]
+    return [items[a:b] for a, b in zip(bounds, bounds[1:])]
+
+
+def strip_gutenberg(blocks):
+    flat = [(i, p) for i, paragraphs in enumerate(blocks) for p in paragraphs]
     start = next((k for k, (_, p) in enumerate(flat) if GUTENBERG_START.match(p)), -1)
     end = next((k for k, (_, p) in enumerate(flat) if k > start and GUTENBERG_END.match(p)), None)
     kept = {}
     for i, p in flat[start + 1:end]:
         kept.setdefault(i, []).append(p)
-    return [(href, title, kept.get(i, [])) for i, (href, title, _) in enumerate(docs)], end is not None
+    return [kept.get(i, []) for i in range(len(blocks))], end is not None
+
+
+HEADING_WORDS = 12
+
+
+def toc_labels(entries, out=None):
+    out = {} if out is None else out
+    for e in entries:
+        if e.anchor:
+            out.setdefault(e.href, {}).setdefault(e.anchor, e.label)
+        toc_labels(e.children, out)
+    return out
+
+
+def toc_pieces(segments):
+    """Anchored segments of one document as chapter pieces. A segment of headings alone (a part title,
+    a book title) is not a chapter: it joins the next piece, or the last one at the end of the document."""
+    pieces, pending = [], []
+    for anchor, paragraphs in segments:
+        if all(len(p.split()) <= HEADING_WORDS for p in paragraphs):
+            pending += paragraphs
+        else:
+            pieces.append((anchor, pending + paragraphs))
+            pending = []
+    if pending and pieces:
+        pieces[-1] = (pieces[-1][0], pieces[-1][1] + pending)
+    return pieces
+
+
+def split_documents(docs, labels, min_words):
+    """docs: (href, title, segments), where segments[0] is the text before the document's first TOC anchor.
+    A document with two or more TOC chapters in it becomes one entry per chapter, keyed "href#anchor"."""
+    out, split = [], set()
+    for href, title, segments in docs:
+        (_, prefix), pieces = segments[0], toc_pieces(segments[1:])
+        if len(pieces) < 2:
+            out.append((href, title, [p for _, paragraphs in segments for p in paragraphs]))
+            continue
+        previous = next((k for k in reversed(range(len(out))) if k in split or is_chapter(out[k][2], min_words)), None)
+        if previous is None:
+            pieces[0] = (pieces[0][0], prefix + pieces[0][1])
+        else:
+            out[previous] = (*out[previous][:2], out[previous][2] + prefix)
+        split.update(range(len(out), len(out) + len(pieces)))
+        out.extend((f"{href}#{anchor}", labels[href][anchor], paragraphs) for anchor, paragraphs in pieces)
+    return out
 
 
 def story_end(titles, last_text):
@@ -201,6 +260,10 @@ def front_matter(paragraphs):
     return len(paragraphs) >= 5 and 2 * sum(bool(HEADING_LINE.match(p)) for p in paragraphs) >= len(paragraphs)
 
 
+def is_chapter(paragraphs, min_words):
+    return sum(len(p.split()) for p in paragraphs) >= min_words and not front_matter(paragraphs)
+
+
 @dataclass(frozen=True)
 class Extraction:
     title: str
@@ -215,12 +278,18 @@ class Extraction:
 def extract_book(epub, min_words=300):
     with zipfile.ZipFile(epub) as zf:
         package = read_package(zf)
-        docs = [(href, *html_to_text(zf.read(href).decode("utf-8"))) for href in package.spine]
-    docs, gutenberg_end = strip_gutenberg(docs)
+        labels = toc_labels(package.toc)
+        docs = [(href, *html_to_text(zf.read(href).decode("utf-8"), labels.get(href, ()))) for href in package.spine]
+    docs = [(href, title, list(zip([None] + [a for a, _ in starts], cut(paragraphs, [i for _, i in starts]))))
+            for href, title, paragraphs, starts in docs]
+    kept, gutenberg_end = strip_gutenberg([paragraphs for _, _, segments in docs for _, paragraphs in segments])
+    kept = iter(kept)
+    docs = split_documents([(href, title, [(a, next(kept)) for a, _ in segments]) for href, title, segments in docs],
+                           labels, min_words)
     chapters, texts, skipped, last = [], [], [], []
     for href, title, paragraphs in docs:
         words = sum(len(p.split()) for p in paragraphs)
-        if words < min_words or front_matter(paragraphs):
+        if not is_chapter(paragraphs, min_words):
             skipped.append((href, words))
             continue
         index = len(chapters) + 1
