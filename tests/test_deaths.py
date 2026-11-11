@@ -91,3 +91,16 @@ class KillerSideDeathTest(unittest.TestCase):
                          "quotes": [], "status": "stated", "timeline": "main"})
         volumes = [{"from": 1, "to": 5}]
         self.assertIn(("Tomas Hale", 3), death_candidates(kb, {}, volumes, 5))
+
+
+class FuneralDeathTest(unittest.TestCase):
+    def test_a_death_shown_only_by_a_funeral_or_a_grave_makes_a_candidate(self):
+        book = MiniBook(mini_script())
+        self.addCleanup(book.tmp.cleanup)
+        book.read(5)
+        for claim in ("After Tomas Hale's funeral, the crowd stood in the rain.", "Tomas Hale's tombstone reads 'Keeper of the lamp'."):
+            kb = load_states(book.workdir)
+            kb.facts = [f for f in kb.facts if not (f["entity"] == "Tomas Hale" and DEATH_WORDS.search(f["claim"]))]
+            kb.relations = [r for r in kb.relations if r["target"] != "Tomas Hale"]
+            kb.facts.append({"entity": "Tomas Hale", "chapter": 3, "claim": claim, "quotes": [], "status": "stated", "timeline": "main"})
+            self.assertIn(("Tomas Hale", 3), death_candidates(kb, {}, [{"from": 1, "to": 5}], 5), claim)

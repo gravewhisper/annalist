@@ -30,7 +30,7 @@ Facts outside main carry their timeline id in brackets. Add "timeline": the id o
 
 
 DEATH_WORDS = re.compile(r"\b(die|dies|died|dead|death|deaths|dying|kill|kills|killed|killing|murder|murders|murdered|murdering|suicide|corpse|body|"
-                         r"euthanas\w*|perish\w*|slay|slays|slew|slain|executed)\b", re.I)
+                         r"euthanas\w*|perish\w*|slay|slays|slew|slain|executed|funeral|tombstone|grave|buried|burial|coffin|epitaph|mourn\w*)\b", re.I)
 
 
 DEATH_RELATIONS = ("killed", "kills", "murdered", "murders", "executed", "executes", "slew", "slays")
