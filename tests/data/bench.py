@@ -3,6 +3,10 @@
     python3 tests/data/bench.py fetch            download the epubs into tests/data/cache
     python3 tests/data/bench.py build [names]    build each book's scoped chapters into runs/bench-<name> (costs money)
     python3 tests/data/bench.py score [names]    score each built run against its gold and print a table
+
+Books that are not public domain stay out of the repo: runs/bench-private.json maps each name to
+{"epub": path, "to": last chapter, "stresses": text}, and its gold file is runs/bench-private/<name>-gold.json.
+A book whose epub is missing is skipped.
 """
 import json
 import subprocess
@@ -26,8 +30,17 @@ BOOKS = {
 }
 
 
+PRIVATE = ROOT / "runs" / "bench-private.json"
+if PRIVATE.exists():
+    BOOKS.update({n: {**b, "private": True} for n, b in json.loads(PRIVATE.read_text(encoding="utf-8")).items()})
+
+
 def epub(name):
-    return CACHE / f"{name}.epub"
+    return Path(BOOKS[name]["epub"]) if BOOKS[name].get("private") else CACHE / f"{name}.epub"
+
+
+def gold(name):
+    return ROOT / "runs" / "bench-private" / f"{name}-gold.json" if BOOKS[name].get("private") else DATA / f"{name}-gold.json"
 
 
 def workdir(name):
@@ -53,7 +66,7 @@ def build(name):
 
 
 def score(name):
-    out = subprocess.run([sys.executable, "-m", "annalist", "eval", str(workdir(name)), str(DATA / f"{name}-gold.json")],
+    out = subprocess.run([sys.executable, "-m", "annalist", "eval", str(workdir(name)), str(gold(name))],
                          cwd=ROOT, capture_output=True, text=True)
     if out.returncode:
         return None
@@ -74,10 +87,14 @@ def main():
     command, names = (sys.argv[1] if len(sys.argv) > 1 else "score"), sys.argv[2:] or list(BOOKS)
     if command == "fetch":
         for n in names:
-            fetch(n)
+            if not BOOKS[n].get("private"):
+                fetch(n)
     elif command == "build":
         for n in names:
-            build(n)
+            if epub(n).exists():
+                build(n)
+            else:
+                print(f"skip {n}: {epub(n)} is missing")
     elif command == "score":
         table(names)
     else:
