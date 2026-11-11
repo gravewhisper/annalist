@@ -216,6 +216,17 @@ class RankMentionTest(unittest.TestCase):
                                                                   ("Maren Holt", "Maren Holt, Circle 3")])
         self.assertEqual(found[0]["quote"], "They keep three circles. Circle 1: Lamp Wick. Then Circle Two, the Lantern Bearer.")
 
+    def test_the_scan_finds_a_name_after_a_linking_verb_or_standing_alone_in_the_next_sentence(self):
+        text = ("At last the hill school's Circle 2 came to mind.\n\n\"Ash Reader. They read the ashes.\" Its Circle 3 was called Ember Sage.\n"
+                "Nobody spoke of Circle 4 again. \"Enough. Go to bed.\"\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "chapters").mkdir()
+            (Path(tmp) / "chapters" / "0001.txt").write_text(text, encoding="utf-8")
+            found = rank_mentions(tmp, [1], "circle")
+        self.assertEqual([(m["name"], m["form"]) for m in found], [("Ash Reader", 'Circle 2 came to mind. "Ash Reader.'),
+                                                                  ("Ember Sage", "Circle 3 was called Ember Sage")])
+        self.assertEqual(found[0]["quote"], 'At last the hill school\'s Circle 2 came to mind. "Ash Reader. They read the ashes." Its Circle 3 was called Ember Sage.')
+
 
 class RanksOffLadderTest(unittest.TestCase):
     def test_people_and_organizations_holding_a_rank_are_not_listed_as_ranks(self):

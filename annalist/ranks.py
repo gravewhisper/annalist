@@ -35,10 +35,15 @@ def stated_steps(kb, spec, word):
     return found
 
 
+TITLED = r"[\"“]?(?P<name>{name})[.!](?=[\"”]?\s+[\"“]?(?:They|Their|Its?|He|She|His|Her|This|These|Those)(?!\w))".format(name=NAME)
+
+
 def mention_patterns(word):
     w, number = re.escape(word), rf"(?i:{NUMBER})"
-    return (re.compile(rf"(?i:(?<!\w){w})\s+{number}\s*[:,]?\s+(?:the\s+|a\s+)?(?P<name>{NAME})"),
-            re.compile(rf"(?<![\w'’])(?P<name>{NAME})(?:,\s*|\s*\()(?:a\s+|the\s+)?(?i:{w})\s+{number}(?!\w)"))
+    rank = rf"(?i:(?<!\w){w})\s+{number}"
+    return (re.compile(rf"{rank}\s*[:,]?\s+(?:(?:is|was)\s+(?:(?:called|named|known\s+as)\s+)?)?(?:the\s+|a\s+)?(?P<name>{NAME})"),
+            re.compile(rf"(?<![\w'’])(?P<name>{NAME})(?:,\s*|\s*\()(?:a\s+|the\s+)?(?i:{w})\s+{number}(?!\w)"),
+            re.compile(rf"{rank}(?!\w)[^.!?:\n\"“”]{{0,80}}[.!?][\"”’]?\s+{TITLED}"))
 
 
 def rank_quote(text, start, end, limit=400):
