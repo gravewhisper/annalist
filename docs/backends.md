@@ -48,6 +48,8 @@ With the `claude-cli` backend, an `efforts` map in `book.json` sets the reasonin
 {"efforts": {"default": "high", "extract": "medium"}}
 ```
 
+The `proofread` step runs at `high` unless the map names `proofread` itself, because its prompts hold a whole volume, and at the default effort such a prompt got no reasoning and empty replies. A `default` key does not lower it.
+
 Replies saved at one effort are never reused at another.
 
 ## Retries

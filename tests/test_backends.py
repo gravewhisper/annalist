@@ -164,6 +164,12 @@ class ClaudeCLIBackendTest(unittest.TestCase):
         with self.assertRaisesRegex(ConfigError, "only with the claude-cli backend"):
             parse_settings({"efforts": {"extract": "high"}, "backend": {"name": "openai", "model": "m"}}, {})
 
+    def test_the_whole_volume_proofread_asks_at_high_effort_unless_book_json_names_its_effort(self):
+        self.assertEqual(parse_settings({}, {}).effort_for("proofread"), "high")
+        self.assertEqual(parse_settings({"efforts": {"default": "low"}}, {}).effort_for("proofread"), "high")
+        self.assertEqual(parse_settings({"efforts": {"proofread": "max"}}, {}).effort_for("proofread"), "max")
+        self.assertIsNone(parse_settings({"backend": {"name": "openai", "model": "m"}}, {}).effort_for("proofread"))
+
     def test_error_envelope_is_retried(self):
         envelope = json.dumps({"is_error": True, "subtype": "error_during_execution", "result": "overloaded"})
         with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, stub_claude(tmp, envelope, 1)):

@@ -257,6 +257,12 @@ OPTIONS = {
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 
 
+EFFORT_BACKENDS = ("claude-cli", "fake")
+
+
+DEFAULT_EFFORTS = {"proofread": "high"}
+
+
 TYPE_NAMES = {str: "a string", int: "a whole number", dict: "an object"}
 
 
@@ -269,7 +275,8 @@ class Settings:
     efforts: dict = field(default_factory=dict)
 
     def effort_for(self, purpose):
-        return self.efforts.get(purpose) or self.efforts.get("default")
+        built_in = DEFAULT_EFFORTS.get(purpose) if self.backend in EFFORT_BACKENDS else None
+        return self.efforts.get(purpose) or built_in or self.efforts.get("default")
 
     def model_for(self, purpose):
         model = self.models.get(purpose) or self.default_model
@@ -317,7 +324,7 @@ def parse_settings(book, env):
     efforts = book.get("efforts") or {}
     if not isinstance(efforts, dict) or any(v not in EFFORTS for v in efforts.values()):
         raise ConfigError(f"book.json efforts must map steps to one of {', '.join(EFFORTS)}")
-    if efforts and name not in ("claude-cli", "fake"):
+    if efforts and name not in EFFORT_BACKENDS:
         raise ConfigError(f"book.json efforts work only with the claude-cli backend, not {name}")
     return Settings(backend=name, default_model=model or BACKENDS[name].default_model, models=models, options=options,
                     efforts=efforts)
