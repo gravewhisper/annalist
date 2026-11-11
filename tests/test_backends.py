@@ -8,6 +8,7 @@ from unittest import mock
 
 from annalist.backends import (Anthropic, ClaudeCLI, ConfigError, Fake, Fatal, OpenAI, Request, Transient,
                                parse_settings, prompt_sha1)
+from annalist.estimate import estimate
 from annalist.llm import SYSTEM_PROMPT
 
 PAYLOADS = Path(__file__).parent / "data" / "payloads"
@@ -206,6 +207,22 @@ class SettingsTest(unittest.TestCase):
         settings = parse_settings({"models": {"extract": "opus"}}, {})
         self.assertEqual(settings.backend, "claude-cli")
         self.assertEqual((settings.model_for("extract"), settings.model_for("support")), ("opus", "sonnet"))
+
+    def test_proofread_alone_may_name_a_list_of_models(self):
+        settings = parse_settings({"models": {"proofread": ["sonnet", "opus"]}}, {})
+        self.assertEqual(settings.models_for("proofread"), ("sonnet", "opus"))
+        self.assertEqual(settings.with_model("proofread", "opus").model_for("proofread"), "opus")
+        self.assertEqual(parse_settings({}, {}).models_for("proofread"), ("sonnet",))
+        for models, error in (({"extract": ["sonnet", "opus"]}, "only proofread takes a list"), ({"proofread": []}, "must list different model names"),
+                              ({"proofread": ["opus", "opus"]}, "must list different model names")):
+            with self.assertRaisesRegex(ConfigError, error):
+                parse_settings({"models": models}, {})
+
+    def test_a_list_of_proofread_models_adds_up_each_models_estimate(self):
+        one = {m: estimate(parse_settings({"models": {"proofread": m}}, {}), ("proofread",), 100_000) for m in ("sonnet", "opus")}
+        both = estimate(parse_settings({"models": {"proofread": ["sonnet", "opus"]}}, {}), ("proofread",), 100_000)
+        self.assertAlmostEqual(both.dollars, one["sonnet"].dollars + one["opus"].dollars)
+        self.assertAlmostEqual(both.seconds, 2 * one["sonnet"].seconds)
 
     def test_book_block_selects_backend_and_default_model(self):
         settings = parse_settings({"backend": {"name": "openai", "base_url": "http://localhost:1234/v1", "model": "qwen3-8b"},

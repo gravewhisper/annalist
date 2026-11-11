@@ -123,3 +123,12 @@ Code checks each row the way it checks yours, and more strictly:
 `render` and `export` apply both files through the same path, so a proposed row rewrites page text the way yours does. Where both files change the same thing, your row wins and the proposed row is skipped. The same thing means the same page's `same_as`, `type`, or `title`, the same infobox field at the same chapter, the same tie, or the same question. Your `drop` and `drop_relations` rows also remove a value or a tie that a proposed row added. `sweep`, `answers`, `ending`, and `read` see only your file.
 
 The stage reviews the pipeline's wiki without either file's corrections. So an edit to `corrections.json` never makes it ask the model again. A volume is reviewed again only when a session's prompt changes, which happens when the pipeline changes that volume's wiki.
+
+### Several proofread models
+
+Two models find different mistakes, so `book.json` can name a list for the stage: `"models": {"proofread": ["sonnet", "opus[1m]"]}`. A single name, the default, runs one model as before. With a list, each model runs every session. Each reply is cached under its own model, so a rerun asks neither model again. Every row passes the checks above, and the rows of all models are then combined in the order of the list:
+
+- A row that makes the same change as an earlier model's row counts once. Two rows make the same change when they differ only in their quotes and `why`, so two answers to one question in different words are different changes.
+- A row that changes the same thing as an earlier model's row in another way is a conflict. The row of the model listed first is kept, and the other goes to `rejected` with the reason `conflicts with the row from <model>, listed first`. The same thing means what it means above for your own corrections.
+
+Each kept row has a `models` list. Its first model is the one whose quotes and `why` the row keeps, and any model that proposed the same change follows it. Each line of `rejected` and `sessions` names its `model`, and each session counts its `duplicates`.

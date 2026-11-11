@@ -117,6 +117,10 @@ class ProofreadBuildTest(unittest.TestCase):
         self.assertEqual([r["id"] for r in self.review["questions"]], ["Q0003-01", "Q0003-04"])
         self.assertFalse((self.book.workdir / "corrections.json").exists())
 
+    def test_one_model_marks_no_row_with_its_model(self):
+        rows = [r for kind in ("entries", "relations", "drop_relations", "questions", "rejected", "sessions") for r in self.review[kind]]
+        self.assertEqual([r for r in rows if {"models", "model", "duplicates"} & set(r)], [])
+
     def test_no_session_sees_a_chapter_past_its_volume(self):
         probed = {r["volume"] for r in self.review["rejected"] if r["row"].get("why") == PROBE}
         self.assertEqual(probed, {"Volume 2"})
@@ -215,6 +219,100 @@ class PartsTest(unittest.TestCase):
             self.assertEqual(len(book.calls("proofread")), len(review["sessions"]))
             self.assertIn(("Tomas Hale", "wrote in", "Salt Ledger", 2), [(r["source"], r["type"], r["target"], r["chapter"]) for r in review["relations"]])
             self.assertIn("chapter 3 is outside chapters 2-2", {r["reason"] for r in review["rejected"]})
+        finally:
+            book.close()
+
+
+TWO_MODELS = ["first-model", "second-model"]
+SECOND_CHARACTERS = {
+    "entries": [{"name": "harbour lamp", "type": "organization", "chapter": 1, "quotes": [LAMP], "why": "The second model files it otherwise."}],
+    "relations": [
+        {"source": "Tomas Hale", "target": "Salt Ledger", "type": "wrote in", "status": "stated", "chapter": 2,
+         "quotes": ["He wrote the hour of lighting in the Salt Ledger every night, in his square careful hand"], "why": "Other words, same tie."},
+        {"source": "Tomas Hale", "target": "harbour lamp", "type": "keeper of", "chapter": 1, "quotes": [KEEPER]}],
+}
+SECOND_MYSTERIES = {"questions": [
+    {"id": "Q0003-04", "dismiss": True, "why": "No mystery at all."},
+    {"id": "Q0003-01", "chapter": 3, "answer": "The Captain said he slipped.", "quotes": [SLIPPED]},
+]}
+
+
+def two_model_script():
+    script = proofread_script()
+    script["replies"][:0] = [
+        {"purpose": "proofread", "model": "second-model", "contains": f"as it stands after chapter 3: the {title}.", "reply": reply}
+        for title, reply in (("characters", SECOND_CHARACTERS), ("places, organizations, and other entries", {"relations": SECOND_CHARACTERS["relations"][:1]}),
+                             ("questions a reader noted", SECOND_MYSTERIES))]
+    return script
+
+
+def tie_rows(review):
+    return {(r["source"], r["type"], r["target"], r["chapter"]): r["models"] for r in review["relations"]}
+
+
+class TwoModelTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.book = MiniBuild(two_model_script(), book={"backend": {"name": "fake", "script": "script.json"}, "models": {"proofread": TWO_MODELS}})
+        cls.book.build(*VOLUMES)
+        cls.asked = len(cls.book.calls("proofread"))
+        cls.again = cls.book.build(*VOLUMES)
+        cls.review = cls.book.json("proofread.json")
+        cls.wiki = cls.book.json("site/data/wiki.json")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.book.close()
+
+    def test_each_model_reads_every_session(self):
+        sessions = {(s["model"], s["volume"], s["slice"]) for s in self.review["sessions"]}
+        self.assertEqual({m for m, _, _ in sessions}, set(TWO_MODELS))
+        self.assertEqual({(v, k) for m, v, k in sessions if m == "first-model"}, {(v, k) for m, v, k in sessions if m == "second-model"})
+        self.assertEqual({c["model"] for c in self.book.calls("proofread")}, set(TWO_MODELS))
+
+    def test_the_rows_of_both_models_are_combined(self):
+        self.assertEqual(tie_rows(self.review)[("Tomas Hale", "keeper of", "harbour lamp", 1)], ["second-model"])
+        self.assertIn(("Tomas Hale", "keeper of", "harbour lamp", 1), ties(self.wiki))
+        self.assertEqual(entity(self.wiki, "harbour lamp")["type"], "place")
+
+    def test_an_identical_change_from_two_models_counts_once(self):
+        self.assertEqual([(r["type"], r["models"]) for r in self.review["relations"] if r["target"] == "Salt Ledger"],
+                         [("wrote in", TWO_MODELS)])
+        self.assertEqual([r["models"] for r in self.review["questions"] if r["id"] == "Q0003-04"], [TWO_MODELS])
+        self.assertEqual(sum(s["duplicates"] for s in self.review["sessions"]), 2)
+
+    def test_a_model_that_repeats_its_own_duplicate_is_rejected_as_a_repeat(self):
+        repeats = [(r["model"], r["slice"]) for r in self.review["rejected"] if r["reason"] == "repeats or contradicts a row accepted earlier"
+                   and r["row"].get("target") == "Salt Ledger"]
+        self.assertEqual(repeats, [("second-model", "world-1")])
+
+    def test_a_conflict_keeps_the_first_listed_models_row_and_logs_the_other(self):
+        self.assertEqual([(r.get("type"), r["models"]) for r in self.review["entries"] if r["name"] == "harbour lamp"], [("place", ["first-model"])])
+        self.assertEqual([r["answer"] for r in self.review["questions"] if r["id"] == "Q0003-01"], ["Captain Fenn said he slipped in the fog."])
+        conflicts = {(r["model"], r["list"], json.dumps(r["row"], sort_keys=True)) for r in self.review["rejected"]
+                     if r["reason"] == "conflicts with the row from first-model, listed first"}
+        self.assertEqual(conflicts, {("second-model", "entries", json.dumps(SECOND_CHARACTERS["entries"][0], sort_keys=True)),
+                                     ("second-model", "questions", json.dumps(SECOND_MYSTERIES["questions"][1], sort_keys=True))})
+
+    def test_a_rerun_calls_no_model(self):
+        self.assertEqual(ran(self.again.stdout), [])
+        self.assertEqual(len(self.book.calls("proofread")), self.asked)
+        rerun = self.book.run_annalist("proofread", str(self.book.workdir), "--budget", "0")
+        self.assertEqual(rerun.returncode, 0)
+        self.assertEqual(len(self.book.calls("proofread")), self.asked)
+        self.assertEqual(self.book.json("proofread.json"), self.review)
+
+    def test_the_budget_counts_every_model(self):
+        book = MiniBuild(two_model_script(), book={"backend": {"name": "fake", "script": "script.json"}, "models": {"proofread": TWO_MODELS}})
+        try:
+            book.build(*VOLUMES)
+            for path in (book.workdir / "cache").glob("proofread-*.json"):
+                if json.loads(path.read_text(encoding="utf-8"))["model"] == "second-model":
+                    path.unlink()
+            asked = len(book.calls("proofread"))
+            stopped = book.run_annalist("proofread", str(book.workdir), "--budget", "0", check=False)
+            self.assertIn("stopping before the second-model proofread of Volume 1", stopped.stderr)
+            self.assertEqual(len(book.calls("proofread")), asked)
         finally:
             book.close()
 

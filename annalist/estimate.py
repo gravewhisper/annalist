@@ -81,8 +81,7 @@ def measure_rates(workdirs, purposes=None):
     return {p: Rate(round(i * per, 2), round(o * per, 2), round(w * per, 4)) for p, (i, o, w) in sorted(totals.items())}
 
 
-def dollars_per_million(settings, purpose):
-    model = settings.model_for(purpose)
+def dollars_per_million(settings, model):
     if settings.backend == "fake":
         return {"input": 0.0, "output": 0.0}
     if settings.backend == "openai":
@@ -104,14 +103,14 @@ def estimate(settings, purposes, words, jobs=1, chain=False, rates=RATES, fresh=
     for purpose in purposes:
         rate = rates[purpose]
         try:
-            price = dollars_per_million(settings, purpose)
+            prices = [dollars_per_million(settings, model) for model in settings.models_for(purpose)]
         except ConfigError:
-            price = None
-        if price is None or dollars is None:
+            prices = [None]
+        if None in prices or dollars is None:
             dollars = None
         else:
-            dollars += words / 1000 * (rate.input_tokens * price["input"] + rate.output_tokens * price["output"]) / 1e6
-        walls.append(words / 1000 * rate.wall_s)
+            dollars += sum(words / 1000 * (rate.input_tokens * price["input"] + rate.output_tokens * price["output"]) / 1e6 for price in prices)
+        walls.append(words / 1000 * rate.wall_s * len(prices))
     seconds = walls[0] + max(walls[1:], default=0) if chain else sum(walls) / max(1, jobs)
     likely = dollars if dollars is None or fresh is None else dollars * fresh
     return Estimate(words=words, dollars=dollars, seconds=seconds, likely=likely)

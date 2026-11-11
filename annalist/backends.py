@@ -5,7 +5,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from .book import load_book
@@ -220,7 +220,7 @@ class Fake:
         except (OSError, ValueError, KeyError) as exc:
             raise ConfigError(f"fake backend script {path}: {exc}")
         self.by_hash = {e["prompt_sha1"]: e["reply"] for e in entries if "prompt_sha1" in e}
-        self.by_text = [(e["purpose"], e["contains"], e["reply"]) for e in entries if "contains" in e]
+        self.by_text = [(e["purpose"], e["contains"], e.get("model"), e["reply"]) for e in entries if "contains" in e]
         self.by_step = {}
         for e in entries:
             if "purpose" in e and "contains" not in e:
@@ -228,7 +228,8 @@ class Fake:
 
     def complete(self, request):
         digest = prompt_sha1(request.prompt)
-        matched = [r for purpose, text, r in self.by_text if purpose == request.purpose and text in request.prompt]
+        matched = [r for purpose, text, model, r in self.by_text
+                   if purpose == request.purpose and text in request.prompt and model in (None, request.model)]
         if digest in self.by_hash:
             reply = self.by_hash[digest]
         elif matched:
@@ -263,6 +264,9 @@ EFFORT_BACKENDS = ("claude-cli", "fake")
 DEFAULT_EFFORTS = {"proofread": "high"}
 
 
+SEVERAL_MODELS = ("proofread",)
+
+
 TYPE_NAMES = {str: "a string", int: "a whole number", dict: "an object"}
 
 
@@ -278,11 +282,20 @@ class Settings:
         built_in = DEFAULT_EFFORTS.get(purpose) if self.backend in EFFORT_BACKENDS else None
         return self.efforts.get(purpose) or built_in or self.efforts.get("default")
 
-    def model_for(self, purpose):
+    def models_for(self, purpose):
         model = self.models.get(purpose) or self.default_model
         if not model:
             raise ConfigError(f"the {self.backend} backend has no model for {purpose!r}; set backend.model in book.json")
+        return tuple(model) if isinstance(model, list) else (model,)
+
+    def model_for(self, purpose):
+        model, *more = self.models_for(purpose)
+        if more:
+            raise ConfigError(f"book.json models.{purpose} names several models, but this step runs one")
         return model
+
+    def with_model(self, purpose, model):
+        return replace(self, models={**self.models, purpose: model})
 
 
 def check_prices(prices):
@@ -313,11 +326,16 @@ def parse_settings(book, env):
         raise ConfigError("the fake backend needs backend.script, a JSON file of scripted replies")
     check_prices(options.get("prices", {}))
     models = book.get("models") or {}
+    for purpose, named in models.items():
+        if isinstance(named, list) and purpose not in SEVERAL_MODELS:
+            raise ConfigError(f"book.json models.{purpose} must be one model name; only {', '.join(SEVERAL_MODELS)} takes a list")
+        if isinstance(named, list) and not (named and all(isinstance(m, str) and m for m in named) and len(set(named)) == len(named)):
+            raise ConfigError(f"book.json models.{purpose} must list different model names")
     model = block.get("model")
     if model is not None and not (isinstance(model, str) and model):
         raise ConfigError("backend.model must be a model name")
     if name == "openai":
-        aliased = {p: m for p, m in models.items() if m in ANTHROPIC_ALIASES}
+        aliased = {p: m for p, m in models.items() if set(m if isinstance(m, list) else [m]) & set(ANTHROPIC_ALIASES)}
         if aliased:
             raise ConfigError(f"book.json models {aliased} name Claude CLI aliases, which an OpenAI-compatible server "
                               "does not know; give model ids the server serves")

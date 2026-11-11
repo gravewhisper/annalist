@@ -26,6 +26,8 @@ A `backend` block in `book.json` picks the backend and its options. `model` is t
 }
 ```
 
+`models.proofread` alone may name a list of models, such as `"models": {"proofread": ["sonnet", "opus[1m]"]}`. Each model reviews every volume, and the stage combines the rows they propose (see [Several proofread models](corrections.md#several-proofread-models)). A list costs the sum of each model's sessions, so `--dry-run` adds up each model's estimate and `--budget` counts every model's calls. A list for any other step stops the command with an error.
+
 OpenRouter: `"base_url": "https://openrouter.ai/api/v1", "api_key_env": "OPENROUTER_API_KEY", "model"` set to an OpenRouter model id. Ollama: `"base_url": "http://localhost:11434/v1"`. Local models are experimental. Load them with a context of 32k tokens or more, because LM Studio's default 8k cuts prompts short. In a test with a 12B model, reasoning took over three minutes per chapter and ran away on one call, and with reasoning off, 2 of 5 chapter reads came back as broken JSON on the first try. The Anthropic backend accepts the aliases `opus`, `sonnet` and `haiku`, so a book written for `claude-cli` runs on it unchanged.
 
 Options per backend:

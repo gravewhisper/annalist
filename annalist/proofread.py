@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 
-from .corrections import absorbed_part, blocked, claims, find_question, profile_group, PROOFREAD_FILE
+from .backends import load_settings
+from .corrections import absorbed_part, blockers, claims, find_question, profile_group, PROOFREAD_FILE
 from .families import read_families, relation_family
 from .files import log, read_json, write_json
 from .llm import BudgetSpent, cached_llm, cached_reply, spent_since
@@ -434,34 +435,67 @@ def sessions(workdir, v, review):
             yield (first, last), s, prompt
 
 
+CHANGE_DETAIL = ("quotes", "why", "volume", "slice", "models")
+
+
+def change(kb, row):
+    def plain(value):
+        if isinstance(value, dict):
+            return tuple(sorted((k, plain(v)) for k, v in value.items() if k not in CHANGE_DETAIL))
+        if isinstance(value, list):
+            return tuple(plain(v) for v in value)
+        return name_key(value) if isinstance(value, str) else value
+    return plain({**row, **{k: kb.resolve(row[k]) or row[k] for k in ("name", "same_as", "source", "target") if isinstance(row.get(k), str)}})
+
+
 def cmd_proofread(args):
     workdir = Path(args.workdir).resolve()
     started = args.started or time.strftime("%Y-%m-%dT%H:%M:%S")
     book = read_json(workdir / "book.json", {})
+    settings = load_settings(workdir)
+    several = isinstance(settings.models.get(PURPOSE), list)
     out = {kind: [] for kind in LISTS} | {"rejected": [], "sessions": []}
-    taken = set()
+    views = []
     for v in finished_volumes(workdir, args.to):
         kb, pages = volume_view(workdir, v)
         review = Review(workdir, kb, pages, book)
         planned = list(sessions(workdir, v, review))
         log(workdir, f"proofread: {v['name']} (ch {v['from']}-{v['to']}): {len(planned)} sessions, "
                      f"about {max((tokens(p) for _, _, p in planned), default=0):,} tokens each at most")
-        for part, s, prompt in planned:
-            spent = spent_since(workdir, started)
-            if args.budget is not None and spent >= args.budget and cached_reply(workdir, PURPOSE, prompt) is None:
-                raise BudgetSpent(f"spent ${spent:,.2f} of the ${args.budget:,.2f} budget; stopping before the proofread of {v['name']}, {s.title}")
-            where = {"volume": v["name"], "chapters": list(part), "slice": s.key}
-            counts = {"accepted": 0, "rejected": 0}
-            for kind, piece, row in proposals(cached_llm(workdir, PURPOSE, prompt, check=reply_problem, chapter=part[1])):
-                reason = problem(review, piece, row, part)
-                if not reason and blocked(kb, kind, row, taken):
-                    reason = "repeats or contradicts a row accepted earlier"
-                if reason:
-                    out["rejected"].append({**where, "list": kind, "row": row, "reason": reason})
-                else:
-                    taken.update(claims(kb, kind, row))
-                    out[kind].append({**accepted_row(review, kind, row), "volume": v["name"], "slice": s.key})
-                counts["rejected" if reason else "accepted"] += 1
-            out["sessions"].append({**where, "tokens": tokens(prompt), **counts})
-            log(workdir, f"proofread: {v['name']} ch {part[0]}-{part[1]}, {s.title}: {counts['accepted']} accepted, {counts['rejected']} rejected")
+        views.append((v, review, planned))
+    owners = {}
+    for model in settings.models_for(PURPOSE):
+        one = settings.with_model(PURPOSE, model)
+        for v, review, planned in views:
+            kb = review.kb
+            for part, s, prompt in planned:
+                spent = spent_since(workdir, started)
+                if args.budget is not None and spent >= args.budget and cached_reply(workdir, PURPOSE, prompt, one) is None:
+                    raise BudgetSpent(f"spent ${spent:,.2f} of the ${args.budget:,.2f} budget; stopping before the "
+                                      f"{f'{model} ' if several else ''}proofread of {v['name']}, {s.title}")
+                where = {"volume": v["name"], "chapters": list(part), "slice": s.key} | ({"model": model} if several else {})
+                counts = {"accepted": 0, "rejected": 0} | ({"duplicates": 0} if several else {})
+                for kind, piece, row in proposals(cached_llm(workdir, PURPOSE, prompt, check=reply_problem, chapter=part[1], settings=one)):
+                    reason = problem(review, piece, row, part)
+                    accepted = None if reason else accepted_row(review, kind, row)
+                    owner = None if reason else next((owners[b] for c in claims(kb, kind, row) for b in blockers(c) if b in owners), None)
+                    if owner and model in owner[0]:
+                        reason = "repeats or contradicts a row accepted earlier"
+                    elif owner and owner[1] != change(kb, accepted):
+                        reason = f"conflicts with the row from {owner[0][0]}, listed first"
+                    if reason:
+                        out["rejected"].append({**where, "list": kind, "row": row, "reason": reason})
+                        counts["rejected"] += 1
+                    elif owner:
+                        owner[0].append(model)
+                        counts["duplicates"] += 1
+                    else:
+                        models = [model]
+                        kept = {**accepted, "volume": v["name"], "slice": s.key} | ({"models": models} if several else {})
+                        owners.update((c, (models, change(kb, accepted))) for c in claims(kb, kind, row))
+                        out[kind].append(kept)
+                        counts["accepted"] += 1
+                out["sessions"].append({**where, "tokens": tokens(prompt), **counts})
+                log(workdir, f"proofread: {v['name']} ch {part[0]}-{part[1]}, {s.title}{f' ({model})' if several else ''}: "
+                             f"{counts['accepted']} accepted, {counts['rejected']} rejected" + (f", {counts['duplicates']} duplicates" if several else ""))
     write_json(workdir / PROOFREAD_FILE, out)
