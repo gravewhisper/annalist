@@ -535,3 +535,39 @@ svg.family .ftie.new{stroke:var(--accent)}
 .pres{list-style:none;margin:2px 0 4px;padding:0 0 0 10px;font-size:13px;line-height:1.45}
 .prole{color:var(--muted)}
 .pnode .disc{margin:2px 0 0 10px;font-size:13px}
+
+/* Light-mode prototypes A, B and C, picked by data-light on <html>. Without data-light the site renders as before.
+   Each option outranks a book theme's light surfaces and links; the :where() blocks give defaults that a book's accent and heading override. */
+:root[data-theme="light"][data-light] body{background:linear-gradient(90deg,var(--frame) 50%,var(--bg) 50%)}
+:root[data-theme="light"][data-light] .side h4{color:var(--side-label)}
+:root[data-theme="light"][data-light] blockquote{border-left-color:var(--quote-rule)}
+:root[data-theme="light"][data-light] .top{background:var(--top-bg);box-shadow:inset 0 3px var(--top-rule)}
+:root[data-theme="light"][data-light] .side{min-height:calc(100vh - 57px)}
+:root[data-theme="light"][data-light] .side a.on{background:var(--side-on)}
+:root[data-theme="light"][data-light] main{background:var(--bg)}
+:root[data-theme="light"][data-light] .searchwrap input{background:var(--field)}
+:root[data-theme="light"][data-light] :is(.searchwrap input,.iconbtn,.more,.gmorebtn){border-color:var(--line-strong)}
+:root[data-theme="light"][data-light] :is(.iconbtn,.more,.gmorebtn):hover{border-color:var(--fg)}
+:root[data-theme="light"][data-light] :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+:root[data-theme="light"][data-light] .searchwrap input:focus{border-color:var(--focus)}
+:root[data-theme="light"][data-light] .newtag{background:var(--new-bg)}
+:root[data-theme="light"][data-light] .infobox h3{background:var(--ib-head-bg);border-radius:calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0}
+:root[data-theme="light"][data-light] :is(span.dead,.lholders li.lpast){opacity:1}
+:root[data-theme="light"][data-light] :is(span.dead,.lholders li.lpast) a{color:var(--muted);border-bottom-color:var(--dead-line)}
+:root[data-theme="light"][data-light] .lholders li.lpast::before{opacity:.5}
+:root[data-theme="light"][data-light] .gchips a{opacity:1;color:var(--muted)}
+:root[data-theme="light"][data-light] .gchips a:not(.on) .dot{opacity:.35}
+:root[data-theme="light"][data-light] .gchips a:is(.on,:hover){color:var(--fg)}
+:root[data-theme="light"][data-light] #graph .lbl.dead{opacity:1;fill:var(--muted)}
+:root[data-theme="light"][data-light] :is(.newtag,.mans .mlbl,.mrow.new a,.mcol.new a){color:var(--accent-text)}
+:root[data-theme="light"][data-light] .myst.dropped .mans .mlbl{color:var(--muted)}
+:root[data-theme="light"][data-light]{--accent-text:color-mix(in srgb,var(--accent) 78%,var(--fg));--edge-rest:.85;--r-things:#6b7785;--r-conflict:#b3261e;--g2:#d4561f;--g3:#12845c;--g4:#b07400;--g5:#c8487f;--g8:#d63b3a}
+
+:root[data-theme="light"][data-light="a"]{--frame:#ffffff;--top-bg:#ffffff;--side-on:#eef0f3;--bg:#ffffff;--card:#f8f9fa;--hover:#eef0f3;--line:#dadde2;--line-strong:#8d939a;--field:#ffffff;--fg:#202122;--muted:#54595d;--link:#3366cc;--link-line:transparent;--focus:#3366cc;--new-bg:transparent;--ib-head-bg:transparent;--top-rule:transparent;--side-label:var(--muted);--quote-rule:var(--line);--dead-line:transparent;--shadow:0 4px 16px #0000001f}
+:root[data-theme="light"]:where([data-light="a"]){--accent:#177860;--heading:#101112}
+
+:root[data-theme="light"][data-light="b"]{--frame:#f4f3ef;--top-bg:#ffffff;--side-on:#ffffff;--bg:#f4f3ef;--card:#ffffff;--hover:#e9e7e1;--line:#dfdcd4;--line-strong:#8e8a82;--field:#ffffff;--fg:#1c1b18;--muted:#5a5852;--link:#1d55a6;--link-line:color-mix(in srgb,var(--link) 28%,transparent);--focus:#1d55a6;--new-bg:transparent;--ib-head-bg:transparent;--top-rule:transparent;--side-label:var(--muted);--quote-rule:var(--line);--dead-line:var(--line);--shadow:0 6px 20px #2a26201f}
+:root[data-theme="light"]:where([data-light="b"]){--accent:#177860;--heading:#1c1b18}
+
+:root[data-theme="light"][data-light="c"]{--frame:#f1ede4;--top-bg:#f1ede4;--side-on:#fbf9f4;--bg:#fbf9f4;--card:#ffffff;--hover:#eeeae1;--line:#e2dccf;--line-strong:#8f877a;--field:#fffefb;--fg:#24211c;--muted:#5d564b;--link:#1b4f94;--link-line:color-mix(in srgb,var(--link) 35%,transparent);--focus:#1b4f94;--new-bg:color-mix(in srgb,var(--accent) 12%,transparent);--ib-head-bg:color-mix(in srgb,var(--accent) 13%,var(--card));--top-rule:var(--accent);--side-label:var(--accent-text);--quote-rule:color-mix(in srgb,var(--accent) 45%,transparent);--dead-line:var(--line);--shadow:0 6px 22px #3a2c121f}
+:root[data-theme="light"]:where([data-light="c"]){--accent:#9a4f16;--heading:#1d1a16}

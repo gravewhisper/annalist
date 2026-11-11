@@ -11,6 +11,13 @@
   try { t = localStorage.getItem('wiki-theme'); } catch (e) {}
   if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   document.documentElement.dataset.theme = t;
+  var o = null;
+  try {
+    var asked = new URLSearchParams(location.search).get('light');
+    if (asked !== null) localStorage.setItem('wiki-light', asked);
+    o = localStorage.getItem('wiki-light');
+  } catch (e) {}
+  if (o === 'a' || o === 'b' || o === 'c') document.documentElement.dataset.light = o;
 })();
 </script>
 <link rel="stylesheet" href="app.css">
@@ -35,6 +42,20 @@
   <main id="main"><p class="muted">Loading...</p></main>
 </div>
 <div class="hover" id="hover" role="tooltip"></div>
+<script>
+if (new URLSearchParams(location.search).has('light')) {
+  var bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:60;display:flex;gap:4px;padding:4px;border-radius:8px;background:#202122;font:12px system-ui;box-shadow:0 4px 16px #0004';
+  [['', 'Current'], ['a', 'A plain white'], ['b', 'B soft neutral'], ['c', 'C reading']].forEach(function (p) {
+    var b = document.createElement('button');
+    b.textContent = p[1];
+    b.style.cssText = 'border:0;border-radius:5px;padding:4px 9px;cursor:pointer;color:#fff;background:' + ((document.documentElement.dataset.light || '') === p[0] ? '#3366cc' : 'transparent');
+    b.onclick = function () { location.search = '?light=' + p[0]; };
+    bar.appendChild(b);
+  });
+  document.body.appendChild(bar);
+}
+</script>
 <script src="app.js"></script>
 </body>
 </html>
