@@ -77,6 +77,23 @@ class GutenbergTest(unittest.TestCase):
         self.assertTrue(source["complete"])
 
 
+class FrontMatterTest(unittest.TestCase):
+    def test_prefaces_and_contents_pages_are_not_chapters_but_a_prologue_is(self):
+        contents = ["THE TEST NOVEL", "by A. Writer", "Contents"] + [f"Chapter {i}. A Title Here" for i in range(1, 12)]
+        with tempfile.TemporaryDirectory() as tmp:
+            write_epub(Path(tmp) / "book.epub", [
+                ("Title", contents),
+                ("Preface", ["TRANSLATOR’S PREFACE", "A few words about the author may help the English reader. " * 3]),
+                ("Foreword", ["Foreword", "The author thanks the public for the indulgent ear it has lent. " * 3]),
+                ("Prologue", ["Prologue", STORY]),
+                ("One", ["Chapter 1", STORY]),
+                ("Two", ["Chapter 2", STORY]),
+            ])
+            chapters, texts, _ = extract(Path(tmp) / "book.epub", Path(tmp) / "work")
+        self.assertEqual([t.split("\n\n")[0] for t in texts], ["Prologue", "Chapter 1", "Chapter 2"])
+        self.assertEqual([c["index"] for c in chapters], [1, 2, 3])
+
+
 class ReextractTest(unittest.TestCase):
     def test_extracting_a_different_epub_over_read_state_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:

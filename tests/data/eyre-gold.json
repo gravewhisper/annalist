@@ -11,71 +11,66 @@
   "chapters": [
     {
       "index": 1,
-      "title": "PREFACE",
-      "href": "OEBPS/4081691289656086397_1260-h-1.htm.html"
-    },
-    {
-      "index": 2,
       "title": "CHAPTER I",
       "href": "OEBPS/4081691289656086397_1260-h-3.htm.html"
     },
     {
-      "index": 3,
+      "index": 2,
       "title": "CHAPTER II",
       "href": "OEBPS/4081691289656086397_1260-h-4.htm.html"
     },
     {
-      "index": 4,
+      "index": 3,
       "title": "CHAPTER III",
       "href": "OEBPS/4081691289656086397_1260-h-5.htm.html"
     },
     {
-      "index": 5,
+      "index": 4,
       "title": "CHAPTER IV",
       "href": "OEBPS/4081691289656086397_1260-h-6.htm.html"
     },
     {
-      "index": 6,
+      "index": 5,
       "title": "CHAPTER V",
       "href": "OEBPS/4081691289656086397_1260-h-7.htm.html"
     },
     {
-      "index": 7,
+      "index": 6,
       "title": "CHAPTER VI",
       "href": "OEBPS/4081691289656086397_1260-h-8.htm.html"
     },
     {
-      "index": 8,
+      "index": 7,
       "title": "CHAPTER VII",
       "href": "OEBPS/4081691289656086397_1260-h-9.htm.html"
     },
     {
-      "index": 9,
+      "index": 8,
       "title": "CHAPTER VIII",
       "href": "OEBPS/4081691289656086397_1260-h-10.htm.html"
     },
     {
-      "index": 10,
+      "index": 9,
       "title": "CHAPTER IX",
       "href": "OEBPS/4081691289656086397_1260-h-11.htm.html"
     },
     {
-      "index": 11,
+      "index": 10,
       "title": "CHAPTER X",
       "href": "OEBPS/4081691289656086397_1260-h-12.htm.html"
     },
     {
-      "index": 12,
+      "index": 11,
       "title": "CHAPTER XI",
       "href": "OEBPS/4081691289656086397_1260-h-13.htm.html"
     },
     {
-      "index": 13,
+      "index": 12,
       "title": "CHAPTER XII",
       "href": "OEBPS/4081691289656086397_1260-h-14.htm.html"
     },
     {
-      "index": 14,
+      "index": 13,
       "title": "CHAPTER XIII",
       "href": "OEBPS/4081691289656086397_1260-h-15.htm.html"
     }
@@ -92,6 +87,10 @@
     {
       "href": "OEBPS/4081691289656086397_1260-h-2.htm.html",
       "kind": "author_note"
+    },
+    {
+      "href": "OEBPS/4081691289656086397_1260-h-1.htm.html",
+      "kind": "front_matter"
     }
   ],
   "entities": [
@@ -108,8 +107,8 @@
         "Mademoiselle Eyre",
         "Jeannette"
       ],
-      "first_chapter": 2,
-      "notes": "First-person narrator ('I'); rarely named in narration. Mrs. Reed calls her 'Jane' in ch 2; 'Miss Eyre' and 'Jane Eyre' first in ch 3. The Preface (ch 1) names 'Jane Eyre' only as the book's title, so a page from ch 1 also passes. Signs her advertisement 'J.E.' (ch 11); Adèle calls her 'Mdlle. Jeannette' (ch 13)."
+      "first_chapter": 1,
+      "notes": "First-person narrator ('I'); rarely named in narration. Mrs. Reed calls her 'Jane' in ch 1; 'Miss Eyre' and 'Jane Eyre' first in ch 2. The Preface, which is front matter and not a chapter, names 'Jane Eyre' only as the book's title, so a page that also names the book is fine. Signs her advertisement 'J.E.' (ch 10); Adèle calls her 'Mdlle. Jeannette' (ch 12)."
     },
     {
       "id": "mrs_reed",
@@ -119,7 +118,7 @@
         "Aunt Reed",
         "Missis"
       ],
-      "first_chapter": 2,
+      "first_chapter": 1,
       "notes": "Jane's aunt by marriage (widow of Jane's mother's brother) and her guardian at Gateshead. Her forename is not given in scope."
     },
     {
@@ -129,7 +128,7 @@
       "aliases": [
         "Uncle Reed"
       ],
-      "first_chapter": 3,
+      "first_chapter": 2,
       "notes": "Jane's uncle, her mother's brother; dead nine years when the story opens, died in the red-room. Never seen alive."
     },
     {
@@ -142,8 +141,8 @@
         "Master John",
         "Mr. John"
       ],
-      "first_chapter": 2,
-      "notes": "Mrs. Reed's son, fourteen in ch 2. Bare 'John' is left out on purpose: the Thornfield coachman John (ch 12-13) shares it."
+      "first_chapter": 1,
+      "notes": "Mrs. Reed's son, fourteen in ch 1. Bare 'John' is left out on purpose: the Thornfield coachman John (ch 11-12) shares it."
     },
     {
       "id": "eliza_reed",
@@ -154,8 +153,8 @@
         "Lizzy",
         "Miss Reed"
       ],
-      "first_chapter": 2,
-      "notes": "Elder Reed daughter. Bessie's 'Miss Reed' in ch 11 is Eliza."
+      "first_chapter": 1,
+      "notes": "Elder Reed daughter. Bessie's 'Miss Reed' in ch 10 is Eliza."
     },
     {
       "id": "georgiana_reed",
@@ -166,7 +165,7 @@
         "Georgy",
         "Miss Georgiana"
       ],
-      "first_chapter": 2,
+      "first_chapter": 1,
       "notes": "Younger Reed daughter, the beauty. Never 'Miss Reed' in scope."
     },
     {
@@ -178,8 +177,8 @@
         "Mrs. Leaven",
         "Bessie Leaven"
       ],
-      "first_chapter": 2,
-      "notes": "Nursemaid at Gateshead; full name 'Bessie Lee' in ch 5. Married Robert Leaven, the coachman (ch 11)."
+      "first_chapter": 1,
+      "notes": "Nursemaid at Gateshead; full name 'Bessie Lee' in ch 4. Married Robert Leaven, the coachman (ch 10)."
     },
     {
       "id": "abbot",
@@ -188,7 +187,7 @@
       "aliases": [
         "Abbot"
       ],
-      "first_chapter": 2,
+      "first_chapter": 1,
       "notes": "Mrs. Reed's lady's-maid."
     },
     {
@@ -198,8 +197,8 @@
       "aliases": [
         "Lloyd"
       ],
-      "first_chapter": 4,
-      "notes": "Apothecary who attends Jane after the red-room fit and suggests school; later confirms her story to Miss Temple (ch 9)."
+      "first_chapter": 3,
+      "notes": "Apothecary who attends Jane after the red-room fit and suggests school; later confirms her story to Miss Temple (ch 8)."
     },
     {
       "id": "brocklehurst",
@@ -208,7 +207,7 @@
       "aliases": [
         "Brocklehurst"
       ],
-      "first_chapter": 5,
+      "first_chapter": 4,
       "notes": "Clergyman, treasurer and manager of Lowood."
     },
     {
@@ -216,8 +215,8 @@
       "name": "Naomi Brocklehurst",
       "type": "character",
       "aliases": [],
-      "first_chapter": 6,
-      "notes": "Mr. Brocklehurst's mother, of Brocklehurst Hall; rebuilt part of Lowood (the tablet, ch 6). Not his wife, Mrs. Brocklehurst."
+      "first_chapter": 5,
+      "notes": "Mr. Brocklehurst's mother, of Brocklehurst Hall; rebuilt part of Lowood (the tablet, ch 5). Not his wife, Mrs. Brocklehurst."
     },
     {
       "id": "miss_temple",
@@ -227,8 +226,8 @@
         "Maria Temple",
         "Temple"
       ],
-      "first_chapter": 5,
-      "notes": "Superintendent of Lowood. Marries the Rev. Mr. Nasmyth and leaves in ch 11; never called Mrs. Nasmyth in scope."
+      "first_chapter": 4,
+      "notes": "Superintendent of Lowood. Marries the Rev. Mr. Nasmyth and leaves in ch 10; never called Mrs. Nasmyth in scope."
     },
     {
       "id": "helen_burns",
@@ -238,8 +237,8 @@
         "Helen",
         "Burns"
       ],
-      "first_chapter": 7,
-      "notes": "Appears unnamed in ch 6 as the girl reading Rasselas; 'Burns' and 'Helen' are given in ch 7."
+      "first_chapter": 6,
+      "notes": "Appears unnamed in ch 5 as the girl reading Rasselas; 'Burns' and 'Helen' are given in ch 6."
     },
     {
       "id": "miss_scatcherd",
@@ -248,7 +247,7 @@
       "aliases": [
         "Scatcherd"
       ],
-      "first_chapter": 6,
+      "first_chapter": 5,
       "notes": "Lowood teacher of history and grammar; persecutes Helen."
     },
     {
@@ -258,7 +257,7 @@
       "aliases": [
         "Miller"
       ],
-      "first_chapter": 6,
+      "first_chapter": 5,
       "notes": "Lowood under-teacher who receives Jane."
     },
     {
@@ -266,8 +265,8 @@
       "name": "Mr. Eyre",
       "type": "character",
       "aliases": [],
-      "first_chapter": 11,
-      "notes": "Bessie believes he is Jane's father's brother; came to Gateshead about seven years before ch 11, bound for Madeira; probably a wine merchant. His forename is not given in scope."
+      "first_chapter": 10,
+      "notes": "Bessie believes he is Jane's father's brother; came to Gateshead about seven years before ch 10, bound for Madeira; probably a wine merchant. His forename is not given in scope."
     },
     {
       "id": "mrs_fairfax",
@@ -277,8 +276,8 @@
         "Fairfax",
         "Madame Fairfax"
       ],
-      "first_chapter": 11,
-      "notes": "Elderly widow, housekeeper of Thornfield. Jane takes her for the owner until ch 12."
+      "first_chapter": 10,
+      "notes": "Elderly widow, housekeeper of Thornfield. Jane takes her for the owner until ch 11."
     },
     {
       "id": "rochester",
@@ -291,8 +290,8 @@
         "Edouard Fairfax de Rochester",
         "Mr. Edward"
       ],
-      "first_chapter": 12,
-      "notes": "Owner of Thornfield, named in ch 12. The rider Jane helps in Hay Lane (ch 13) is identified as him at the end of ch 13. His forenames first appear in ch 14; see identity_reveals."
+      "first_chapter": 11,
+      "notes": "Owner of Thornfield, named in ch 11. The rider Jane helps in Hay Lane (ch 12) is identified as him at the end of ch 12. His forenames first appear in ch 13; see identity_reveals."
     },
     {
       "id": "adele",
@@ -308,7 +307,7 @@
         "Miss Adèle",
         "Mademoiselle Adela"
       ],
-      "first_chapter": 12,
+      "first_chapter": 11,
       "notes": "Mr. Rochester's ward and Jane's pupil; born on the Continent. The text spells her both 'Adèle' and 'Adela'."
     },
     {
@@ -318,7 +317,7 @@
       "aliases": [
         "Grace"
       ],
-      "first_chapter": 12,
+      "first_chapter": 11,
       "notes": "Thornfield servant who sews on the third storey; the strange laugh is put down to her."
     },
     {
@@ -326,15 +325,15 @@
       "name": "Leah",
       "type": "character",
       "aliases": [],
-      "first_chapter": 12,
-      "notes": "Thornfield housemaid; tells Jane the master has arrived (ch 13)."
+      "first_chapter": 11,
+      "notes": "Thornfield housemaid; tells Jane the master has arrived (ch 12)."
     },
     {
       "id": "sophie",
       "name": "Sophie",
       "type": "character",
       "aliases": [],
-      "first_chapter": 12,
+      "first_chapter": 11,
       "notes": "Adèle's French nurse ('bonne')."
     },
     {
@@ -342,7 +341,7 @@
       "name": "Pilot",
       "type": "character",
       "aliases": [],
-      "first_chapter": 13,
+      "first_chapter": 12,
       "notes": "Mr. Rochester's black-and-white Newfoundland dog; Jane first takes him for a Gytrash.",
       "accepted_types": [
         "character",
@@ -358,7 +357,7 @@
         "Mr. Rowland Rochester",
         "Mr. Rowland"
       ],
-      "first_chapter": 14,
+      "first_chapter": 13,
       "notes": "Mr. Rochester's elder brother, dead some years; died without a will."
     },
     {
@@ -368,7 +367,7 @@
       "aliases": [
         "Mr. Rochester's father"
       ],
-      "first_chapter": 14,
+      "first_chapter": 13,
       "notes": "Mr. Rochester's father. Must stay separate from his son despite the shared 'Mr. Rochester'."
     },
     {
@@ -378,7 +377,7 @@
       "aliases": [
         "Gateshead"
       ],
-      "first_chapter": 3,
+      "first_chapter": 2,
       "notes": "The Reeds' house. Ch 4 also mentions the village of Gateshead."
     },
     {
@@ -390,7 +389,7 @@
         "red room",
         "the red room"
       ],
-      "first_chapter": 2,
+      "first_chapter": 1,
       "notes": "Chamber at Gateshead where Mr. Reed died and Jane is locked in."
     },
     {
@@ -402,7 +401,7 @@
         "Lowood school",
         "Lowood School"
       ],
-      "first_chapter": 5,
+      "first_chapter": 4,
       "notes": "Charity school for orphan girls; also the name of its district.",
       "accepted_types": [
         "place",
@@ -416,7 +415,7 @@
       "aliases": [
         "Thornfield"
       ],
-      "first_chapter": 11,
+      "first_chapter": 10,
       "notes": "Mr. Rochester's manor-house near Millcote."
     },
     {
@@ -424,7 +423,7 @@
       "name": "Millcote",
       "type": "place",
       "aliases": [],
-      "first_chapter": 11,
+      "first_chapter": 10,
       "notes": "Manufacturing town six miles from Thornfield."
     },
     {
@@ -432,7 +431,7 @@
       "name": "Hay",
       "type": "place",
       "aliases": [],
-      "first_chapter": 12,
+      "first_chapter": 11,
       "notes": "Village two miles from Thornfield; Mrs. Fairfax's late husband was its incumbent."
     },
     {
@@ -440,7 +439,7 @@
       "name": "Gytrash",
       "type": "concept",
       "aliases": [],
-      "first_chapter": 13,
+      "first_chapter": 12,
       "notes": "North-of-England spirit from Bessie's tales, in the form of a horse, mule or large dog. Folklore, not a character in the story.",
       "accepted_types": [
         "concept",
@@ -458,8 +457,8 @@
         "typhus fever",
         "typhus"
       ],
-      "first_chapter": 10,
-      "notes": "Spring fever that turns Lowood into a hospital (ch 10) and exposes the school's conditions (ch 11). Helen dies of consumption, not typhus. Jane's parents died of typhus before the story (ch 4); a disease page from ch 4 passes.",
+      "first_chapter": 9,
+      "notes": "Spring fever that turns Lowood into a hospital (ch 9) and exposes the school's conditions (ch 10). Helen dies of consumption, not typhus. Jane's parents died of typhus before the story (ch 3); a disease page from ch 3 passes.",
       "accepted_types": [
         "event",
         "concept"
@@ -470,47 +469,47 @@
     {
       "name": "Robert Leaven",
       "type": "character",
-      "notes": "Bessie's husband, the Gateshead coachman (ch 11)."
+      "notes": "Bessie's husband, the Gateshead coachman (ch 10)."
     },
     {
       "name": "Bobby",
       "type": "character",
-      "notes": "Bessie's little boy (ch 11)."
+      "notes": "Bessie's little boy (ch 10)."
     },
     {
       "name": "Mr. Miles",
       "type": "character",
-      "notes": "John Reed's schoolmaster (ch 2)."
+      "notes": "John Reed's schoolmaster (ch 1)."
     },
     {
       "name": "Sarah",
       "type": "character",
-      "notes": "Gateshead housemaid (ch 4)."
+      "notes": "Gateshead housemaid (ch 3)."
     },
     {
       "name": "Miss Smith",
       "type": "character",
-      "notes": "Lowood teacher (ch 6)."
+      "notes": "Lowood teacher (ch 5)."
     },
     {
       "name": "Madame Pierrot",
       "type": "character",
-      "notes": "Lowood French teacher (ch 6)."
+      "notes": "Lowood French teacher (ch 5)."
     },
     {
       "name": "Mrs. Harden",
       "type": "character",
-      "notes": "Lowood housekeeper (ch 9)."
+      "notes": "Lowood housekeeper (ch 8)."
     },
     {
       "name": "Barbara",
       "type": "character",
-      "notes": "Miss Temple's servant (ch 9)."
+      "notes": "Miss Temple's servant (ch 8)."
     },
     {
       "name": "Julia Severn",
       "type": "character",
-      "notes": "Lowood pupil with curled hair (ch 8)."
+      "notes": "Lowood pupil with curled hair (ch 7)."
     },
     {
       "name": "Mrs. Brocklehurst",
@@ -521,22 +520,22 @@
         "Theodore",
         "Broughton Brocklehurst"
       ],
-      "notes": "Mr. Brocklehurst's wife and children (ch 5, ch 8). Not Naomi Brocklehurst."
+      "notes": "Mr. Brocklehurst's wife and children (ch 4, ch 7). Not Naomi Brocklehurst."
     },
     {
       "name": "Mary Ann Wilson",
       "type": "character",
-      "notes": "Jane's companion during the epidemic (ch 10)."
+      "notes": "Jane's companion during the epidemic (ch 9)."
     },
     {
       "name": "Mr. Bates",
       "type": "character",
-      "notes": "Lowood surgeon (ch 10)."
+      "notes": "Lowood surgeon (ch 9)."
     },
     {
       "name": "Miss Gryce",
       "type": "character",
-      "notes": "Fellow teacher who shares Jane's room (ch 11)."
+      "notes": "Fellow teacher who shares Jane's room (ch 10)."
     },
     {
       "name": "Mr. Nasmyth",
@@ -544,27 +543,27 @@
       "aliases": [
         "the Rev. Mr. Nasmyth"
       ],
-      "notes": "Miss Temple's husband (ch 11)."
+      "notes": "Miss Temple's husband (ch 10)."
     },
     {
       "name": "John",
       "type": "character",
-      "notes": "Thornfield servant and driver, with his wife (ch 12-13). Not John Reed."
+      "notes": "Thornfield servant and driver, with his wife (ch 11-12). Not John Reed."
     },
     {
       "name": "Madame Frédéric",
       "type": "character",
-      "notes": "Cared for Adèle after her mother died (ch 12)."
+      "notes": "Cared for Adèle after her mother died (ch 11)."
     },
     {
       "name": "Mr. Carter",
       "type": "character",
-      "notes": "Surgeon called to Rochester (ch 13)."
+      "notes": "Surgeon called to Rochester (ch 12)."
     },
     {
       "name": "Lowton",
       "type": "place",
-      "notes": "Market town near Lowood (ch 8, ch 11)."
+      "notes": "Market town near Lowood (ch 7, ch 10)."
     },
     {
       "name": "Brocklehurst Hall",
@@ -576,12 +575,12 @@
       "aliases": [
         "Brocklebridge churchyard"
       ],
-      "notes": "Helen's grave (ch 10)."
+      "notes": "Helen's grave (ch 9)."
     },
     {
       "name": "Hay Lane",
       "type": "place",
-      "notes": "Where Rochester's horse falls (ch 13)."
+      "notes": "Where Rochester's horse falls (ch 12)."
     },
     {
       "name": "Madeira",
@@ -595,27 +594,14 @@
       ]
     },
     {
-      "name": "Thackeray",
-      "type": "character",
-      "aliases": [
-        "Mr. Thackeray"
-      ],
-      "notes": "Preface dedication (ch 1); not story."
-    },
-    {
-      "name": "Currer Bell",
-      "type": "character",
-      "notes": "Pen name signing the Preface (ch 1); not story."
-    },
-    {
       "name": "Bewick's History of British Birds",
       "type": "artifact",
-      "notes": "The book John Reed throws at Jane (ch 2)."
+      "notes": "The book John Reed throws at Jane (ch 1)."
     },
     {
       "name": "Rasselas",
       "type": "artifact",
-      "notes": "Helen's book (ch 6-7)."
+      "notes": "Helen's book (ch 5-6)."
     }
   ],
   "statuses": [
@@ -623,18 +609,18 @@
       "entity": "jane",
       "timeline": [
         {
-          "chapter": 2,
+          "chapter": 1,
           "status": "alive",
           "quote": {
-            "chapter": 2,
+            "chapter": 1,
             "text": "Jane, I don’t like cavillers or questioners"
           }
         },
         {
-          "chapter": 14,
+          "chapter": 13,
           "status": "alive; governess at Thornfield, aged eighteen",
           "quote": {
-            "chapter": 14,
+            "chapter": 13,
             "text": "And you stayed there eight years: you are now, then, eighteen?"
           }
         }
@@ -644,10 +630,10 @@
       "entity": "mr_reed",
       "timeline": [
         {
-          "chapter": 3,
+          "chapter": 2,
           "status": "dead (nine years before the story opens)",
           "quote": {
-            "chapter": 3,
+            "chapter": 2,
             "text": "Mr. Reed had been dead nine years: it was in this chamber he breathed his last"
           }
         }
@@ -657,10 +643,10 @@
       "entity": "mrs_reed",
       "timeline": [
         {
-          "chapter": 11,
+          "chapter": 10,
           "status": "alive",
           "quote": {
-            "chapter": 11,
+            "chapter": 10,
             "text": "Missis looks stout and well enough in the face"
           }
         }
@@ -670,10 +656,10 @@
       "entity": "john_reed",
       "timeline": [
         {
-          "chapter": 11,
+          "chapter": 10,
           "status": "alive; failed at college, dissipated",
           "quote": {
-            "chapter": 11,
+            "chapter": 10,
             "text": "he is not doing so well as his mama could wish"
           }
         }
@@ -683,18 +669,18 @@
       "entity": "helen_burns",
       "timeline": [
         {
-          "chapter": 9,
+          "chapter": 8,
           "status": "alive; ill with a cough and chest pain",
           "quote": {
-            "chapter": 9,
+            "chapter": 8,
             "text": "she breathed a little fast and coughed a short cough"
           }
         },
         {
-          "chapter": 10,
+          "chapter": 9,
           "status": "dead (consumption)",
           "quote": {
-            "chapter": 10,
+            "chapter": 9,
             "text": "I was asleep, and Helen was—dead."
           }
         }
@@ -704,10 +690,10 @@
       "entity": "rochester",
       "timeline": [
         {
-          "chapter": 13,
+          "chapter": 12,
           "status": "alive; ankle sprained in a fall from his horse",
           "quote": {
-            "chapter": 13,
+            "chapter": 12,
             "text": "With master—Mr. Rochester—he is just arrived."
           }
         }
@@ -717,10 +703,10 @@
       "entity": "rowland_rochester",
       "timeline": [
         {
-          "chapter": 14,
-          "status": "dead (some years before ch 14)",
+          "chapter": 13,
+          "status": "dead (some years before ch 13)",
           "quote": {
-            "chapter": 14,
+            "chapter": 13,
             "text": "He lost his elder brother a few years since."
           }
         }
@@ -730,10 +716,10 @@
       "entity": "miss_temple",
       "timeline": [
         {
-          "chapter": 11,
+          "chapter": 10,
           "status": "alive; married and left Lowood",
           "quote": {
-            "chapter": 11,
+            "chapter": 10,
             "text": "At this period she married, removed with her husband"
           }
         }
@@ -743,10 +729,10 @@
       "entity": "bessie",
       "timeline": [
         {
-          "chapter": 11,
+          "chapter": 10,
           "status": "alive; married to Robert Leaven",
           "quote": {
-            "chapter": 11,
+            "chapter": 10,
             "text": "nearly five years since to Robert Leaven, the coachman"
           }
         }
@@ -758,9 +744,9 @@
       "source": "jane",
       "target": "mr_reed",
       "type": "niece_of",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "I knew that he was my own uncle—my mother’s brother"
       }
     },
@@ -768,9 +754,9 @@
       "source": "mrs_reed",
       "target": "jane",
       "type": "aunt_of",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "O aunt! have pity! Forgive me!"
       }
     },
@@ -778,9 +764,9 @@
       "source": "mrs_reed",
       "target": "mr_reed",
       "type": "married_to",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "a miniature of her deceased husband"
       }
     },
@@ -788,9 +774,9 @@
       "source": "john_reed",
       "target": "mrs_reed",
       "type": "son_of",
-      "first_chapter": 2,
+      "first_chapter": 1,
       "quote": {
-        "chapter": 2,
+        "chapter": 1,
         "text": "but his mama had taken him home for a month or two"
       }
     },
@@ -798,9 +784,9 @@
       "source": "eliza_reed",
       "target": "mrs_reed",
       "type": "daughter_of",
-      "first_chapter": 2,
+      "first_chapter": 1,
       "quote": {
-        "chapter": 2,
+        "chapter": 1,
         "text": "The said Eliza, John, and Georgiana were now clustered round their mama"
       }
     },
@@ -808,9 +794,9 @@
       "source": "georgiana_reed",
       "target": "mrs_reed",
       "type": "daughter_of",
-      "first_chapter": 2,
+      "first_chapter": 1,
       "quote": {
-        "chapter": 2,
+        "chapter": 1,
         "text": "The said Eliza, John, and Georgiana were now clustered round their mama"
       }
     },
@@ -818,9 +804,9 @@
       "source": "john_reed",
       "target": "jane",
       "type": "cousin_of",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "You have a kind aunt and cousins."
       }
     },
@@ -828,9 +814,9 @@
       "source": "john_reed",
       "target": "jane",
       "type": "bullied_and_attacked",
-      "first_chapter": 2,
+      "first_chapter": 1,
       "quote": {
-        "chapter": 2,
+        "chapter": 1,
         "text": "He bullied and punished me"
       }
     },
@@ -838,9 +824,9 @@
       "source": "mrs_reed",
       "target": "jane",
       "type": "hostile_to",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "all his mother’s aversion"
       }
     },
@@ -848,9 +834,9 @@
       "source": "bessie",
       "target": "jane",
       "type": "nurse_and_friend_of",
-      "first_chapter": 2,
+      "first_chapter": 1,
       "quote": {
-        "chapter": 2,
+        "chapter": 1,
         "text": "the chidings of Bessie, the nurse"
       },
       "lenient": true
@@ -859,9 +845,9 @@
       "source": "jane",
       "target": "gateshead_hall",
       "type": "lives_at",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "I was a discord in Gateshead Hall"
       }
     },
@@ -869,9 +855,9 @@
       "source": "mr_reed",
       "target": "red_room",
       "type": "died_in",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "Mr. Reed had been dead nine years: it was in this chamber he breathed his last"
       }
     },
@@ -879,9 +865,9 @@
       "source": "brocklehurst",
       "target": "jane",
       "type": "hostile_to",
-      "first_chapter": 5,
+      "first_chapter": 4,
       "quote": {
-        "chapter": 5,
+        "chapter": 4,
         "text": "she shall, however, be watched, Mrs. Reed"
       },
       "lenient": true
@@ -890,9 +876,9 @@
       "source": "naomi_brocklehurst",
       "target": "brocklehurst",
       "type": "mother_of",
-      "first_chapter": 6,
+      "first_chapter": 5,
       "quote": {
-        "chapter": 6,
+        "chapter": 5,
         "text": "The lady who built the new part of this house as that tablet records, and whose son overlooks and directs everything here."
       }
     },
@@ -900,9 +886,9 @@
       "source": "brocklehurst",
       "target": "lowood",
       "type": "treasurer_and_manager_of",
-      "first_chapter": 6,
+      "first_chapter": 5,
       "quote": {
-        "chapter": 6,
+        "chapter": 5,
         "text": "Because he is treasurer and manager of the establishment."
       },
       "lenient": true
@@ -911,9 +897,9 @@
       "source": "miss_temple",
       "target": "lowood",
       "type": "superintendent_of",
-      "first_chapter": 6,
+      "first_chapter": 5,
       "quote": {
-        "chapter": 6,
+        "chapter": 5,
         "text": "The superintendent of Lowood (for such was this lady)"
       },
       "lenient": true
@@ -922,9 +908,9 @@
       "source": "miss_scatcherd",
       "target": "helen_burns",
       "type": "teacher_hostile_to",
-      "first_chapter": 7,
+      "first_chapter": 6,
       "quote": {
-        "chapter": 7,
+        "chapter": 6,
         "text": "But that teacher, Miss Scatcherd, is so cruel to you?"
       }
     },
@@ -932,9 +918,9 @@
       "source": "helen_burns",
       "target": "jane",
       "type": "friend_of",
-      "first_chapter": 8,
+      "first_chapter": 7,
       "quote": {
-        "chapter": 8,
+        "chapter": 7,
         "text": "smiled at me as she again went by"
       }
     },
@@ -942,9 +928,9 @@
       "source": "miss_temple",
       "target": "jane",
       "type": "mentor_and_protector_of",
-      "first_chapter": 8,
+      "first_chapter": 7,
       "quote": {
-        "chapter": 8,
+        "chapter": 7,
         "text": "Don’t be afraid, Jane, I saw it was an accident; you shall not be punished."
       }
     },
@@ -952,9 +938,9 @@
       "source": "mr_eyre",
       "target": "jane",
       "type": "uncle_of",
-      "first_chapter": 11,
+      "first_chapter": 10,
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "I believe he was your father’s brother."
       }
     },
@@ -962,9 +948,9 @@
       "source": "jane",
       "target": "mrs_fairfax",
       "type": "hired_by",
-      "first_chapter": 11,
+      "first_chapter": 10,
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "fixing that day fortnight as the period for my assuming the post of governess in her house"
       }
     },
@@ -972,9 +958,9 @@
       "source": "mrs_fairfax",
       "target": "thornfield_hall",
       "type": "housekeeper_at",
-      "first_chapter": 12,
+      "first_chapter": 11,
       "quote": {
-        "chapter": 12,
+        "chapter": 11,
         "text": "I am only the housekeeper—the manager."
       }
     },
@@ -982,9 +968,9 @@
       "source": "rochester",
       "target": "thornfield_hall",
       "type": "owner_of",
-      "first_chapter": 12,
+      "first_chapter": 11,
       "quote": {
-        "chapter": 12,
+        "chapter": 11,
         "text": "The owner of Thornfield"
       }
     },
@@ -992,9 +978,9 @@
       "source": "adele",
       "target": "rochester",
       "type": "ward_of",
-      "first_chapter": 12,
+      "first_chapter": 11,
       "quote": {
-        "chapter": 12,
+        "chapter": 11,
         "text": "She is Mr. Rochester’s ward; he commissioned me to find a governess for her."
       },
       "lenient": true
@@ -1003,9 +989,9 @@
       "source": "jane",
       "target": "adele",
       "type": "governess_and_teacher_of",
-      "first_chapter": 12,
+      "first_chapter": 11,
       "quote": {
-        "chapter": 12,
+        "chapter": 11,
         "text": "She came and shook hands with me when she heard that I was her governess"
       }
     },
@@ -1013,9 +999,9 @@
       "source": "jane",
       "target": "rochester",
       "type": "employed_by",
-      "first_chapter": 12,
+      "first_chapter": 11,
       "quote": {
-        "chapter": 12,
+        "chapter": 11,
         "text": "This was all the account I got from Mrs. Fairfax of her employer and mine."
       }
     },
@@ -1023,9 +1009,9 @@
       "source": "grace_poole",
       "target": "thornfield_hall",
       "type": "servant_at",
-      "first_chapter": 12,
+      "first_chapter": 11,
       "quote": {
-        "chapter": 12,
+        "chapter": 11,
         "text": "She is a person we have to sew and assist Leah in her housemaid’s work"
       }
     },
@@ -1033,9 +1019,9 @@
       "source": "rochester",
       "target": "pilot",
       "type": "owner_of",
-      "first_chapter": 13,
+      "first_chapter": 12,
       "quote": {
-        "chapter": 13,
+        "chapter": 12,
         "text": "He came with master."
       }
     },
@@ -1043,9 +1029,9 @@
       "source": "rowland_rochester",
       "target": "rochester",
       "type": "brother_of",
-      "first_chapter": 14,
+      "first_chapter": 13,
       "quote": {
-        "chapter": 14,
+        "chapter": 13,
         "text": "He lost his elder brother a few years since."
       }
     },
@@ -1053,9 +1039,9 @@
       "source": "old_mr_rochester",
       "target": "rochester",
       "type": "father_of",
-      "first_chapter": 14,
+      "first_chapter": 13,
       "quote": {
-        "chapter": 14,
+        "chapter": 13,
         "text": "and perhaps he prejudiced his father against him"
       }
     }
@@ -1064,30 +1050,30 @@
     {
       "entity": "rochester",
       "alias": "the traveller in Hay Lane",
-      "reveal_chapter": 13,
-      "rule": "The rider whose horse falls in Hay Lane is unnamed until Leah's report at the end of ch 13; Jane recognises him in ch 14 ('I knew my traveller'). Linking at 13 or 14 passes.",
+      "reveal_chapter": 12,
+      "rule": "The rider whose horse falls in Hay Lane is unnamed until Leah's report at the end of ch 12; Jane recognises him in ch 13 ('I knew my traveller'). Linking at 13 or 14 passes.",
       "quote": {
-        "chapter": 13,
+        "chapter": 12,
         "text": "for master has had an accident; his horse fell and his ankle is sprained."
       }
     },
     {
       "entity": "rochester",
       "alias": "Edward",
-      "reveal_chapter": 14,
-      "rule": "Jane had not heard his forenames before ch 14 (Adèle's 'Edouard Fairfax de Rochester', Mrs. Fairfax's 'Mr. Edward'). No 'Edward' before ch 14.",
+      "reveal_chapter": 13,
+      "rule": "Jane had not heard his forenames before ch 13 (Adèle's 'Edouard Fairfax de Rochester', Mrs. Fairfax's 'Mr. Edward'). No 'Edward' before ch 13.",
       "quote": {
-        "chapter": 14,
+        "chapter": 13,
         "text": "I had not before heard his prenomens"
       }
     },
     {
       "entity": "helen_burns",
       "alias": "the girl reading Rasselas",
-      "reveal_chapter": 7,
-      "rule": "The girl Jane meets in the verandah in ch 6 is unnamed; 'Burns' and 'Helen' come in ch 7. Naming her before ch 7 is a leak.",
+      "reveal_chapter": 6,
+      "rule": "The girl Jane meets in the verandah in ch 5 is unnamed; 'Burns' and 'Helen' come in ch 6. Naming her before ch 6 is a leak.",
       "quote": {
-        "chapter": 7,
+        "chapter": 6,
         "text": "such it seems was her name: the girls here were all called by their surnames"
       }
     }
@@ -1104,7 +1090,7 @@
       ],
       "rule": "Five Reeds, five pages. 'Mr. Reed' is only the dead uncle; John is 'Master Reed' or 'Mr. John', Eliza is 'Miss Reed', Georgiana is 'Miss Georgiana'.",
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "Mr. Reed had been dead nine years"
       }
     },
@@ -1114,9 +1100,9 @@
         "mr_eyre",
         "jane"
       ],
-      "rule": "Jane's paternal uncle who called at Gateshead (ch 11) is not the narrator. Keep 'Mr. Eyre' off Jane's page.",
+      "rule": "Jane's paternal uncle who called at Gateshead (ch 10) is not the narrator. Keep 'Mr. Eyre' off Jane's page.",
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "a Mr. Eyre came to Gateshead and wanted to see you"
       }
     },
@@ -1127,9 +1113,9 @@
         "rochester",
         "adele"
       ],
-      "rule": "Mrs. Fairfax is the housekeeper, not the owner (Jane's guess in ch 11, corrected in ch 12), and has no family: the pupil is Miss Varens, not 'Miss Fairfax'. Rochester's middle name Fairfax (ch 14) comes from his mother's family. Only Mrs. Fairfax may carry 'Fairfax'.",
+      "rule": "Mrs. Fairfax is the housekeeper, not the owner (Jane's guess in ch 10, corrected in ch 11), and has no family: the pupil is Miss Varens, not 'Miss Fairfax'. Rochester's middle name Fairfax (ch 13) comes from his mother's family. Only Mrs. Fairfax may carry 'Fairfax'.",
       "quote": {
-        "chapter": 12,
+        "chapter": 11,
         "text": "Oh, you mean Miss Varens!"
       }
     },
@@ -1140,9 +1126,9 @@
         "rochester",
         "rowland_rochester"
       ],
-      "rule": "Father, elder brother and the present Mr. Rochester are three people (ch 14).",
+      "rule": "Father, elder brother and the present Mr. Rochester are three people (ch 13).",
       "quote": {
-        "chapter": 14,
+        "chapter": 13,
         "text": "Old Mr. Rochester and Mr. Rowland combined to bring Mr. Edward into what he considered a painful position"
       }
     },
@@ -1154,7 +1140,7 @@
       ],
       "rule": "Jane likens the dog to Bessie's Gytrash; Pilot is a real dog. Never give Pilot the alias 'Gytrash'.",
       "quote": {
-        "chapter": 13,
+        "chapter": 12,
         "text": "No Gytrash was this"
       }
     },
@@ -1166,34 +1152,33 @@
       ],
       "rule": "Naomi Brocklehurst is Mr. Brocklehurst's mother, named on the Lowood tablet. Do not merge her with her son, or with his wife Mrs. Brocklehurst.",
       "quote": {
-        "chapter": 6,
+        "chapter": 5,
         "text": "whose son overlooks and directs everything here"
       }
     }
   ],
   "ambiguities": [
-    "Narrator: Jane is 'I' and rarely named in narration. Mrs. Reed calls her 'Jane' in ch 2; 'Miss Eyre' and 'Jane Eyre' first appear in ch 3. The Preface (ch 1) names 'Jane Eyre' only as the book's title. A Jane page from ch 1, 2 or 3 passes.",
-    "The traveller in Hay Lane (ch 13) is identified at the end of ch 13 (Leah: the master's horse fell); Jane recognises him in ch 14. Accept the link at 13 or 14.",
-    "Rochester's forenames ('Edouard Fairfax de Rochester', 'Mr. Edward') first appear in ch 14. 'Edward' on his page before ch 14 is a leak; 'Edward Fairfax Rochester' is a fair page name from ch 14.",
-    "Helen Burns: the girl reading Rasselas in ch 6 is unnamed; she is named in ch 7. An unnamed ch-6 page merged into Helen later passes.",
-    "Helen dies of consumption, not of the typhus epidemic of the same spring (ch 10: 'her complaint was consumption, not typhus'). Reject 'died of typhus'.",
-    "Mr. Reed is Jane's mother's brother, so Jane is his blood niece; Mrs. Reed is her aunt only by marriage ('I am glad you are no relation of mine', ch 5). Kin passes for both. The scope never states outright that Mr. Reed fathered John, Eliza and Georgiana, so no such relation is required.",
-    "Cousins: the Reed children are first called Jane's cousins in ch 4 ('You have a kind aunt and cousins'); ch 3 already makes it inferable. A cousin link at ch 2 is early.",
-    "'Miss Reed' in ch 11 means Eliza, the elder; Georgiana is 'Miss Georgiana'. Georgiana must not carry 'Miss Reed'.",
-    "Mrs. Reed's hostility: ch 2 shows the exclusion and the red-room order; ch 3 first states 'his mother’s aversion'. first_chapter 3 accepts 2 to 4.",
+    "Narrator: Jane is 'I' and rarely named in narration. Mrs. Reed calls her 'Jane' in ch 1; 'Miss Eyre' and 'Jane Eyre' first appear in ch 2. The Preface, which is front matter and not a chapter, names 'Jane Eyre' only as the book's title. A Jane page from ch 1, 2 or 3 passes.",
+    "The traveller in Hay Lane (ch 12) is identified at the end of ch 12 (Leah: the master's horse fell); Jane recognises him in ch 13. Accept the link at 13 or 14.",
+    "Rochester's forenames ('Edouard Fairfax de Rochester', 'Mr. Edward') first appear in ch 13. 'Edward' on his page before ch 13 is a leak; 'Edward Fairfax Rochester' is a fair page name from ch 13.",
+    "Helen Burns: the girl reading Rasselas in ch 5 is unnamed; she is named in ch 6. An unnamed ch-6 page merged into Helen later passes.",
+    "Helen dies of consumption, not of the typhus epidemic of the same spring (ch 9: 'her complaint was consumption, not typhus'). Reject 'died of typhus'.",
+    "Mr. Reed is Jane's mother's brother, so Jane is his blood niece; Mrs. Reed is her aunt only by marriage ('I am glad you are no relation of mine', ch 4). Kin passes for both. The scope never states outright that Mr. Reed fathered John, Eliza and Georgiana, so no such relation is required.",
+    "Cousins: the Reed children are first called Jane's cousins in ch 3 ('You have a kind aunt and cousins'); ch 2 already makes it inferable. A cousin link at ch 1 is early.",
+    "'Miss Reed' in ch 10 means Eliza, the elder; Georgiana is 'Miss Georgiana'. Georgiana must not carry 'Miss Reed'.",
+    "Mrs. Reed's hostility: ch 1 shows the exclusion and the red-room order; ch 2 first states 'his mother’s aversion'. first_chapter 3 accepts 2 to 4.",
     "Bessie and Jane: nurse and later fond friend; the family could be service or alliance. Lenient.",
-    "Brocklehurst and Jane: Mrs. Reed plants the suspicion in ch 5 ('she shall, however, be watched'); he brands Jane a liar before the school in ch 8. Lenient on first_chapter (5 to 8).",
-    "Helen and Jane: acquaintance in ch 6-7, solidarity on the stool in ch 8, friendship plain in ch 9-10 ('a quiet and faithful friendship'). first_chapter 8 accepts 7 to 9.",
-    "Miss Temple and Jane: protective in ch 8, teaches her from ch 9, 'mother, governess, and, latterly, companion' in ch 11. first_chapter 8.",
+    "Brocklehurst and Jane: Mrs. Reed plants the suspicion in ch 4 ('she shall, however, be watched'); he brands Jane a liar before the school in ch 7. Lenient on first_chapter (5 to 8).",
+    "Helen and Jane: acquaintance in ch 5-6, solidarity on the stool in ch 7, friendship plain in ch 8-9 ('a quiet and faithful friendship'). first_chapter 8 accepts 7 to 9.",
+    "Miss Temple and Jane: protective in ch 7, teaches her from ch 8, 'mother, governess, and, latterly, companion' in ch 10. first_chapter 8.",
     "Brocklehurst as Lowood's treasurer and manager, Miss Temple as its superintendent, and Adèle as Rochester's ward have no settled relation family (service, membership, kin or alliance all read fairly). Lenient.",
-    "Mrs. Fairfax: Jane assumes in ch 11 that Thornfield is her house and asks after 'Miss Fairfax'; ch 12 corrects both. Mrs. Fairfax is distantly related to the Rochesters through her late husband (ch 12); Rochester's middle name Fairfax (ch 14) comes from his mother. 'Owner of Thornfield' on Mrs. Fairfax after ch 12 is wrong.",
-    "Grace Poole: Mrs. Fairfax puts the third-storey laugh down to her (ch 12) and Jane accepts it (ch 13). Recording the laugh as attributed to Grace passes; naming anyone else as the laugher is a leak in this scope.",
+    "Mrs. Fairfax: Jane assumes in ch 10 that Thornfield is her house and asks after 'Miss Fairfax'; ch 11 corrects both. Mrs. Fairfax is distantly related to the Rochesters through her late husband (ch 11); Rochester's middle name Fairfax (ch 13) comes from his mother. 'Owner of Thornfield' on Mrs. Fairfax after ch 11 is wrong.",
+    "Grace Poole: Mrs. Fairfax puts the third-storey laugh down to her (ch 11) and Jane accepts it (ch 12). Recording the laugh as attributed to Grace passes; naming anyone else as the laugher is a leak in this scope.",
     "Pilot and the Gytrash: Jane takes the dog for Bessie's Gytrash before 'Down, Pilot!' names him in the same chapter. Gytrash may be typed concept or creature.",
     "Old Mr. Rochester: the scope does not state his death outright; Rowland's death 'without a will left him master of the estate' implies it. No status is scored.",
-    "Mr. Eyre: Bessie only believes he was Jane's father's brother; his forename is not in scope. Accept the uncle link at ch 11.",
-    "Miss Temple marries the Rev. Mr. Nasmyth and leaves Lowood in ch 11; she is never 'Mrs. Nasmyth' in scope. Her status is alive.",
-    "John Reed: bare 'John' is not a gold alias because the Thornfield coachman John (ch 12-13) shares it. A separate page for that John is correct.",
-    "Preface (ch 1) mentions Thackeray, Fielding, Currer Bell and Biblical figures. None are story entities; pages for them are not scored.",
+    "Mr. Eyre: Bessie only believes he was Jane's father's brother; his forename is not in scope. Accept the uncle link at ch 10.",
+    "Miss Temple marries the Rev. Mr. Nasmyth and leaves Lowood in ch 10; she is never 'Mrs. Nasmyth' in scope. Her status is alive.",
+    "John Reed: bare 'John' is not a gold alias because the Thornfield coachman John (ch 11-12) shares it. A separate page for that John is correct.",
     "Lowood is a school, an institution and its district ('That forest-dell, where Lowood lay'); place or organization passes."
   ]
 }

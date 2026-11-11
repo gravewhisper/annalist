@@ -186,6 +186,21 @@ def story_end(titles, last_text):
     return "the last chapter ends with The End" if ENDING_TEXT.search(last_text.strip()) else ""
 
 
+FRONT_HEADING = re.compile(r"^(?:(?:the\s+)?(?:author|translator|editor)(?:['’]s)?\s+)?(?:preface|foreword|introduction|contents|table of contents|"
+                           r"dedication|acknowledge?ments?|note(?:\s+(?:to|on)\b.*)?)\W*$", re.I)
+
+
+HEADING_LINE = re.compile(r"^(?:chapter|book|part|volume)\s+(?:\d+|[ivxlc]+|[a-z]+)\b", re.I)
+
+
+def front_matter(paragraphs):
+    if not paragraphs:
+        return False
+    if FRONT_HEADING.match(paragraphs[0]) and not re.fullmatch(r"note\W*", paragraphs[0], re.I):
+        return True
+    return len(paragraphs) >= 5 and 2 * sum(bool(HEADING_LINE.match(p)) for p in paragraphs) >= len(paragraphs)
+
+
 @dataclass(frozen=True)
 class Extraction:
     title: str
@@ -205,7 +220,7 @@ def extract_book(epub, min_words=300):
     chapters, texts, skipped, last = [], [], [], []
     for href, title, paragraphs in docs:
         words = sum(len(p.split()) for p in paragraphs)
-        if words < min_words:
+        if words < min_words or front_matter(paragraphs):
             skipped.append((href, words))
             continue
         index = len(chapters) + 1

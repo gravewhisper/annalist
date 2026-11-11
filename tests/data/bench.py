@@ -18,10 +18,10 @@ BUDGET = 8
 BOOKS = {
     "hound": {"gutenberg": 2852, "to": 15, "stresses": "mystery, false names, a wife passed off as a sister"},
     "women": {"gutenberg": 514, "to": 12, "stresses": "four sisters who share 'Miss March', nicknames, club pen names"},
-    "crime": {"gutenberg": 2554, "to": 11, "stresses": "Russian name forms, shared patronymics, murders"},
+    "crime": {"gutenberg": 2554, "to": 10, "stresses": "Russian name forms, shared patronymics, murders"},
     "dracula": {"gutenberg": 345, "to": 10, "stresses": "journals and letters by several narrators"},
-    "eyre": {"gutenberg": 1260, "to": 14, "stresses": "first-person narrator, a stranger named later"},
-    "cristo": {"gutenberg": 1184, "to": 17, "stresses": "prisoner numbers as names, a father under another surname"},
+    "eyre": {"gutenberg": 1260, "to": 13, "stresses": "first-person narrator, a stranger named later"},
+    "cristo": {"gutenberg": 1184, "to": 16, "stresses": "prisoner numbers as names, a father under another surname"},
 }
 
 

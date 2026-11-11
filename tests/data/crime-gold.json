@@ -11,56 +11,51 @@
   "chapters": [
     {
       "index": 1,
-      "title": "TRANSLATOR’S PREFACE",
-      "href": "OEBPS/6390138873999068608_2554-h-1.htm.html"
-    },
-    {
-      "index": 2,
       "title": "CHAPTER I",
       "href": "OEBPS/6390138873999068608_2554-h-3.htm.html"
     },
     {
-      "index": 3,
+      "index": 2,
       "title": "CHAPTER II",
       "href": "OEBPS/6390138873999068608_2554-h-4.htm.html"
     },
     {
-      "index": 4,
+      "index": 3,
       "title": "CHAPTER III",
       "href": "OEBPS/6390138873999068608_2554-h-5.htm.html"
     },
     {
-      "index": 5,
+      "index": 4,
       "title": "CHAPTER IV",
       "href": "OEBPS/6390138873999068608_2554-h-6.htm.html"
     },
     {
-      "index": 6,
+      "index": 5,
       "title": "CHAPTER V",
       "href": "OEBPS/6390138873999068608_2554-h-7.htm.html"
     },
     {
-      "index": 7,
+      "index": 6,
       "title": "CHAPTER VI",
       "href": "OEBPS/6390138873999068608_2554-h-8.htm.html"
     },
     {
-      "index": 8,
+      "index": 7,
       "title": "CHAPTER VII",
       "href": "OEBPS/6390138873999068608_2554-h-9.htm.html"
     },
     {
-      "index": 9,
+      "index": 8,
       "title": "PART II",
       "href": "OEBPS/6390138873999068608_2554-h-10.htm.html"
     },
     {
-      "index": 10,
+      "index": 9,
       "title": "CHAPTER II",
       "href": "OEBPS/6390138873999068608_2554-h-11.htm.html"
     },
     {
-      "index": 11,
+      "index": 10,
       "title": "CHAPTER III",
       "href": "OEBPS/6390138873999068608_2554-h-12.htm.html"
     }
@@ -77,6 +72,10 @@
     {
       "href": "OEBPS/6390138873999068608_2554-h-2.htm.html",
       "kind": "title_page"
+    },
+    {
+      "href": "OEBPS/6390138873999068608_2554-h-1.htm.html",
+      "kind": "front_matter"
     }
   ],
   "entities": [
@@ -90,8 +89,8 @@
         "Rodion Raskolnikov",
         "Rodya"
       ],
-      "first_chapter": 2,
-      "notes": "'A young man' until he gives his name to the pawnbroker in ch 2. The diminutive 'Rodya' first appears in ch 4 (his mother's letter); the full 'Rodion Romanovitch Raskolnikov' first in ch 5. See identity_reveals. The bare surname belongs to him, not to his mother or sister."
+      "first_chapter": 1,
+      "notes": "'A young man' until he gives his name to the pawnbroker in ch 1. The diminutive 'Rodya' first appears in ch 3 (his mother's letter); the full 'Rodion Romanovitch Raskolnikov' first in ch 4. See identity_reveals. The bare surname belongs to him, not to his mother or sister."
     },
     {
       "id": "alyona",
@@ -103,8 +102,8 @@
         "the pawnbroker",
         "the old woman"
       ],
-      "first_chapter": 2,
-      "notes": "The pawnbroker. Killed by Raskolnikov in ch 8."
+      "first_chapter": 1,
+      "notes": "The pawnbroker. Killed by Raskolnikov in ch 7."
     },
     {
       "id": "lizaveta",
@@ -113,8 +112,8 @@
       "aliases": [
         "Lizaveta"
       ],
-      "first_chapter": 2,
-      "notes": "Named in ch 2 ('Lizaveta's work'), where Raskolnikov also asks after the pawnbroker's sister; ch 6 first states that she is Alyona's younger sister. Killed in ch 8."
+      "first_chapter": 1,
+      "notes": "Named in ch 1 ('Lizaveta's work'), where Raskolnikov also asks after the pawnbroker's sister; ch 5 first states that she is Alyona's younger sister. Killed in ch 7."
     },
     {
       "id": "marmeladov",
@@ -125,8 +124,8 @@
         "Semyon Zaharovitch Marmeladov",
         "Semyon Marmeladov"
       ],
-      "first_chapter": 3,
-      "notes": "Sits unnamed in the tavern at the end of ch 2 ('a retired government clerk'); names himself in ch 3. This translation spells the patronymic 'Zaharovitch'. He dies in run ch 15, outside this gold."
+      "first_chapter": 2,
+      "notes": "Sits unnamed in the tavern at the end of ch 1 ('a retired government clerk'); names himself in ch 2. This translation spells the patronymic 'Zaharovitch'. He dies in run ch 14, outside this gold."
     },
     {
       "id": "katerina",
@@ -136,7 +135,7 @@
         "Katerina Ivanovna Marmeladov",
         "Marmeladov's wife"
       ],
-      "first_chapter": 3,
+      "first_chapter": 2,
       "notes": "Marmeladov's second wife, an officer's daughter, consumptive, with three children by her first husband."
     },
     {
@@ -149,8 +148,8 @@
         "Sofya Semyonovna Marmeladov",
         "Sofya Marmeladov"
       ],
-      "first_chapter": 3,
-      "notes": "Marmeladov's daughter by his first wife. 'Sonia' and 'Sofya Semyonovna' both appear in ch 3; 'Sonia Marmeladov' in ch 5."
+      "first_chapter": 2,
+      "notes": "Marmeladov's daughter by his first wife. 'Sonia' and 'Sofya Semyonovna' both appear in ch 2; 'Sonia Marmeladov' in ch 4."
     },
     {
       "id": "lebeziatnikov",
@@ -161,8 +160,8 @@
         "Andrey Semyonovitch Lebeziatnikov",
         "Andrey Semyonovitch"
       ],
-      "first_chapter": 3,
-      "notes": "Only talked about in scope (Marmeladov's story). 'Andrey Semyonovitch' first appears in run ch 13."
+      "first_chapter": 2,
+      "notes": "Only talked about in scope (Marmeladov's story). 'Andrey Semyonovitch' first appears in run ch 12."
     },
     {
       "id": "amalia",
@@ -176,8 +175,8 @@
         "Amalia Ivanovna",
         "Amalia Ludwigovna"
       ],
-      "first_chapter": 3,
-      "notes": "The Marmeladovs' landlady. In scope she is only 'Amalia Fyodorovna'; 'Amalia Ivanovna' and 'Amalia Ludwigovna' first appear in run ch 15."
+      "first_chapter": 2,
+      "notes": "The Marmeladovs' landlady. In scope she is only 'Amalia Fyodorovna'; 'Amalia Ivanovna' and 'Amalia Ludwigovna' first appear in run ch 14."
     },
     {
       "id": "nastasya",
@@ -186,8 +185,8 @@
       "aliases": [
         "Nastasya Petrovna"
       ],
-      "first_chapter": 4,
-      "notes": "Cook and only servant of Raskolnikov's lodging house. In ch 11 Razumihin calls her 'Nastasya Nikiforovna' and she corrects him: 'I am not Nikiforovna, but Petrovna.' Nikiforovna is not her name."
+      "first_chapter": 3,
+      "notes": "Cook and only servant of Raskolnikov's lodging house. In ch 10 Razumihin calls her 'Nastasya Nikiforovna' and she corrects him: 'I am not Nikiforovna, but Petrovna.' Nikiforovna is not her name."
     },
     {
       "id": "praskovya",
@@ -201,8 +200,8 @@
         "the widow Zarnitsyn",
         "Praskovya Pavlovna Zarnitsyn"
       ],
-      "first_chapter": 2,
-      "notes": "Raskolnikov's landlady. Unnamed in ch 2 ('his landlady', to whom he owes money); named Praskovya Pavlovna in ch 4; the IOU in ch 9 makes her 'the widow of the assessor Zarnitsyn'; Razumihin calls her 'Pashenka' in ch 11."
+      "first_chapter": 1,
+      "notes": "Raskolnikov's landlady. Unnamed in ch 1 ('his landlady', to whom he owes money); named Praskovya Pavlovna in ch 3; the IOU in ch 8 makes her 'the widow of the assessor Zarnitsyn'; Razumihin calls her 'Pashenka' in ch 10."
     },
     {
       "id": "natalya",
@@ -212,8 +211,8 @@
         "the landlady's daughter",
         "Natalya Yegorovna Zarnitsyn"
       ],
-      "first_chapter": 9,
-      "notes": "The landlady's daughter, whom Raskolnikov once promised to marry; she died of typhus a year before the story. Ch 9 tells this without her name; ch 11 names her."
+      "first_chapter": 8,
+      "notes": "The landlady's daughter, whom Raskolnikov once promised to marry; she died of typhus a year before the story. Ch 9 tells this without her name; ch 10 names her."
     },
     {
       "id": "razumihin",
@@ -224,8 +223,8 @@
         "Dmitri Prokofitch Razumihin",
         "Vrazumihin"
       ],
-      "first_chapter": 5,
-      "notes": "Raskolnikov's old university comrade. In ch 11 he jokingly introduces himself as 'Vrazumihin'. 'Dmitri Prokofitch' first appears in run ch 17."
+      "first_chapter": 4,
+      "notes": "Raskolnikov's old university comrade. In ch 10 he jokingly introduces himself as 'Vrazumihin'. 'Dmitri Prokofitch' first appears in run ch 16."
     },
     {
       "id": "pulcheria",
@@ -237,8 +236,8 @@
         "Pulcheria Alexandrovna Raskolnikov",
         "Raskolnikov's mother"
       ],
-      "first_chapter": 4,
-      "notes": "Raskolnikov's mother. In scope she appears only through her letter, signed 'PULCHERIA RASKOLNIKOV'. 'Pulcheria Alexandrovna' first appears in run ch 15."
+      "first_chapter": 3,
+      "notes": "Raskolnikov's mother. In scope she appears only through her letter, signed 'PULCHERIA RASKOLNIKOV'. 'Pulcheria Alexandrovna' first appears in run ch 14."
     },
     {
       "id": "dounia",
@@ -249,8 +248,8 @@
         "Avdotya Romanovna Raskolnikov",
         "Dounia Raskolnikov"
       ],
-      "first_chapter": 4,
-      "notes": "Raskolnikov's sister. 'Dounia' from ch 4; 'Avdotya Romanovna' first in ch 5. See identity_reveals."
+      "first_chapter": 3,
+      "notes": "Raskolnikov's sister. 'Dounia' from ch 3; 'Avdotya Romanovna' first in ch 4. See identity_reveals."
     },
     {
       "id": "svidrigailov",
@@ -262,8 +261,8 @@
         "Arkady Ivanovitch Svidrigaïlov",
         "Arkady Ivanovitch"
       ],
-      "first_chapter": 4,
-      "notes": "Only talked about in scope (the letter, Raskolnikov's thoughts). The ASCII spelling 'Svidrigailov' is accepted for matching. 'Arkady Ivanovitch' first appears in run ch 21."
+      "first_chapter": 3,
+      "notes": "Only talked about in scope (the letter, Raskolnikov's thoughts). The ASCII spelling 'Svidrigailov' is accepted for matching. 'Arkady Ivanovitch' first appears in run ch 20."
     },
     {
       "id": "marfa",
@@ -273,7 +272,7 @@
         "Marfa Petrovna Svidrigaïlov",
         "Mrs. Svidrigaïlov"
       ],
-      "first_chapter": 4,
+      "first_chapter": 3,
       "notes": "Svidrigaïlov's wife."
     },
     {
@@ -285,8 +284,8 @@
         "Mr. Luzhin",
         "Pyotr Petrovitch"
       ],
-      "first_chapter": 4,
-      "notes": "Dounia's fiancé. Only talked about in scope; he appears in run ch 13."
+      "first_chapter": 3,
+      "notes": "Dounia's fiancé. Only talked about in scope; he appears in run ch 12."
     },
     {
       "id": "vahrushin",
@@ -298,8 +297,8 @@
         "Vassily Ivanovitch Vahrushin",
         "Vassily Ivanovitch"
       ],
-      "first_chapter": 4,
-      "notes": "Merchant in the mother's town who lends against her pension and sends Raskolnikov money in ch 11. The letter first calls him 'Vassily Ivanovitch Vahrushin', then 'Afanasy Ivanovitch'; ch 5 and ch 11 say 'Afanasy Ivanovitch Vahrushin'. One person. Not Ivan Afanasyvitch, Marmeladov's superior in ch 3."
+      "first_chapter": 3,
+      "notes": "Merchant in the mother's town who lends against her pension and sends Raskolnikov money in ch 10. The letter first calls him 'Vassily Ivanovitch Vahrushin', then 'Afanasy Ivanovitch'; ch 4 and ch 10 say 'Afanasy Ivanovitch Vahrushin'. One person. Not Ivan Afanasyvitch, Marmeladov's superior in ch 2."
     },
     {
       "id": "dandy",
@@ -310,24 +309,24 @@
         "the stout gentleman",
         "the plump gentleman"
       ],
-      "first_chapter": 5,
-      "notes": "Unnamed gentleman stalking the drunk girl on K—— Boulevard in ch 5. Raskolnikov shouts 'You Svidrigaïlov!' at him as an insult; he is not Svidrigaïlov."
+      "first_chapter": 4,
+      "notes": "Unnamed gentleman stalking the drunk girl on K—— Boulevard in ch 4. Raskolnikov shouts 'You Svidrigaïlov!' at him as an insult; he is not Svidrigaïlov."
     },
     {
       "id": "koch",
       "name": "Koch",
       "type": "character",
       "aliases": [],
-      "first_chapter": 8,
-      "notes": "One of the two callers at the pawnbroker's door during the murders; detained and then cleared in ch 9."
+      "first_chapter": 7,
+      "notes": "One of the two callers at the pawnbroker's door during the murders; detained and then cleared in ch 8."
     },
     {
       "id": "pestryakov",
       "name": "Pestryakov",
       "type": "character",
       "aliases": [],
-      "first_chapter": 9,
-      "notes": "The young law student who joins Koch at the door in ch 8 ('I'm studying the law you see!') is unnamed there; ch 9 names him."
+      "first_chapter": 8,
+      "notes": "The young law student who joins Koch at the door in ch 7 ('I'm studying the law you see!') is unnamed there; ch 8 names him."
     },
     {
       "id": "ilya_petrovitch",
@@ -337,7 +336,7 @@
         "the assistant superintendent",
         "the Explosive Lieutenant"
       ],
-      "first_chapter": 9,
+      "first_chapter": 8,
       "notes": "Assistant superintendent at the district police office. Nikodim Fomitch says 'His nickname in the regiment was the Explosive Lieutenant'. Luise Ivanovna calls him 'Mr. Captain'."
     },
     {
@@ -348,7 +347,7 @@
         "the district superintendent",
         "the superintendent"
       ],
-      "first_chapter": 9,
+      "first_chapter": 8,
       "notes": "Superintendent of the district police. Raskolnikov addresses him as 'Captain'."
     },
     {
@@ -361,8 +360,8 @@
         "Mr. Zametov",
         "the head clerk"
       ],
-      "first_chapter": 9,
-      "notes": "Head clerk at the police office. Ch 9 calls him only 'the head clerk' and once 'Alexandr Grigorievitch'; the surname Zametov first appears in ch 11."
+      "first_chapter": 8,
+      "notes": "Head clerk at the police office. Ch 9 calls him only 'the head clerk' and once 'Alexandr Grigorievitch'; the surname Zametov first appears in ch 10."
     },
     {
       "id": "luise",
@@ -371,16 +370,16 @@
       "aliases": [
         "Luise"
       ],
-      "first_chapter": 9,
-      "notes": "German keeper of a disorderly 'honourable house', scolded by Ilya Petrovitch in ch 9. The translation spells it 'Luise', not 'Louisa'."
+      "first_chapter": 8,
+      "notes": "German keeper of a disorderly 'honourable house', scolded by Ilya Petrovitch in ch 8. The translation spells it 'Luise', not 'Louisa'."
     },
     {
       "id": "zossimov",
       "name": "Zossimov",
       "type": "character",
       "aliases": [],
-      "first_chapter": 11,
-      "notes": "Doctor and friend of Razumihin; only talked about in ch 11 and appears in run ch 12."
+      "first_chapter": 10,
+      "notes": "Doctor and friend of Razumihin; only talked about in ch 10 and appears in run ch 11."
     },
     {
       "id": "petersburg",
@@ -391,7 +390,7 @@
         "Saint Petersburg"
       ],
       "first_chapter": 1,
-      "notes": "Ch 1 (the translator's preface) names it in 'the Petersburg school of Engineering'; the story is set there from ch 2. A wiki that skips the preface still passes at ch 2."
+      "notes": "Ch 1 (the translator's preface) names it in 'the Petersburg school of Engineering'; the story is set there from ch 1. A wiki that skips the preface still passes at ch 1."
     },
     {
       "id": "hay_market",
@@ -401,7 +400,7 @@
         "the Hay Market",
         "Haymarket"
       ],
-      "first_chapter": 2
+      "first_chapter": 1
     },
     {
       "id": "vassilyevsky",
@@ -410,8 +409,8 @@
       "aliases": [
         "Vassilyevsky Island"
       ],
-      "first_chapter": 4,
-      "notes": "Razumihin lives near the bridge to it (ch 5, ch 10)."
+      "first_chapter": 3,
+      "notes": "Razumihin lives near the bridge to it (ch 4, ch 9)."
     },
     {
       "id": "police_office",
@@ -427,8 +426,8 @@
         "organization",
         "place"
       ],
-      "first_chapter": 9,
-      "notes": "The district police office where Raskolnikov is summoned in ch 9. 'The police' are mentioned from ch 4 (the landlady's complaint), so an earlier page passes too."
+      "first_chapter": 8,
+      "notes": "The district police office where Raskolnikov is summoned in ch 8. 'The police' are mentioned from ch 3 (the landlady's complaint), so an earlier page passes too."
     },
     {
       "id": "axe",
@@ -437,8 +436,8 @@
       "aliases": [
         "the porter's axe"
       ],
-      "first_chapter": 7,
-      "notes": "Taken from the porter's room in ch 7 after Nastasya blocks the kitchen; used in ch 8 and put back under the porter's bench. Ch 6 speaks of taking 'an axe' only in general."
+      "first_chapter": 6,
+      "notes": "Taken from the porter's room in ch 6 after Nastasya blocks the kitchen; used in ch 7 and put back under the porter's bench. Ch 6 speaks of taking 'an axe' only in general."
     },
     {
       "id": "watch",
@@ -448,8 +447,8 @@
         "the silver watch",
         "his father's watch"
       ],
-      "first_chapter": 2,
-      "notes": "His father's watch, pawned with Alyona Ivanovna in ch 2."
+      "first_chapter": 1,
+      "notes": "His father's watch, pawned with Alyona Ivanovna in ch 1."
     },
     {
       "id": "purse",
@@ -458,8 +457,8 @@
       "aliases": [
         "the purse"
       ],
-      "first_chapter": 8,
-      "notes": "Cut from her neck in ch 8; hidden with the stolen pledges under a stone in a courtyard in ch 10, unopened."
+      "first_chapter": 7,
+      "notes": "Cut from her neck in ch 7; hidden with the stolen pledges under a stone in a courtyard in ch 9, unopened."
     },
     {
       "id": "murders",
@@ -475,7 +474,7 @@
       "accepted_types": [
         "event"
       ],
-      "first_chapter": 8
+      "first_chapter": 7
     }
   ],
   "statuses": [
@@ -483,18 +482,18 @@
       "entity": "raskolnikov",
       "timeline": [
         {
-          "chapter": 2,
+          "chapter": 1,
           "status": "alive",
           "quote": {
-            "chapter": 2,
+            "chapter": 1,
             "text": "“Raskolnikov, a student, I came here a month ago,” the young man made haste to mutter"
           }
         },
         {
-          "chapter": 9,
+          "chapter": 8,
           "status": "alive; feverish, faints at the police office",
           "quote": {
-            "chapter": 9,
+            "chapter": 8,
             "text": "When he recovered consciousness, he found himself sitting in a chair"
           }
         }
@@ -504,18 +503,18 @@
       "entity": "alyona",
       "timeline": [
         {
-          "chapter": 2,
+          "chapter": 1,
           "status": "alive",
           "quote": {
-            "chapter": 2,
+            "chapter": 1,
             "text": "“I remember, my good sir, I remember quite well your coming here,” the old woman said distinctly"
           }
         },
         {
-          "chapter": 8,
+          "chapter": 7,
           "status": "dead (killed by Raskolnikov with the axe)",
           "quote": {
-            "chapter": 8,
+            "chapter": 7,
             "text": "He stepped back, let it fall, and at once bent over her face; she was dead."
           }
         }
@@ -525,18 +524,18 @@
       "entity": "lizaveta",
       "timeline": [
         {
-          "chapter": 6,
+          "chapter": 5,
           "status": "alive",
           "quote": {
-            "chapter": 6,
+            "chapter": 5,
             "text": "“All right, I’ll come,” said Lizaveta, still pondering"
           }
         },
         {
-          "chapter": 8,
+          "chapter": 7,
           "status": "dead (killed by Raskolnikov with the axe)",
           "quote": {
-            "chapter": 8,
+            "chapter": 7,
             "text": "The axe fell with the sharp edge just on the skull and split at one blow all the top of the head."
           }
         }
@@ -546,10 +545,10 @@
       "entity": "marmeladov",
       "timeline": [
         {
-          "chapter": 3,
+          "chapter": 2,
           "status": "alive",
           "quote": {
-            "chapter": 3,
+            "chapter": 2,
             "text": "Marmeladov—such is my name; titular counsellor."
           }
         }
@@ -559,10 +558,10 @@
       "entity": "katerina",
       "timeline": [
         {
-          "chapter": 3,
+          "chapter": 2,
           "status": "alive; consumptive",
           "quote": {
-            "chapter": 3,
+            "chapter": 2,
             "text": "But her chest is weak and she has a tendency to consumption and I feel it!"
           }
         }
@@ -572,10 +571,10 @@
       "entity": "sonia",
       "timeline": [
         {
-          "chapter": 3,
+          "chapter": 2,
           "status": "alive",
           "quote": {
-            "chapter": 3,
+            "chapter": 2,
             "text": "my daughter Sofya Semyonovna has been forced to take a yellow ticket"
           }
         }
@@ -585,10 +584,10 @@
       "entity": "natalya",
       "timeline": [
         {
-          "chapter": 9,
+          "chapter": 8,
           "status": "dead (typhus, a year before the story)",
           "quote": {
-            "chapter": 9,
+            "chapter": 8,
             "text": "But a year ago, the girl died of typhus."
           }
         }
@@ -598,10 +597,10 @@
       "entity": "dounia",
       "timeline": [
         {
-          "chapter": 4,
+          "chapter": 3,
           "status": "alive",
           "quote": {
-            "chapter": 4,
+            "chapter": 3,
             "text": "your sister has been living with me for the last six weeks"
           }
         }
@@ -611,10 +610,10 @@
       "entity": "pulcheria",
       "timeline": [
         {
-          "chapter": 4,
+          "chapter": 3,
           "status": "alive",
           "quote": {
-            "chapter": 4,
+            "chapter": 3,
             "text": "“My dear Rodya,” wrote his mother"
           }
         }
@@ -624,10 +623,10 @@
       "entity": "svidrigailov",
       "timeline": [
         {
-          "chapter": 4,
+          "chapter": 3,
           "status": "alive",
           "quote": {
-            "chapter": 4,
+            "chapter": 3,
             "text": "Mr. Svidrigaïlov returned to his senses and repented"
           }
         }
@@ -639,9 +638,9 @@
       "source": "raskolnikov",
       "target": "alyona",
       "type": "client_and_customer_of",
-      "first_chapter": 2,
+      "first_chapter": 1,
       "quote": {
-        "chapter": 2,
+        "chapter": 1,
         "text": "“I’ve brought something to pawn here,”"
       }
     },
@@ -649,9 +648,9 @@
       "source": "raskolnikov",
       "target": "praskovya",
       "type": "tenant_of_landlady",
-      "first_chapter": 2,
+      "first_chapter": 1,
       "quote": {
-        "chapter": 2,
+        "chapter": 1,
         "text": "He was hopelessly in debt to his landlady"
       }
     },
@@ -659,9 +658,9 @@
       "source": "marmeladov",
       "target": "katerina",
       "type": "married_to",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "Katerina Ivanovna, my spouse, is a person of education"
       }
     },
@@ -669,9 +668,9 @@
       "source": "sonia",
       "target": "marmeladov",
       "type": "daughter_of",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "my daughter Sofya Semyonovna"
       }
     },
@@ -679,9 +678,9 @@
       "source": "sonia",
       "target": "katerina",
       "type": "step_daughter_of",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "what my daughter has had to put up with from her step-mother"
       }
     },
@@ -689,9 +688,9 @@
       "source": "marmeladov",
       "target": "amalia",
       "type": "tenant_of_landlady",
-      "first_chapter": 3,
+      "first_chapter": 2,
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "We have now part of a room at Amalia Fyodorovna Lippevechsel’s"
       }
     },
@@ -699,9 +698,9 @@
       "source": "pulcheria",
       "target": "raskolnikov",
       "type": "mother_of",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "“My dear Rodya,” wrote his mother"
       }
     },
@@ -709,9 +708,9 @@
       "source": "pulcheria",
       "target": "dounia",
       "type": "mother_of",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "to urge me to remain with my daughter for the future"
       }
     },
@@ -719,9 +718,9 @@
       "source": "dounia",
       "target": "raskolnikov",
       "type": "sister_of",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "Love Dounia your sister, Rodya"
       }
     },
@@ -729,9 +728,9 @@
       "source": "dounia",
       "target": "luzhin",
       "type": "engaged_to",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "Now that everyone has heard that Dounia is to marry Pyotr Petrovitch"
       }
     },
@@ -739,9 +738,9 @@
       "source": "dounia",
       "target": "svidrigailov",
       "type": "employed_as_governess_by",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "when she took the place as governess in their family"
       }
     },
@@ -749,9 +748,9 @@
       "source": "svidrigailov",
       "target": "dounia",
       "type": "pursued_with_unwanted_love",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "the crazy fellow had conceived a passion for Dounia from the beginning"
       }
     },
@@ -759,9 +758,9 @@
       "source": "svidrigailov",
       "target": "marfa",
       "type": "married_to",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "Marfa Petrovna, Mr. Svidrigaïlov’s wife"
       }
     },
@@ -769,9 +768,9 @@
       "source": "luzhin",
       "target": "marfa",
       "type": "distant_relative_of",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "is distantly related to Marfa Petrovna"
       }
     },
@@ -779,9 +778,9 @@
       "source": "nastasya",
       "target": "praskovya",
       "type": "servant_of",
-      "first_chapter": 4,
+      "first_chapter": 3,
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "Nastasya, the cook and only servant"
       }
     },
@@ -789,9 +788,9 @@
       "source": "razumihin",
       "target": "raskolnikov",
       "type": "friend_of",
-      "first_chapter": 5,
+      "first_chapter": 4,
       "quote": {
-        "chapter": 5,
+        "chapter": 4,
         "text": "Razumihin was one of his old comrades at the university."
       }
     },
@@ -799,9 +798,9 @@
       "source": "lizaveta",
       "target": "alyona",
       "type": "half_sister_of",
-      "first_chapter": 6,
+      "first_chapter": 5,
       "quote": {
-        "chapter": 6,
+        "chapter": 5,
         "text": "the younger sister of the old pawnbroker, Alyona Ivanovna"
       }
     },
@@ -809,9 +808,9 @@
       "source": "raskolnikov",
       "target": "alyona",
       "type": "plans_to_kill",
-      "first_chapter": 6,
+      "first_chapter": 5,
       "quote": {
-        "chapter": 6,
+        "chapter": 5,
         "text": "an old woman, on whose life an attempt was contemplated, would be at home and entirely alone"
       }
     },
@@ -819,9 +818,9 @@
       "source": "raskolnikov",
       "target": "axe",
       "type": "stole_and_used",
-      "first_chapter": 7,
+      "first_chapter": 6,
       "quote": {
-        "chapter": 7,
+        "chapter": 6,
         "text": "He dashed to the axe (it was an axe) and pulled it out from under the bench"
       }
     },
@@ -829,9 +828,9 @@
       "source": "raskolnikov",
       "target": "alyona",
       "type": "murdered",
-      "first_chapter": 8,
+      "first_chapter": 7,
       "quote": {
-        "chapter": 8,
+        "chapter": 7,
         "text": "brought the blunt side down on her head"
       }
     },
@@ -839,9 +838,9 @@
       "source": "raskolnikov",
       "target": "lizaveta",
       "type": "murdered",
-      "first_chapter": 8,
+      "first_chapter": 7,
       "quote": {
-        "chapter": 8,
+        "chapter": 7,
         "text": "The axe fell with the sharp edge just on the skull and split at one blow all the top of the head."
       }
     },
@@ -849,9 +848,9 @@
       "source": "raskolnikov",
       "target": "purse",
       "type": "stole",
-      "first_chapter": 8,
+      "first_chapter": 7,
       "quote": {
-        "chapter": 8,
+        "chapter": 7,
         "text": "Raskolnikov thrust it in his pocket without looking at it"
       }
     },
@@ -859,9 +858,9 @@
       "source": "ilya_petrovitch",
       "target": "police_office",
       "type": "assistant_superintendent_at",
-      "first_chapter": 9,
+      "first_chapter": 8,
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "He was the assistant superintendent."
       }
     },
@@ -869,9 +868,9 @@
       "source": "nikodim",
       "target": "police_office",
       "type": "head_of",
-      "first_chapter": 9,
+      "first_chapter": 8,
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "This was the superintendent of the district himself, Nikodim Fomitch."
       }
     },
@@ -879,9 +878,9 @@
       "source": "zametov",
       "target": "police_office",
       "type": "head_clerk_at",
-      "first_chapter": 9,
+      "first_chapter": 8,
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "“Go in there to the head clerk,” said the clerk"
       }
     },
@@ -889,9 +888,9 @@
       "source": "ilya_petrovitch",
       "target": "raskolnikov",
       "type": "quarrelled_with_and_suspects",
-      "first_chapter": 9,
+      "first_chapter": 8,
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "The assistant superintendent was so furious that for the first minute he could only splutter inarticulately."
       }
     },
@@ -899,9 +898,9 @@
       "source": "raskolnikov",
       "target": "natalya",
       "type": "formerly_engaged_to",
-      "first_chapter": 9,
+      "first_chapter": 8,
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "at the very beginning I promised to marry her daughter"
       }
     },
@@ -909,9 +908,9 @@
       "source": "natalya",
       "target": "praskovya",
       "type": "daughter_of",
-      "first_chapter": 9,
+      "first_chapter": 8,
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "I promised to marry her daughter, it was a verbal promise, freely given"
       }
     },
@@ -919,9 +918,9 @@
       "source": "zossimov",
       "target": "raskolnikov",
       "type": "physician_of",
-      "first_chapter": 11,
+      "first_chapter": 10,
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "I brought Zossimov to see you twice."
       }
     },
@@ -929,9 +928,9 @@
       "source": "razumihin",
       "target": "zametov",
       "type": "friend_of",
-      "first_chapter": 11,
+      "first_chapter": 10,
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "Now we are friends—see each other almost every day."
       }
     }
@@ -940,90 +939,90 @@
     {
       "entity": "marmeladov",
       "alias": "Marmeladov",
-      "reveal_chapter": 3,
-      "rule": "The man 'like a retired government clerk' at the end of ch 2 is unnamed; no page may call him Marmeladov before ch 3.",
+      "reveal_chapter": 2,
+      "rule": "The man 'like a retired government clerk' at the end of ch 1 is unnamed; no page may call him Marmeladov before ch 2.",
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "Marmeladov—such is my name; titular counsellor."
       }
     },
     {
       "entity": "raskolnikov",
       "alias": "Rodya",
-      "reveal_chapter": 4,
-      "rule": "The diminutive first appears in his mother's letter in ch 4.",
+      "reveal_chapter": 3,
+      "rule": "The diminutive first appears in his mother's letter in ch 3.",
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "“My dear Rodya,” wrote his mother"
       }
     },
     {
       "entity": "raskolnikov",
       "alias": "Rodion Romanovitch",
-      "reveal_chapter": 5,
-      "rule": "Chs 2-4 give only 'Raskolnikov' and 'Rodya'. The forename and patronymic first appear in ch 5; showing them earlier comes from outside the text read so far.",
+      "reveal_chapter": 4,
+      "rule": "Chs 2-4 give only 'Raskolnikov' and 'Rodya'. The forename and patronymic first appear in ch 4; showing them earlier comes from outside the text read so far.",
       "quote": {
-        "chapter": 5,
+        "chapter": 4,
         "text": "It’s clear that Rodion Romanovitch Raskolnikov is the central figure in the business"
       }
     },
     {
       "entity": "dounia",
       "alias": "Avdotya Romanovna",
-      "reveal_chapter": 5,
-      "rule": "Ch 4 calls her only Dounia; 'Avdotya Romanovna' first appears in ch 5.",
+      "reveal_chapter": 4,
+      "rule": "Ch 4 calls her only Dounia; 'Avdotya Romanovna' first appears in ch 4.",
       "quote": {
-        "chapter": 5,
+        "chapter": 4,
         "text": "you have determined to marry a sensible business man, Avdotya Romanovna"
       }
     },
     {
       "entity": "pestryakov",
       "alias": "Pestryakov",
-      "reveal_chapter": 9,
-      "rule": "The young man at the door in ch 8 is unnamed; the police name him in ch 9.",
+      "reveal_chapter": 8,
+      "rule": "The young man at the door in ch 7 is unnamed; the police name him in ch 8.",
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "Besides, Pestryakov, the student, was seen at the gate by both the porters"
       }
     },
     {
       "entity": "praskovya",
       "alias": "Zarnitsyn",
-      "reveal_chapter": 9,
-      "rule": "The landlady's surname comes from the IOU read at the police office in ch 9.",
+      "reveal_chapter": 8,
+      "rule": "The landlady's surname comes from the IOU read at the police office in ch 8.",
       "quote": {
-        "chapter": 9,
+        "chapter": 8,
         "text": "given by you to the widow of the assessor Zarnitsyn"
       }
     },
     {
       "entity": "zametov",
       "alias": "Zametov",
-      "reveal_chapter": 11,
-      "rule": "In ch 9 the head clerk is 'the head clerk' and once 'Alexandr Grigorievitch'; the surname Zametov first appears in ch 11.",
+      "reveal_chapter": 10,
+      "rule": "In ch 8 the head clerk is 'the head clerk' and once 'Alexandr Grigorievitch'; the surname Zametov first appears in ch 10.",
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "Mr. Zametov, Alexandr Grigorievitch, the head clerk in the police office"
       }
     },
     {
       "entity": "praskovya",
       "alias": "Pashenka",
-      "reveal_chapter": 11,
-      "rule": "Razumihin's pet name for the landlady first appears in ch 11.",
+      "reveal_chapter": 10,
+      "rule": "Razumihin's pet name for the landlady first appears in ch 10.",
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "it’s all Pashenka, your dear little landlady, who sees to that"
       }
     },
     {
       "entity": "natalya",
       "alias": "Natalya Yegorovna",
-      "reveal_chapter": 11,
-      "rule": "Ch 9 tells of the landlady's dead daughter without naming her; Razumihin names her in ch 11.",
+      "reveal_chapter": 10,
+      "rule": "Ch 9 tells of the landlady's dead daughter without naming her; Razumihin names her in ch 10.",
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "And that promise of marriage when her daughter, Natalya Yegorovna, was alive?"
       }
     }
@@ -1038,9 +1037,9 @@
         "luise",
         "amalia"
       ],
-      "rule": "A shared patronymic, not a shared person. Alyona and Lizaveta are half-sisters (same father); Katerina Ivanovna and Luise Ivanovna are unrelated to them and to each other; Amalia is 'Amalia Fyodorovna' in scope but 'Amalia Ivanovna' from run ch 15. Five pages.",
+      "rule": "A shared patronymic, not a shared person. Alyona and Lizaveta are half-sisters (same father); Katerina Ivanovna and Luise Ivanovna are unrelated to them and to each other; Amalia is 'Amalia Fyodorovna' in scope but 'Amalia Ivanovna' from run ch 14. Five pages.",
       "quote": {
-        "chapter": 8,
+        "chapter": 7,
         "text": "Hey, Alyona Ivanovna, old witch! Lizaveta Ivanovna, hey, my beauty!"
       }
     },
@@ -1058,9 +1057,9 @@
         "marfa",
         "nastasya"
       ],
-      "rule": "Marfa Petrovna (Svidrigaïlov's wife) and Nastasya, who says in ch 11 that she is 'Petrovna', are unrelated.",
+      "rule": "Marfa Petrovna (Svidrigaïlov's wife) and Nastasya, who says in ch 10 that she is 'Petrovna', are unrelated.",
       "quote": {
-        "chapter": 11,
+        "chapter": 10,
         "text": "I am not Nikiforovna, but Petrovna"
       }
     },
@@ -1073,7 +1072,7 @@
       ],
       "rule": "Mother and sister share his surname (the letter is signed 'PULCHERIA RASKOLNIKOV') and Dounia shares his patronymic (Rodion Romanovitch, Avdotya Romanovna). Three pages; the bare surname names only Rodion.",
       "quote": {
-        "chapter": 4,
+        "chapter": 3,
         "text": "PULCHERIA RASKOLNIKOV"
       }
     },
@@ -1085,7 +1084,7 @@
       ],
       "rule": "Two landladies in two houses: Raskolnikov's (Praskovya Pavlovna, Zarnitsyn's widow) and the Marmeladovs' (Amalia Lippevechsel). Both are fairly called 'the landlady', so the title is not a reason to merge them.",
       "quote": {
-        "chapter": 3,
+        "chapter": 2,
         "text": "For our landlady, Amalia Fyodorovna would not hear of it"
       }
     },
@@ -1097,26 +1096,26 @@
       ],
       "rule": "Raskolnikov hurls the name at a stranger on the boulevard as an insult. The dandy is not Svidrigaïlov, who does not appear in scope; never add 'Svidrigaïlov' to the dandy's page or merge the two.",
       "quote": {
-        "chapter": 5,
+        "chapter": 4,
         "text": "“Hey! You Svidrigaïlov! What do you want here?”"
       }
     }
   ],
   "ambiguities": [
-    "First chapters follow the brief: the first chapter that names the entity. Two entities are the exception because the text states their ties before it names them: the landlady (ch 2, 'his landlady', to whom he owes money; named Praskovya Pavlovna in ch 4) and Natalya Yegorovna (ch 9, the dead daughter he promised to marry; named in ch 11). Marmeladov (unnamed in ch 2, named ch 3) and Pestryakov (unnamed in ch 8, named ch 9) take their naming chapter; an earlier page passes anyway.",
-    "Lizaveta and Alyona: ch 2 hints at the tie ('Lizaveta's work'; 'your sister is not here with you?') but only ch 6 states it. The relation is strict at ch 6, so a wiki that infers 'sister of' in ch 2-4 is flagged early.",
-    "Lizaveta is a 'step-sister' to the huckster's wife (ch 6) and a 'half-sister, being the child of a different mother' in ch 7. Sister, half-sister and step-sister all fall in the kin family and pass.",
-    "Vahrushin's forename: 'Vassily Ivanovitch Vahrushin' once at the start of the letter (ch 4), 'Afanasy Ivanovitch' afterwards (ch 4, 5, 11). One man. Do not confuse him with 'Ivan Afanasyvitch', Marmeladov's superior in ch 3 (not in this gold).",
-    "Ilya Petrovitch beating the landlady on the stairs (ch 10) is Raskolnikov's delirium: Nastasya says 'Nobody has been beating the landlady.' Never record it as an event or a relation.",
-    "The beating of the mare (ch 6) is a dream of Raskolnikov's childhood. Its Mikolka is a dream figure, so he is left out of this gold. Later chapters have a painter Nikolay, and ch 8 already shouts for 'Mitka', one of the painters; none of them is the dream Mikolka.",
-    "'You Svidrigaïlov!' (ch 5) is an insult to a stranger. Svidrigaïlov himself does not appear in run ch 1-11.",
-    "Raskolnikov's intent to kill the pawnbroker is first stated outright in ch 6 (the dream's aftermath and 'an old woman, on whose life an attempt was contemplated'); chs 2-5 speak only of a 'project', a 'rehearsal' and 'It'. Scorer limitation: early_relations matches word stems, so a wiki row 'plans to murder' shown in ch 6 is flagged as an early 'murdered' (ch 8). The gold uses 'murdered' rather than 'killed' so that the likelier wording 'plans to kill' does not trip it.",
+    "First chapters follow the brief: the first chapter that names the entity. Two entities are the exception because the text states their ties before it names them: the landlady (ch 1, 'his landlady', to whom he owes money; named Praskovya Pavlovna in ch 3) and Natalya Yegorovna (ch 8, the dead daughter he promised to marry; named in ch 10). Marmeladov (unnamed in ch 1, named ch 2) and Pestryakov (unnamed in ch 7, named ch 8) take their naming chapter; an earlier page passes anyway.",
+    "Lizaveta and Alyona: ch 1 hints at the tie ('Lizaveta's work'; 'your sister is not here with you?') but only ch 5 states it. The relation is strict at ch 5, so a wiki that infers 'sister of' in ch 1-3 is flagged early.",
+    "Lizaveta is a 'step-sister' to the huckster's wife (ch 5) and a 'half-sister, being the child of a different mother' in ch 6. Sister, half-sister and step-sister all fall in the kin family and pass.",
+    "Vahrushin's forename: 'Vassily Ivanovitch Vahrushin' once at the start of the letter (ch 3), 'Afanasy Ivanovitch' afterwards (ch 3, 5, 11). One man. Do not confuse him with 'Ivan Afanasyvitch', Marmeladov's superior in ch 2 (not in this gold).",
+    "Ilya Petrovitch beating the landlady on the stairs (ch 9) is Raskolnikov's delirium: Nastasya says 'Nobody has been beating the landlady.' Never record it as an event or a relation.",
+    "The beating of the mare (ch 5) is a dream of Raskolnikov's childhood. Its Mikolka is a dream figure, so he is left out of this gold. Later chapters have a painter Nikolay, and ch 7 already shouts for 'Mitka', one of the painters; none of them is the dream Mikolka.",
+    "'You Svidrigaïlov!' (ch 4) is an insult to a stranger. Svidrigaïlov himself does not appear in run ch 0-10.",
+    "Raskolnikov's intent to kill the pawnbroker is first stated outright in ch 5 (the dream's aftermath and 'an old woman, on whose life an attempt was contemplated'); chs 1-4 speak only of a 'project', a 'rehearsal' and 'It'. Scorer limitation: early_relations matches word stems, so a wiki row 'plans to murder' shown in ch 5 is flagged as an early 'murdered' (ch 7). The gold uses 'murdered' rather than 'killed' so that the likelier wording 'plans to kill' does not trip it.",
     "'Captain' is a courtesy title here: Luise Ivanovna calls Ilya Petrovitch 'Mr. Captain' and Raskolnikov calls Nikodim Fomitch 'Captain'. Not a reason to merge the two policemen.",
-    "Nastasya's patronymic: Razumihin guesses 'Nikiforovna' (ch 11); she says 'Petrovna'. Only Petrovna is hers.",
-    "'Vrazumihin' (ch 11) is Razumihin's joke on his own name, accepted as an alias but not a second person.",
-    "Name forms that first appear after run ch 11 are aliases for matching only: Pulcheria Alexandrovna (run ch 15), Dmitri Prokofitch (ch 17), Arkady Ivanovitch (ch 21), Andrey Semyonovitch (ch 13), Amalia Ivanovna and Amalia Ludwigovna (ch 15). Showing any of them as of ch 11 or earlier is a leak, but this partial gold cannot test it because the revealing quotes lie outside its chapters.",
-    "Zametov's first chapter is 9 (head clerk, 'Alexandr Grigorievitch'); his surname is a reveal at ch 11. A page titled 'Zametov' that already shows that name in ch 9 or 10 fails the reveal.",
-    "Statuses: Raskolnikov is ill and delirious from ch 9 to ch 11 but alive. Marmeladov, Katerina Ivanovna and Sonia are alive throughout scope; Marmeladov dies in run ch 15.",
+    "Nastasya's patronymic: Razumihin guesses 'Nikiforovna' (ch 10); she says 'Petrovna'. Only Petrovna is hers.",
+    "'Vrazumihin' (ch 10) is Razumihin's joke on his own name, accepted as an alias but not a second person.",
+    "Name forms that first appear after run ch 10 are aliases for matching only: Pulcheria Alexandrovna (run ch 14), Dmitri Prokofitch (ch 16), Arkady Ivanovitch (ch 20), Andrey Semyonovitch (ch 12), Amalia Ivanovna and Amalia Ludwigovna (ch 14). Showing any of them as of ch 10 or earlier is a leak, but this partial gold cannot test it because the revealing quotes lie outside its chapters.",
+    "Zametov's first chapter is 9 (head clerk, 'Alexandr Grigorievitch'); his surname is a reveal at ch 10. A page titled 'Zametov' that already shows that name in ch 8 or 10 fails the reveal.",
+    "Statuses: Raskolnikov is ill and delirious from ch 8 to ch 10 but alive. Marmeladov, Katerina Ivanovna and Sonia are alive throughout scope; Marmeladov dies in run ch 14.",
     "Spelling: the ASCII 'Svidrigailov' and 'Haymarket' are accepted as aliases because a model may drop the diaeresis or join the words; the key's names use the translation's spellings."
   ]
 }
