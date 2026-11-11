@@ -23,6 +23,10 @@ ECHOED = {
 }
 
 
+SAME_PERSON = {"entries": [{"name": "Captain Fenn", "same_as": "Odile Marr", "chapter": 4,
+                             "quotes": ["They buried Tomas Hale in the Guild plot behind the harbour chapel on a grey, windless morning."]}]}
+
+
 TWO_ARCS = {"arcs": [{"name": ECHO, "start": 1}, {"name": ECHO, "start": 4}]}
 
 
@@ -68,6 +72,7 @@ class AsOfLeakTest(unittest.TestCase):
     def setUpClass(cls):
         script = echo_script()
         cls.book = EchoBuild(script)
+        (cls.book.workdir / "corrections.json").write_text(json.dumps(SAME_PERSON), encoding="utf-8")
         cls.book.echo("build", str(MINI), str(cls.book.workdir), "--to", "4", "--yes")
         cls.book.echo("build", str(MINI), str(cls.book.workdir), "--yes")
         cls.wiki = cls.book.json("site/data/wiki.json")
@@ -93,6 +98,11 @@ class AsOfLeakTest(unittest.TestCase):
     def assertNoLeak(self, shown):
         leaks = sorted({(n, where, w) for n, strings in shown.items() for where, text in strings for w in words(text) & self.later[n]})
         self.assertEqual(leaks, [], "\n".join(map(str, leaks)) + "\nwords the book first uses after chapter N, shown as of chapter N")
+
+    def test_the_build_joins_the_pages_a_same_person_correction_names(self):
+        ids = {e["name"]: e["id"] for e in self.wiki["entities"]}
+        merged = next(e["merged"] for e in self.wiki["entities"] if e["name"] == "Captain Fenn")
+        self.assertEqual(merged, {"into": ids["Odile Marr"], "chapter": 4})
 
     def test_the_fake_model_writes_its_prompt_words_into_every_echoed_field(self):
         v = self.wiki["volumes"][0]

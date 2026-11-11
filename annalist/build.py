@@ -239,7 +239,7 @@ STAGES = (
           skip=lambda run: None if started_volumes(run) else "no chapter read", code=("volume",)),
     Stage("render", lambda run: cmd_render(namespace(run, until=None, html=True)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
-                   "ending.json", "volumes", ARCS_FILE, "ladders.json"),
+                   "ending.json", "volumes", ARCS_FILE, "ladders.json", "corrections.json"),
           lambda run: ["wiki/index.md"], ("summary", "personality", "history"), code=("render",)),
     Stage("export", lambda run: cmd_export(Namespace(workdir=str(run.workdir), outdir=str(run.workdir / "site"), public=False, theme=None)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",

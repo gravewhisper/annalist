@@ -1,3 +1,4 @@
+import copy
 import html
 import json
 import re
@@ -5,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .book import load_book
+from .corrections import join_same_person, joined_rows, load_corrections
 from .files import read_json, write_atomic
 from .families import wording_key
 from .llm import cached_llm
@@ -403,15 +405,27 @@ def cmd_render(args):
     workdir = Path(args.workdir).resolve()
     until = args.until
     kb = load_states(workdir, until=until, ladders=True)
-    shown = display_names(kb.entities)
     until = until if until is not None else max(kb.synopses, default=0)
     out_dir = workdir / (f"wiki-ch{args.until:04d}" if args.until is not None else "wiki")
     titles = {c["index"]: c["title"] for c in json.loads((workdir / "chapters.json").read_text(encoding="utf-8"))}
     profiles = page_profiles(workdir, read_json(workdir / "entities.json", []),
                              read_json(workdir / "profiles.json", {"characters": {}})["characters"])
-    profiles = {k: v for k, v in profiles.items() if k in kb.entities and kb.entities[k]["type"] == "character"}
     for f in kb.facts:
         f.update(verified_quotes(workdir, f["chapter"], f["quotes"]))
+    corrections = load_corrections(workdir)
+    written = copy.deepcopy(kb) if any("same_as" in c for c in corrections) else kb
+    written_by = {}
+    for f in written.facts:
+        written_by.setdefault(f["entity"], []).append(f)
+    evidence = {n: visible(p["lists"].get("personality_evidence", []), until) for n, p in profiles.items()
+                if n in written.entities and written.entities[n]["type"] == "character"}
+    for part, page, chapter in join_same_person(kb, corrections, until):
+        mine = profiles.setdefault(page, {"fields": {}, "extra": {}, "lists": {}})
+        for group, rows in profiles.get(part, {}).items():
+            for key, obs in rows.items():
+                mine[group][key] = joined_rows(mine[group].get(key, []), obs, chapter)
+    profiles = {k: v for k, v in profiles.items() if k in kb.entities and kb.entities[k]["type"] == "character"}
+    shown = display_names(kb.entities)
 
     by_entity = {}
     for f in kb.facts:
@@ -428,16 +442,15 @@ def cmd_render(args):
         used.add(rel)
         paths[name] = rel
 
-    needs_summary = [n for n in kb.entities if len(by_entity.get(n, [])) >= 3]
+    needs_summary = [n for n in written.entities if len(written_by.get(n, [])) >= 3]
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         summaries = dict(zip(needs_summary, pool.map(
-            lambda n: entity_summary(workdir, kb.entities[n], by_entity[n], kb.timelines, until), needs_summary)))
+            lambda n: entity_summary(workdir, written.entities[n], written_by[n], written.timelines, until), needs_summary)))
         list(pool.map(lambda prompt: cached_llm(workdir, "summary", prompt),
-                      [x for n in needs_summary for x in checkpoint_prompts(kb.entities[n], by_entity[n], kb.timelines).values()]))
-        evidence = {n: visible(p["lists"].get("personality_evidence", []), until) for n, p in profiles.items()}
+                      [x for n in needs_summary for x in checkpoint_prompts(written.entities[n], written_by[n], written.timelines).values()]))
         evidence = {n: v for n, v in evidence.items() if v}
         personalities = dict(zip(evidence, pool.map(lambda n: personality_paragraph(workdir, n, evidence[n]), evidence)))
-        histories = arc_histories(workdir, kb, by_entity, closed_arcs(workdir, until), pool)
+        histories = arc_histories(workdir, written, written_by, closed_arcs(workdir, until), pool)
 
     def chapter_link(n, depth):
         return f"[Ch {n}: {titles.get(n, n)}]({'../' * depth}../chapters/{n:04d}.txt)"
