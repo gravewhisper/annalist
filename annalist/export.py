@@ -15,7 +15,7 @@ from .profile import page_profiles
 from .render import checkpoint_prompts, closed_arcs, history_prompts, PERSONALITY_PROMPT, summary_prompt
 from .state import MAIN_TIMELINE
 from .status import spoken_appearances
-from .template import type_parents
+from .template import type_parents, Types
 from .text import chapter_text, mention_quote, verified_quotes
 from .titles import page_title, revealed_name
 
@@ -281,7 +281,8 @@ def build(workdir, theme):
     for r in relations:
         for end in ("source", "target"):
             ties.setdefault(r[end], []).append(r)
-    types = {e["name"]: e["type"] for e in entities}
+    kinds = Types(type_parents(book.get("power_types")))
+    types = {e["name"]: kinds.kind(e["type"]) for e in entities}
 
     out_entities = []
     for e in entities:

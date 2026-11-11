@@ -407,7 +407,7 @@ def relation_items(gold, wiki, match, readings):
         a, b = match.home.get(r["source"]), match.home.get(r["target"])
         lenient = r.get("lenient", False)
         latest = gold.last if lenient else r["first_chapter"] + NEAR
-        want = gold_families(r["type"], readings, gold.types(r["target"]) if r["target"] in gold.entities else ())
+        want = gold_families(r["type"], readings, {wiki.types.kind(t) for t in gold.types(r["target"])} if r["target"] in gold.entities else ())
         evidence = [f"gold ch{r['first_chapter']}: {r['source']} {r['type']} {r['target']} (families {', '.join(sorted(want))})"
                     + (", lenient" if lenient else "")]
         if not a or not b or a == b:

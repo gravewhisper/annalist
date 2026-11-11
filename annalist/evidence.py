@@ -22,7 +22,7 @@ def observation(workdir, value, row, source):
 def affiliations(workdir, kb, name):
     return [observation(workdir, r["target"], r, "relation") for r in kb.relations
             if r["source"] == name and wording_key(r["type"]) in AFFILIATION_RELATIONS and r.get("status") == "stated"
-            and kb.entities.get(r["target"], {}).get("type") == "organization"
+            and r["target"] in kb.entities and kb.types.is_a(kb.entities[r["target"]]["type"], ("organization",))
             and stems(r["target"]) & stems(" ".join(r["quotes"]))]
 
 

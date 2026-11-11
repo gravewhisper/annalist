@@ -4,9 +4,15 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from types import SimpleNamespace
+
 from annalist.book import load_book
+from annalist.evidence import affiliations
+from annalist.files import write_json
 from annalist.ladders import ladder_needed
+from annalist.link import fact_candidates
 from annalist.resolve import candidate_pairs, decide_pair
+from annalist.review import merges
 from annalist.state import Knowledge
 
 LADDER = {"group_type": "school", "step_type": "rank", "rank": "number", "direction": "ascending", "note": ""}
@@ -119,6 +125,44 @@ class BookTypeResolveTest(unittest.TestCase):
         self.assertNotIn("Salt Ward", self.kb.entities)
 
 
+class BookTypeKindTest(unittest.TestCase):
+    TYPES = {"warding item": {"parent": "artifact", "description": "a charm"}, "harbour fort": {"parent": "place", "description": "a fort"},
+             "sect": {"parent": "organization", "description": "a school of lamp lore"}}
+    TEXT = "Ilse lived at Corvel Keep. Ilse was a member of the Ember Sect.\n"
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.workdir = Path(tmp.name)
+        (self.workdir / "chapters").mkdir()
+        (self.workdir / "chapters" / "0001.txt").write_text(self.TEXT, encoding="utf-8")
+        self.kb = Knowledge(power_types=self.TYPES)
+        for name, etype in (("Ilse", "character"), ("Corvel Keep", "harbour fort"), ("Ember Sect", "sect"), ("Salt Ward", "warding item"),
+                            ("Grey Charm", "artifact"), ("Corvel Quay", "place")):
+            self.kb.upsert_entity({"name": name, "type": etype, "summary": f"{name} of the quay"}, 1)
+        self.kb.synopses[1] = "Ilse joins a sect."
+
+    def test_a_fact_naming_an_entry_of_a_book_type_of_place_is_labelled_with_the_place_labels(self):
+        self.kb.facts.append({"id": "F0001-001", "chapter": 1, "entity": "Ilse", "claim": "Ilse lives at Corvel Keep.",
+                              "quotes": ["Ilse lived at Corvel Keep."], "asserted_by": "narrator", "status": "stated", "timeline": "main"})
+        found = fact_candidates(self.workdir, self.kb)
+        self.assertEqual([(c["source"], c["target"], c["type"]) for c in found], [("Ilse", "Corvel Keep", "place")])
+
+    def test_membership_of_a_book_type_of_organization_is_an_affiliation(self):
+        self.kb.relations.append({"id": "R0001-001", "chapter": 1, "source": "Ilse", "target": "Ember Sect", "type": "member of", "detail": "",
+                                  "quotes": ["Ilse was a member of the Ember Sect."], "asserted_by": "narrator", "status": "stated",
+                                  "timeline": "main"})
+        self.assertEqual([o["value"] for o in affiliations(self.workdir, self.kb, "Ilse")], ["Ember Sect"])
+
+    def test_review_flags_a_merge_across_unrelated_types_but_not_one_of_a_book_type_and_its_parent(self):
+        write_json(self.workdir / "merges.json", {"pairs": [
+            {"a": "Salt Ward", "b": "Grey Charm", "same": True, "canonical": "Grey Charm", "reason": "One charm."},
+            {"a": "Salt Ward", "b": "Corvel Quay", "same": True, "canonical": "Corvel Quay", "reason": "One place."}]})
+        flagged = merges(SimpleNamespace(workdir=self.workdir, extracted=self.kb))
+        self.assertEqual([(f["a"], f["b"], f["reasons"]) for f in flagged], [("Salt Ward", "Corvel Quay", ["cross-type (warding item / place)"])])
+
+
 if __name__ == "__main__":
+
 
     unittest.main()

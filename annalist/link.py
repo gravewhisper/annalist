@@ -59,7 +59,7 @@ def owner_of(kb, prefix, shorts):
         words = words[1:]
     found = ((c if k == kb.resolve(c) else k, k) for c in [prefix, " ".join(words)] + words[-1:]
              for k in (kb.resolve(c), shorts().get(name_key(c))))
-    return next(((named, k) for named, k in found if k and kb.entities[k]["type"] in OWNERS), (None, None))
+    return next(((named, k) for named, k in found if k and kind_of(kb, k) in OWNERS), (None, None))
 
 
 def literal(text):
@@ -69,6 +69,10 @@ def literal(text):
 def sentence_at(text, start, end, limit=300):
     quote = sentence_of(text, start, end).strip()
     return quote if len(quote) <= limit else text_window(text, start, end, (limit - (end - start)) // 3)
+
+
+def kind_of(kb, k):
+    return kb.types.kind(kb.entities[k]["type"])
 
 
 def possessives(workdir, kb):
@@ -117,7 +121,8 @@ def typed_name_rows(workdir, kb):
         for name in names_of(e):
             base = re.sub(rf"\s+{re.escape(e['type'])}$", "", name, flags=re.I)
             other = kb.resolve(base) if base != name else None
-            if not other or other == k or kb.entities[other]["type"] in (e["type"], UNCATEGORIZED) or {e["type"], kb.entities[other]["type"]} <= ladder:
+            if (not other or other == k or kb.entities[other]["type"] == UNCATEGORIZED or kb.types.kin(e["type"], kb.entities[other]["type"])
+                    or {e["type"], kb.entities[other]["type"]} <= ladder):
                 continue
             start = max(e["first_chapter"], kb.entities[other]["first_chapter"])
             hit = next(((n, m) for n in sorted(kb.synopses) if n >= start for m in [literal(name).search(chapter_text(workdir, n))] if m), None)
@@ -137,7 +142,8 @@ def as_named(kb, fact, k):
 
 
 def fact_candidates(workdir, kb):
-    kinds = {k: e["type"] for k, e in kb.entities.items() if e["type"] == "character" or e["type"] in VOCABULARY}
+    kinds = {k: kind_of(kb, k) for k in kb.entities if kind_of(kb, k) == "character" or kind_of(kb, k) in VOCABULARY}
+
     index = NameIndex({k: names_of(kb.entities[k]) for k in kinds})
     found = []
     for f in kb.facts:

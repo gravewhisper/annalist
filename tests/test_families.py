@@ -29,6 +29,8 @@ THING_READING = {"kinds": READINGS["kinds"] + [{"wording": CHANTS, "target": "ar
 
 def families_script():
     script = relate_script()
+    first = next(r for r in script["replies"] if r["purpose"] == "extract" and r.get("chapter") == 1)
+    next(e for e in first["reply"]["entities"] if e["name"] == "Salt Ledger")["type"] = "ward"
     script["replies"][0]["reply"] = {"relations": script["replies"][0]["reply"]["relations"] + RELATE_EXTRA}
     script["replies"].insert(0, {"purpose": "families", "contains": f"source [character] {CHANTS} target [artifact]", "reply": THING_READING})
     script["replies"].insert(0, {"purpose": "relate", "contains": "CHAPTER 2: Nine Winters Ago", "reply": RELATE_CH2})
@@ -134,6 +136,11 @@ class FamiliesMiniTest(unittest.TestCase):
 
     def test_a_wording_the_rules_cannot_settle_is_read_with_the_kind_of_its_target_and_coloured_by_that_reading(self):
         self.assertEqual({r["type"]: r["family"] for r in self.shown("Tomas Hale", "Salt Ledger")}, {CHANTS: "ownership"})
+
+    def test_a_target_of_a_book_type_is_read_as_its_parent_kind(self):
+        ledger = next(e for e in self.wiki["entities"] if e["name"] == "Salt Ledger")
+        self.assertEqual((ledger["type"], self.wiki["book"]["parents"]["ward"]), ("ward", "artifact"))
+        self.assertIn("chants from [artifact]", self.book.json("families.json")["readings"])
 
     def test_a_suspected_romance_between_two_others_is_drawn_between_them_as_the_believers_suspicion(self):
         self.assertFalse([r for r in self.shown("Odile Marr", "Tomas Hale") if "courtship" in r["type"]])

@@ -96,7 +96,7 @@ def merges(run):
             continue
         types = [run.extracted.entities[n]["type"] for n in (d["a"], d["b"]) if n in run.extracted.entities]
         reasons = []
-        if len(set(types)) > 1:
+        if len(set(types)) > 1 and not run.extracted.types.kin(*types):
             reasons.append(f"cross-type ({' / '.join(types)})")
         hedge = HEDGES.search(d.get("reason") or "")
         if hedge:

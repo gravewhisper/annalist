@@ -146,9 +146,10 @@ def read_batch(workdir, lines):
 
 def cmd_families(args):
     workdir = Path(args.workdir).resolve()
-    write_derived(workdir, load_states(workdir))
+    kb = load_states(workdir)
+    write_derived(workdir, kb)
     readings = {k: v for k, v in read_families(workdir).items() if k.endswith("]")}
-    types = {e["name"]: e["type"] for e in read_json(workdir / "entities.json", [])}
+    types = {e["name"]: kb.types.kind(e["type"]) for e in read_json(workdir / "entities.json", [])}
     ends = {}
     for r in read_jsonl(workdir / "relations.jsonl"):
         ends.setdefault((wording_key(r["type"]), types.get(r["target"], "")), types.get(r["source"], ""))
