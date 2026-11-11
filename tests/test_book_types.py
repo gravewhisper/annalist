@@ -1,4 +1,6 @@
+import html
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +16,8 @@ from annalist.link import fact_candidates
 from annalist.resolve import candidate_pairs, decide_pair
 from annalist.review import merges
 from annalist.state import Knowledge
+from tests.test_build import ROOT, site_views
+
 
 LADDER = {"group_type": "school", "step_type": "rank", "rank": "number", "direction": "ascending", "note": ""}
 
@@ -123,6 +127,46 @@ class BookTypeResolveTest(unittest.TestCase):
         merged = self.kb.entities["Salt Ward of Corvel"]
         self.assertEqual((merged["type"], merged["aliases"]), ("warding item", ["Salt Ward"]))
         self.assertNotIn("Salt Ward", self.kb.entities)
+
+
+def category_wiki():
+    rows = [("Salt Ward", "warding item", 1), ("Bone Charm", "warding item", 3), ("Grey Lamp", "artifact", 1), ("Ilse", "character", 1)]
+    entities = [{"id": f"{i:08x}", "name": n, "name_chapter": c, "type": t, "first": c, "aliases": [], "blurbs": [[c, f"{n} of the quay."]]}
+                for i, (n, t, c) in enumerate(rows, 1)]
+    facts = [{"id": f"F{i}", "chapter": e["first"], "entity": e["id"], "claim": f"{e['name']} is on the quay.", "status": "stated",
+              "by": "narrator", "quotes": []} for i, e in enumerate(entities, 1)]
+    return {"book": {"title": "Quay", "max": 3, "public_domain": False, "theme": {}, "power_types": ["warding item"],
+                     "parents": {"warding item": "artifact"}, "ladder": None},
+            "chapters": [{"n": n, "title": f"Chapter {n}", "synopsis": ""} for n in (1, 2, 3)],
+            "timelines": [{"id": "main", "kind": "main", "label": "Main story", "period": "", "started": 1, "erased": None}],
+            "entities": entities, "facts": facts, "relations": [], "questions": [], "ladders": [], "volumes": []}, {e["name"]: e["id"] for e in entities}
+
+
+def plain(markup):
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", markup)).split())
+
+
+class BookTypeCategoryTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        wiki, cls.ids = category_wiki()
+        with tempfile.TemporaryDirectory(dir=ROOT / "tests") as tmp:
+            path = Path(tmp) / "wiki.json"
+            path.write_text(json.dumps(wiki), encoding="utf-8")
+            cls.views = site_views(path, "route:cat:artifact@1", "route:cat:artifact@3", "route:cat:warding item@3",
+                                   f"{cls.ids['Salt Ward']}@1", "route:cat:character@1")
+
+    def test_the_parent_category_links_to_each_book_type_category_with_its_entries_so_far(self):
+        early, later = (plain(self.views[f"route:cat:artifact@{n}"]["html"]) for n in (1, 3))
+        self.assertIn("Subcategories Warding items 1", early)
+        self.assertIn("Subcategories Warding items 2", later)
+        self.assertIn('data-go="cat:warding item"', self.views["route:cat:artifact@3"]["html"])
+        self.assertNotIn("Subcategories", plain(self.views["route:cat:character@1"]["html"]))
+
+    def test_a_book_type_category_and_its_entries_sit_under_the_parent_in_the_crumbs(self):
+        self.assertIn("Home › Artifacts Warding items 2 entries", plain(self.views["route:cat:warding item@3"]["html"]))
+        self.assertIn("Home › Artifacts › Warding items Salt Ward", plain(self.views[f"{self.ids['Salt Ward']}@1"]))
+        self.assertIn("Bone Charm", plain(self.views["route:cat:warding item@3"]["html"]))
 
 
 class BookTypeKindTest(unittest.TestCase):

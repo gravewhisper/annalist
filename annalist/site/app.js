@@ -28,6 +28,7 @@ async function load() {
   D.namesakes = {};
   for (const e of D.entities) (D.namesakes[e.name] ||= []).push(e.id);
   D.power = new Set(D.book.power_types);
+  D.parents = D.book.parents || {};
   D.tl = Object.fromEntries((D.timelines || []).map(t => [t.id, t]));
   D.storeKey = 'wiki-chapter:' + D.book.title;
   const typeCount = {};
@@ -310,13 +311,19 @@ const ladderSteps = l => until(l.steps).filter(s => vis(D.byId[live(s.id)]));
 const visLadders = () => D.ladders.filter(l => (l.group === null || vis(D.byId[live(l.group)])) && ladderSteps(l).length);
 const ladderList = l => `<ul class="list">${ladderSteps(l).map(s => `<li><span class="ch">${esc(cap(D.book.ladder.step_type))} ${s.rank}</span>${entLink(s.id)}${chLink(s.chapter)}</li>`).join('')}</ul>`;
 
+const catLink = t => `<a ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}</a>`;
+const typeCrumbs = t => `<a ${goTo('home')}>Home</a>${D.parents[t] ? ` &rsaquo; ${catLink(D.parents[t])}` : ''}`;
+
 function renderCat(type) {
   const byName = (a, b) => displayName(a).localeCompare(displayName(b));
   const es = D.entities.filter(e => full(e) && e.type === type).sort(byName);
   const minors = D.entities.filter(e => minor(e) && e.type === type).sort((a, b) => a.mention.chapter - b.mention.chapter || byName(a, b));
   const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`)).join('')}</ul>`;
   const unnamed = es.filter(e => e.nameless);
-  return `<div class="crumbs"><a ${goTo('home')}>Home</a></div><h1>${esc(cap(plural(type)))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
+  const c = counts();
+  const subs = D.typeOrder.filter(t => D.parents[t] === type && c[t]);
+  return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(cap(plural(type)))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
+  ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
   ${list(es.filter(e => !e.nameless))}${unnamed.length ? `<h2>Unnamed figures</h2>${list(unnamed)}` : ''}
   ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
   ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
@@ -431,7 +438,7 @@ function renderEntity(id) {
   id = live(id);
   const e = D.byId[id];
   if (!vis(e)) return `<h1>Not yet introduced</h1><p class="muted">This entry first appears after chapter ${S.n}. Move the slider forward to reveal it.</p>`;
-  const crumbs = `<div class="crumbs"><a ${goTo('home')}>Home</a> &rsaquo; <a ${goTo(`cat:${esc(e.type)}`)}>${esc(cap(plural(e.type)))}</a></div>`;
+  const crumbs = `<div class="crumbs">${typeCrumbs(e.type)} &rsaquo; ${catLink(e.type)}</div>`;
   if (minor(e)) return `<article class="entity"><div class="ehead">${crumbs}<h1>${esc(displayName(e))}</h1><div class="subtitle">${esc(cap(e.type))} &middot; a minor mention in ${chLink(e.mention.chapter)}</div></div>
     ${mentionQuote(e)}<p class="muted">Nothing more is known about this entry by chapter ${S.n}.</p></article>`;
   const name = displayName(e);
@@ -622,7 +629,10 @@ const TYPE_GROUPS = [
   {key: 'things', label: 'Things', types: ['artifact']},
   {key: 'lore', label: 'Lore', types: ['concept', 'event', 'deity', 'creature', 'uncategorized']},
 ];
-const groupTypes = g => g.key === 'lore' ? D.typeOrder.filter(t => !TYPE_GROUPS.some(o => o !== g && o.types.includes(t))) : g.types.filter(t => D.typeOrder.includes(t));
+const kindOf = t => D.parents[t] || t;
+const groupTypes = g => g.key === 'lore' ? D.typeOrder.filter(t => !TYPE_GROUPS.some(o => o !== g && o.types.includes(kindOf(t))))
+  : [...g.types.filter(t => D.typeOrder.includes(t)), ...D.typeOrder.filter(t => D.parents[t] && g.types.includes(D.parents[t]))];
+
 const peopleFirst = () => D.typeOrder.includes('character') ? ['character'] : D.typeOrder.slice(0, 1);
 const GRAPH_VIEWS = {
   characters: {label: 'Characters', route: 'graph', tab: true, types: peopleFirst},
@@ -680,7 +690,7 @@ function ties() {
     if (r.role === 'erased') continue;
     for (const [x, y] of [[r.source, r.target], [r.target, r.source]]) {
       add(partners, x, y);
-      if (r.family === 'membership' && D.byId[y].type === 'organization' && D.byId[x].type !== 'organization') add(orgs, x, y);
+      if (r.family === 'membership' && kindOf(D.byId[y].type) === 'organization' && kindOf(D.byId[x].type) !== 'organization') add(orgs, x, y);
     }
   }
   return Object.assign(edgeCache, {partners: new Map([...partners].map(([k, v]) => [k, v.size])), orgs});

@@ -1,6 +1,7 @@
 # The site and its spoiler guarantee
 
-The slider in the site header sets the chapter you are on. The site has a home page, chapter pages with synopses, volume pages, a Mysteries page, and a page for each entry with its profile, facts, relations, and mysteries. The Graph page has these tabs:
+The slider in the site header sets the chapter you are on. The site has a home page, chapter pages with synopses, volume pages, a Mysteries page, a category page for each type, and a page for each entry with its profile, facts, relations, and mysteries. A book type's category page sits under its parent's page in the breadcrumbs, and the parent's page lists it under Subcategories once it has an entry. The Factions and Places tabs count a book type of organization or place as one. The Graph page has these tabs:
+
 
 - Characters shows each character's strongest ties.
 - Connected? finds the path between two entries.

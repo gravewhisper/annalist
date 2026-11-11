@@ -70,6 +70,13 @@ class PlacesTabTest(unittest.TestCase):
                 return found
         return None
 
+    def test_an_entry_of_a_book_type_of_place_is_a_place(self):
+        wiki = json.loads(json.dumps(self.wiki))
+        wiki["book"].update(power_types=["harbour town"], parents={"harbour town": "place"})
+        next(e for e in wiki["entities"] if e["name"] == "Tingen")["type"] = "harbour town"
+        roots = self.views("graph:places@3", wiki=wiki)["graph:places@3"]["model"]["roots"]
+        self.assertEqual(self.tree(roots)["Loen"]["Tingen"], {"Daffodil Street": {}, "Khoy University": {}})
+
     def test_places_nest_under_the_most_specific_place_they_are_said_to_lie_in(self):
         self.assertEqual(self.tree(self.places(3)["model"]["roots"]),
                          {"Loen": {"Tingen": {"Daffodil Street": {}, "Khoy University": {}}, "Backlund": {"Cherwood": {"Minsk Street": {}}}}, "Harbour": {},

@@ -73,7 +73,14 @@ class FactionsTest(unittest.TestCase):
     def holders(self, model):
         return {self.name[s["id"]]: [self.name[h["holder"]] for h in s["holders"]] for r in model["ladders"][0]["rungs"] for s in r["steps"]}
 
+    def test_an_entry_of_a_book_type_of_organization_is_a_faction(self):
+        wiki = json.loads(json.dumps(self.wiki))
+        wiki["book"].update(power_types=wiki["book"]["power_types"] + ["watch company"], parents={"watch company": "organization"})
+        next(e for e in wiki["entities"] if e["name"] == "Night Watch")["type"] = "watch company"
+        self.assertEqual(self.members(self.view("graph:factions@5", wiki=wiki)["model"])["Night Watch"], ["Bram", "Ada", "Dax"])
+
     def test_a_group_lists_only_the_members_known_by_the_chapter(self):
+
         out = self.site("graph:factions@4", "graph:factions@5")
         self.assertEqual(self.members(out["graph:factions@4"]["model"])["Night Watch"], ["Bram", "Ada"])
         self.assertNotIn("Dax", visible(out["graph:factions@4"]["html"]))
