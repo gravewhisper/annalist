@@ -29,7 +29,7 @@ from .ending import cmd_ending, ending_status
 from .read import cmd_read
 from .link import cmd_link
 from .relate import cmd_relate
-from .render import cmd_render
+from .render import ARCS_FILE, cmd_render
 from .resolve import cmd_resolve
 from .retype import cmd_retype
 from .review import cmd_review
@@ -39,7 +39,7 @@ from .sweep import cmd_sweep
 from .template import overlapping_pairs
 from .tiers import cmd_tiers
 from .timelines import cmd_timelines
-from .volume import cmd_volume
+from .volume import cmd_open_volume, cmd_volume
 from .wordings import cmd_wordings
 
 
@@ -136,14 +136,24 @@ def run_book(run):
           f"extra fields {', '.join(book['extra_fields']) or 'none'}")
 
 
+def started_volumes(run):
+    return [v for v in run.volumes["volumes"] if v["from"] <= run.last]
+
+
 def run_volumes(run):
     keep = set()
-    for v in run.eligible_volumes():
-        keep.add(f"{slug(v['name'])}.json")
-        cmd_volume(Namespace(workdir=str(run.workdir), name=v["name"], start=v["from"], end=v["to"]))
+    for v in started_volumes(run):
+        if v["to"] <= run.last:
+            keep.add(f"{slug(v['name'])}.json")
+            cmd_volume(Namespace(workdir=str(run.workdir), name=v["name"], start=v["from"], end=v["to"]))
+        else:
+            cmd_open_volume(run.workdir, v["name"], v["from"], v["to"], run.last)
     for path in (run.workdir / "volumes").glob("*.json"):
         if path.name not in keep:
             path.unlink()
+    current = {(v["name"], v["from"]) for v in run.volumes["volumes"]}
+    arcs = read_json(run.workdir / ARCS_FILE, {"volumes": []})["volumes"]
+    write_json(run.workdir / ARCS_FILE, {"volumes": [v for v in arcs if (v["name"], v["from"]) in current]})
 
 
 def namespace(run, **kw):
@@ -225,15 +235,15 @@ STAGES = (
           failed=failed_items("ending.json")),
     Stage("volumes", run_volumes,
           STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "volumes.json"),
-          lambda run: [f"volumes/{slug(v['name'])}.json" for v in run.eligible_volumes()], ("arcs", "arc", "volume", "events"),
-          skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}", code=("volume",)),
+          lambda run: [ARCS_FILE] + [f"volumes/{slug(v['name'])}.json" for v in run.eligible_volumes()], ("arcs", "arc", "volume", "events"),
+          skip=lambda run: None if started_volumes(run) else "no chapter read", code=("volume",)),
     Stage("render", lambda run: cmd_render(namespace(run, until=None, html=True)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
-                   "ending.json", "volumes", "ladders.json"),
+                   "ending.json", "volumes", ARCS_FILE, "ladders.json"),
           lambda run: ["wiki/index.md"], ("summary", "personality", "history"), code=("render",)),
     Stage("export", lambda run: cmd_export(Namespace(workdir=str(run.workdir), outdir=str(run.workdir / "site"), public=False, theme=None)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
-                   "ending.json", "volumes", "ladders.json", "families.json", "corrections.json"),
+                   "ending.json", "volumes", ARCS_FILE, "ladders.json", "families.json", "corrections.json"),
           lambda run: ["site/data/wiki.json"], code=("export", "site", "themes")),
     Stage("review", lambda run: cmd_review(Namespace(workdir=str(run.workdir))),
           STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "profiles.json"), lambda run: ["review.json", "review.md"], code=("review",)),

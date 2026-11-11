@@ -34,4 +34,4 @@ Rules for changes:
 - `docs/backends.md` documents the backends.
 - `runs/` holds run directories. Git ignores it.
 
-A run directory holds `chapters/` and `chapters.json`, `volumes.json`, `book.json`, `state/`, one JSON file per stage, `cache/`, `calls.jsonl`, `build.json`, `wiki/`, `site/`, `review.md`, and, once you add one, `corrections.json`.
+A run directory holds `chapters/` and `chapters.json`, `volumes.json`, `book.json`, `state/`, one JSON file per stage, `arcs.json`, `cache/`, `calls.jsonl`, `build.json`, `wiki/`, `site/`, `review.md`, and, once you add one, `corrections.json`.

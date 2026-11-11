@@ -50,7 +50,7 @@ LATER_REPLIES = {
     "personality": {"paragraph": "Careful and stubborn (ch 1)."},
     "history": {"paragraph": "Ines kept the lamp and searched for the cut page (ch 1)."},
     "arcs": {"arcs": [{"name": "The Missing Page", "start": 1}]},
-    "arc": {"summary": "Ines follows the cut page of the Salt Ledger to the Gannet's wreck."},
+    "arc": {"name": "The Missing Page", "summary": "Ines follows the cut page of the Salt Ledger to the Gannet's wreck."},
     "volume": {"overview": "The keepers of Corvel Quay and the night the lamp went dark.", "character_development": []},
     "events": {"events": []},
     "death": {"died": False},

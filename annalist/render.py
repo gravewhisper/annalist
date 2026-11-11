@@ -114,9 +114,12 @@ def history_prompts(entity, facts, relations, arcs, timelines):
     return prompts
 
 
-def finished_arcs(workdir, until=None):
-    volumes = sorted((read_json(p, {}) for p in (Path(workdir) / "volumes").glob("*.json")), key=lambda v: v["from"])
-    return [a for v in volumes for a in v.get("arcs", []) if until is None or a["end"] <= until]
+ARCS_FILE = "arcs.json"
+
+
+def closed_arcs(workdir, until):
+    volumes = read_json(Path(workdir) / ARCS_FILE, {"volumes": []})["volumes"]
+    return [a for v in volumes for a in v["arcs"] if a["end"] <= until]
 
 
 def entity_summary(workdir, entity, facts, timelines, until):
@@ -433,7 +436,7 @@ def cmd_render(args):
         evidence = {n: visible(p["lists"].get("personality_evidence", []), until) for n, p in profiles.items()}
         evidence = {n: v for n, v in evidence.items() if v}
         personalities = dict(zip(evidence, pool.map(lambda n: personality_paragraph(workdir, n, evidence[n]), evidence)))
-        histories = arc_histories(workdir, kb, by_entity, finished_arcs(workdir, until), pool)
+        histories = arc_histories(workdir, kb, by_entity, closed_arcs(workdir, until), pool)
 
     def chapter_link(n, depth):
         return f"[Ch {n}: {titles.get(n, n)}]({'../' * depth}../chapters/{n:04d}.txt)"

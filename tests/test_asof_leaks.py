@@ -15,7 +15,7 @@ ECHOED = {
     "summary": {"summary": ECHO},
     "personality": {"paragraph": ECHO},
     "history": {"paragraph": ECHO},
-    "arc": {"summary": ECHO},
+    "arc": {"name": ECHO, "summary": ECHO},
     "volume": {"overview": ECHO, "character_development": [{"character": "Ines Varro", "development": ECHO, "chapters": [1]}]},
     "events": {"events": [{"event": ECHO, "facts": ["F0001-001"]}]},
     "sweep": {"answers": [{"id": "Q0002-01", "answered": True, "chapter": 4, "quote": "My name was Livia Hale. Tomas was my father.”",
@@ -23,7 +23,7 @@ ECHOED = {
 }
 
 
-TWO_ARCS = {"arcs": [{"name": "The Missing Page", "start": 1}, {"name": "The Wreck", "start": 4}]}
+TWO_ARCS = {"arcs": [{"name": ECHO, "start": 1}, {"name": ECHO, "start": 4}]}
 
 
 def echo_script():
@@ -68,6 +68,7 @@ class AsOfLeakTest(unittest.TestCase):
     def setUpClass(cls):
         script = echo_script()
         cls.book = EchoBuild(script)
+        cls.book.echo("build", str(MINI), str(cls.book.workdir), "--to", "4", "--yes")
         cls.book.echo("build", str(MINI), str(cls.book.workdir), "--yes")
         cls.wiki = cls.book.json("site/data/wiki.json")
         known = {c["n"]: words((cls.book.workdir / "chapters" / f"{c['n']:04d}.txt").read_text(encoding="utf-8"))
@@ -100,7 +101,8 @@ class AsOfLeakTest(unittest.TestCase):
                   "summary": next(e["summary"]["text"] for e in entities if e.get("summary")),
                   "personality": next(e["profile"]["personality"][0]["text"] for e in entities if (e.get("profile") or {}).get("personality")),
                   "history": next(e["history"][0]["text"] for e in entities if e.get("history")),
-                  "arc": v["arcs"][0]["summary"], "volume": v["overview"], "events": v["key_events"][0]["event"],
+                  "arc": v["arcs"][0]["summary"], "arc name": v["arcs"][0]["name"],
+                  "history heading": next(e["history"][0]["arc"] for e in entities if e.get("history")), "volume": v["overview"], "events": v["key_events"][0]["event"],
                   "death": v["deaths"][0]["circumstances"],
                   "sweep": next(q["resolved"]["answer"] for q in self.wiki["questions"] if q["id"] == "Q0002-01")}
         self.assertEqual({k for k, text in echoed.items() if "novel" in words(text)}, set(echoed))

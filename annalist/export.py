@@ -12,7 +12,7 @@ from .files import read_json, read_jsonl
 from .llm import cached_reply
 from .names import is_stub, name_key, parse_aliases, written_summary
 from .profile import page_profiles
-from .render import checkpoint_prompts, finished_arcs, history_prompts, PERSONALITY_PROMPT, summary_prompt
+from .render import checkpoint_prompts, closed_arcs, history_prompts, PERSONALITY_PROMPT, summary_prompt
 from .state import MAIN_TIMELINE
 from .status import spoken_appearances
 from .text import chapter_text, mention_quote, verified_quotes
@@ -275,7 +275,7 @@ def build(workdir, theme):
             present.setdefault(page, set()).add(r["chapter"])
     tiers = read_json(workdir / "tiers.json", {"questions": {}})["questions"]
     readings = read_families(workdir)
-    arcs = finished_arcs(workdir)
+    arcs = closed_arcs(workdir, last)
     ties = {}
     for r in relations:
         for end in ("source", "target"):

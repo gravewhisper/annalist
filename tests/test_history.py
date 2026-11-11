@@ -2,8 +2,8 @@ import unittest
 
 from annalist.export import entity_id
 from annalist.render import history_prompts
-from tests.test_asof_leaks import TWO_ARCS, visible_text
-from tests.test_build import build_script, MiniBuild, site_views
+from tests.test_asof_leaks import visible_text
+from tests.test_build import build_script, MiniBuild, ran, site_views
 
 
 FIRST = "Kept the harbour lamp through the storm (ch 2)."
@@ -14,12 +14,14 @@ def prose(paragraph):
     return paragraph.split(" (ch")[0]
 
 
-def history_script():
+def history_script(starts=(1, 4)):
     script = build_script()
     for r in script["replies"]:
         if r["purpose"] == "arcs":
-            r["reply"] = TWO_ARCS
-    script["replies"][:0] = [{"purpose": "history", "contains": 'story arc "The Missing Page"', "reply": {"paragraph": FIRST}},
+            r["reply"] = {"arcs": [{"name": "Whatever Comes Later", "start": s} for s in starts]}
+    script["replies"][:0] = [{"purpose": "arc", "contains": "Arc: chapters 1 to 3", "reply": {"name": "The Missing Page", "summary": "Ines looks."}},
+                             {"purpose": "arc", "contains": "Arc: chapters 4 to 5", "reply": {"name": "The Wreck", "summary": "Bram dives."}},
+                             {"purpose": "history", "contains": 'story arc "The Missing Page"', "reply": {"paragraph": FIRST}},
                              {"purpose": "history", "contains": 'story arc "The Wreck"', "reply": {"paragraph": SECOND}}]
     return script
 
@@ -67,6 +69,42 @@ class HistoryTest(unittest.TestCase):
         self.assertIn(FIRST.replace("(ch 2)", "([ch 2](../../chapters/0002.txt))"), page)
         self.assertNotIn("## History", self.markdown("Bram Ostrow", 4))
         self.assertIn("### The Wreck", self.markdown("Bram Ostrow"))
+
+
+class PartlyReadVolumeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.book = MiniBuild(history_script())
+        cls.book.build("--to", "4")
+        cls.partial = cls.book.json("site/data/wiki.json")
+        cls.again = cls.book.build("--to", "4")
+        cls.book.script(history_script(starts=(1, 2)))
+        cls.book.build()
+        cls.whole = cls.book.json("site/data/wiki.json")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.book.close()
+
+    def history(self, wiki, name):
+        return next(e.get("history", []) for e in wiki["entities"] if e["name"] == name)
+
+    def test_a_volume_read_partway_gets_history_for_its_closed_arcs_and_none_for_the_open_one(self):
+        self.assertEqual(self.history(self.partial, "Tomas Hale"), [{"arc": "The Missing Page", "start": 1, "end": 3, "shown": 3, "text": FIRST}])
+        self.assertEqual(self.history(self.partial, "Bram Ostrow"), [])
+        self.assertEqual(self.partial["volumes"], [])
+        view = f"{entity_id('Tomas Hale')}@4"
+        page = visible_text(site_views(self.book.workdir / "site" / "data" / "wiki.json", view)[view])
+        self.assertIn("History Ch 1 to 3 The Missing Page " + prose(FIRST), page)
+
+    def test_rebuilding_with_the_same_chapters_read_divides_nothing_again(self):
+        self.assertEqual(ran(self.again.stdout), [])
+
+    def test_reading_more_chapters_keeps_a_closed_arc_and_divides_only_the_chapters_after_it(self):
+        self.assertEqual(self.history(self.whole, "Tomas Hale"), self.history(self.partial, "Tomas Hale"))
+        self.assertEqual([(a["name"], a["start"], a["end"]) for a in self.whole["volumes"][0]["arcs"]],
+                         [("The Missing Page", 1, 3), ("The Wreck", 4, 5)])
+        self.assertEqual(len(self.book.calls("arcs")), 2)
 
 
 def fact(n, chapter, claim, **extra):

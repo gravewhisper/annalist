@@ -7,7 +7,7 @@ from pathlib import Path
 from .files import read_json, write_json
 from .llm import cached_llm
 from .names import slug
-from .render import cmd_render
+from .render import ARCS_FILE, cmd_render
 from .state import load_states, timeline_role
 
 
@@ -38,7 +38,7 @@ def key_events(workdir, kb, arcs):
         return [e for events in pool.map(pick, arcs) for e in events]
 
 
-ARCS_PROMPT = """Below are synopses of chapters {lo} to {hi} of a novel, which make up "{name}". Divide them into consecutive story arcs of about 15 to 25 chapters each, the way a fan wiki would, breaking where the story turns: a new main conflict, a new setting, or a climax resolved. A range under 25 chapters is one or two arcs. Give each arc a short name a fan wiki would use. Use only these synopses.
+ARCS_PROMPT = """Below are synopses of chapters {lo} to {hi} of a novel, which make up {part}. Divide them into consecutive story arcs of about 15 to 25 chapters each, the way a fan wiki would, breaking where the story turns: a new main conflict, a new setting, or a climax resolved. A range under 25 chapters is one or two arcs. Give each arc a short name a fan wiki would use. Use only these synopses.
 
 {synopses}
 
@@ -46,13 +46,18 @@ Reply with one JSON object: {{"arcs": [{{"name": "...", "start": first chapter n
 """
 
 
-ARC_PROMPT = """Write the plot summary of one story arc of a novel for a fan wiki, using ONLY the chapter synopses below. Two to four paragraphs of plain past-tense prose, naming the characters and places involved, in story order. No outside knowledge of the novel and nothing beyond chapter {end}.
+ARCS_OPEN_RULE = """
+The novel goes on after chapter {hi}, so the last arc may still be in progress. End it at chapter {hi}.
+"""
 
-Arc: {arc} (chapters {start} to {end})
+
+ARC_PROMPT = """Name and summarise one story arc of a novel for a fan wiki, using ONLY the chapter synopses below. Give the arc a short name a fan wiki would use. Write its plot summary in two to four paragraphs of plain past-tense prose, naming the characters and places involved, in story order. No outside knowledge of the novel and nothing beyond chapter {end}.
+
+Arc: chapters {start} to {end}
 
 {synopses}
 
-Reply with one JSON object: {{"summary": "paragraphs separated by blank lines"}}
+Reply with one JSON object: {{"name": "...", "summary": "paragraphs separated by blank lines"}}
 """
 
 
@@ -74,39 +79,62 @@ Rules: character_development covers the 3 to 8 most important characters. Every 
 
 
 def repair_arcs(arcs, lo, hi):
-    starts = {}
+    starts = {lo}
     for a in arcs if isinstance(arcs, list) else []:
         try:
             start = int(a.get("start"))
         except (TypeError, ValueError, AttributeError):
             continue
-        if lo <= start <= hi:
-            starts.setdefault(start, str(a.get("name") or "").strip())
-    ordered = sorted(starts.items()) or [(lo, "")]
-    ordered[0] = (lo, ordered[0][1])
-    bounds = [s for s, _ in ordered[1:]] + [hi + 1]
-    return [{"name": name or f"Arc {k + 1}", "start": start, "end": end - 1}
-            for k, ((start, name), end) in enumerate(zip(ordered, bounds))]
+        if lo < start <= hi:
+            starts.add(start)
+    ordered = sorted(starts)
+    return [{"start": start, "end": end - 1} for start, end in zip(ordered, ordered[1:] + [hi + 1])]
+
+
+def synopsis_lines(workdir, kb, lo, hi):
+    missing = [n for n in range(lo, hi + 1) if not kb.synopses.get(n)]
+    if missing:
+        sys.exit(f"chapters without a synopsis: {missing[:10]}; read them first")
+    titles = {c["index"]: c["title"] for c in json.loads((workdir / "chapters.json").read_text(encoding="utf-8"))}
+    return lambda a, b: "\n".join(f"Ch {n} ({titles[n]}): {kb.synopses[n]}" for n in range(a, b + 1))
+
+
+def close_arcs(workdir, name, lo, hi, read, synopses):
+    """A closed arc is frozen, so a rebuild with more chapters read divides only the chapters after it. Until the volume
+    ends, the last arc of a division stays open. Names come from each arc's own synopses, never from later chapters."""
+    stored = read_json(workdir / ARCS_FILE, {"volumes": []})["volumes"]
+    entry = next((v for v in stored if v["name"] == name and v["from"] == lo and all(a["end"] <= hi for a in v["arcs"])),
+                 {"name": name, "from": lo, "read": lo - 1, "arcs": []})
+    if read <= entry["read"]:
+        return entry["arcs"]
+    start = entry["arcs"][-1]["end"] + 1 if entry["arcs"] else lo
+    if start <= read:
+        prompt = ARCS_PROMPT.format(lo=start, hi=read, part=f'"{name}"' if (start, read) == (lo, hi) else f'part of "{name}"',
+                                    synopses=synopses(start, read))
+        divided = repair_arcs(cached_llm(workdir, "arcs", prompt + (ARCS_OPEN_RULE.format(hi=read) if read < hi else "")).get("arcs"), start, read)
+        closed = divided if read == hi else divided[:-1]
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            replies = pool.map(lambda a: cached_llm(workdir, "arc", ARC_PROMPT.format(
+                start=a["start"], end=a["end"], synopses=synopses(a["start"], a["end"]))), closed)
+            entry["arcs"] += [{"name": str(r.get("name") or "").strip() or f"Chapters {a['start']} to {a['end']}",
+                               "start": a["start"], "end": a["end"], "summary": str(r.get("summary") or "").strip()}
+                              for a, r in zip(closed, replies)]
+    entry["read"] = read
+    write_json(workdir / ARCS_FILE, {"volumes": sorted([v for v in stored if v["name"] != name] + [entry], key=lambda v: v["from"])})
+    return entry["arcs"]
+
+
+def cmd_open_volume(workdir, name, lo, hi, read):
+    kb = load_states(workdir, until=read)
+    close_arcs(workdir, name, lo, hi, read, synopsis_lines(workdir, kb, lo, read))
 
 
 def cmd_volume(args):
     workdir = Path(args.workdir).resolve()
     lo, hi = args.start, args.end
     kb = load_states(workdir, until=hi)
-    missing = [n for n in range(lo, hi + 1) if not kb.synopses.get(n)]
-    if missing:
-        sys.exit(f"chapters without a synopsis: {missing[:10]}; read them first")
-    titles = {c["index"]: c["title"] for c in json.loads((workdir / "chapters.json").read_text(encoding="utf-8"))}
-
-    def synopses(a, b):
-        return "\n".join(f"Ch {n} ({titles[n]}): {kb.synopses[n]}" for n in range(a, b + 1))
-
-    arcs = repair_arcs(cached_llm(workdir, "arcs", ARCS_PROMPT.format(lo=lo, hi=hi, name=args.name, synopses=synopses(lo, hi))).get("arcs"), lo, hi)
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        replies = pool.map(lambda a: cached_llm(workdir, "arc", ARC_PROMPT.format(
-            arc=a["name"], start=a["start"], end=a["end"], synopses=synopses(a["start"], a["end"]))), arcs)
-        for arc, reply in zip(arcs, replies):
-            arc["summary"] = str(reply.get("summary") or "").strip()
+    synopses = synopsis_lines(workdir, kb, lo, hi)
+    arcs = close_arcs(workdir, args.name, lo, hi, hi, synopses)
     page = cached_llm(workdir, "volume", VOLUME_PROMPT.format(
         name=args.name, lo=lo, hi=hi, synopses=synopses(lo, hi),
         arcs="\n\n".join(f"{a['name']} (chapters {a['start']} to {a['end']}):\n{a['summary']}" for a in arcs)))
