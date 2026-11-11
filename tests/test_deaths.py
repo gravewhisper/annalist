@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from annalist.deaths import DEATH_WORDS, death_candidates
+from annalist.deaths import DEATH_WORDS, death_candidates, revival_candidates
 from annalist.state import load_states
 
 from tests.test_build import TOMAS_DIES
@@ -91,6 +91,26 @@ class KillerSideDeathTest(unittest.TestCase):
                          "quotes": [], "status": "stated", "timeline": "main"})
         volumes = [{"from": 1, "to": 5}]
         self.assertIn(("Tomas Hale", 3), death_candidates(kb, {}, volumes, 5))
+
+
+class DreamDeathTest(unittest.TestCase):
+    def test_a_death_in_a_dream_or_vision_is_no_candidate_and_a_real_one_beside_it_still_is(self):
+        book = MiniBook(mini_script())
+        self.addCleanup(book.tmp.cleanup)
+        book.read(5)
+        kb = load_states(book.workdir)
+        kb.facts = [f for f in kb.facts if not (f["entity"] == "Tomas Hale" and DEATH_WORDS.search(f["claim"]))]
+        kb.relations = [r for r in kb.relations if r["target"] != "Tomas Hale"]
+        kb.timelines["dream"] = {"id": "dream", "kind": "vision", "label": "Bram's nightmare", "period": "", "started": 2, "erased": None}
+        kb.facts.append({"entity": "Tomas Hale", "chapter": 2, "claim": "In Bram's nightmare Tomas Hale dies on the stairs.",
+                         "quotes": [], "status": "stated", "timeline": "dream"})
+        dream = {"value": "dead", "chapter": 2, "quote_ok": True, "quotes": ["q"], "timeline": "dream"}
+        profiles = {"Tomas Hale": {"fields": {"status": [dream]}, "extra": {}, "lists": {}}}
+        volumes = [{"from": 1, "to": 5}]
+        self.assertNotIn(("Tomas Hale", 2), death_candidates(kb, profiles, volumes, 5))
+        kb.facts.append({"entity": "Tomas Hale", "chapter": 2, "claim": "Tomas Hale dies on the stairs.", "quotes": [], "status": "stated", "timeline": "main"})
+        self.assertIn(("Tomas Hale", 2), death_candidates(kb, profiles, volumes, 5))
+        self.assertEqual(revival_candidates(kb, profiles, [], 5), [])
 
 
 class FuneralDeathTest(unittest.TestCase):
