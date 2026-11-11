@@ -314,7 +314,8 @@ def cmd_extract(args):
     for href, words in book.skipped:
         print(f"skip {href} ({words} words)")
     previous = read_json(workdir / "chapters.json", None)
-    if previous is not None and chapter_shape(previous) != chapter_shape(book.chapters) and any((workdir / "state").glob("*.json")):
+    read = {int(f.stem) for f in (workdir / "state").glob("[0-9][0-9][0-9][0-9].json")}
+    if previous is not None and read and chapter_shape(c for c in previous if c["index"] in read) != chapter_shape(c for c in book.chapters if c["index"] in read):
         sys.exit(f"{args.epub} extracts to different chapters than {workdir / 'chapters.json'}, which the read state was built "
                  "from; use a new workdir for this epub")
     for chapter, text in zip(book.chapters, book.texts):

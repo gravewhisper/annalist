@@ -152,7 +152,7 @@ class ReextractTest(unittest.TestCase):
     def test_extracting_a_different_epub_over_read_state_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:
             write_epub(Path(tmp) / "a.epub", [("One", ["Chapter 1", STORY]), ("Two", ["Chapter 2", STORY])])
-            write_epub(Path(tmp) / "b.epub", [("One", ["Chapter 1", STORY])])
+            write_epub(Path(tmp) / "b.epub", [("One", ["Chapter 1", STORY, STORY])])
             extract(Path(tmp) / "a.epub", Path(tmp) / "work")
             extract(Path(tmp) / "a.epub", Path(tmp) / "work")
             (Path(tmp) / "work" / "state").mkdir()
@@ -162,6 +162,17 @@ class ReextractTest(unittest.TestCase):
                 extract(Path(tmp) / "b.epub", Path(tmp) / "work")
             self.assertIn("extracts to different chapters", str(stopped.exception))
             self.assertEqual(len(json.loads((Path(tmp) / "work" / "chapters.json").read_text(encoding="utf-8"))), 2)
+
+
+    def test_a_change_only_in_chapters_not_yet_read_is_extracted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_epub(Path(tmp) / "a.epub", [("One", ["Chapter 1", STORY]), ("Two", ["Chapter 2", STORY])])
+            write_epub(Path(tmp) / "b.epub", [("One", ["Chapter 1", STORY]), ("Two", ["Chapter 2", STORY]), ("Three", ["Chapter 3", STORY])])
+            extract(Path(tmp) / "a.epub", Path(tmp) / "work")
+            (Path(tmp) / "work" / "state").mkdir()
+            (Path(tmp) / "work" / "state" / "0001.json").write_text("{}", encoding="utf-8")
+            chapters, _, _ = extract(Path(tmp) / "b.epub", Path(tmp) / "work")
+        self.assertEqual(len(chapters), 3)
 
 
 class StoryEndTest(unittest.TestCase):
