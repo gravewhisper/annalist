@@ -2,9 +2,11 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from annalist.book import load_book
 from annalist.ladders import ladder_needed
+from annalist.resolve import candidate_pairs, decide_pair
 from annalist.state import Knowledge
 
 LADDER = {"group_type": "school", "step_type": "rank", "rank": "number", "direction": "ascending", "note": ""}
@@ -76,5 +78,47 @@ class BookTypeMatchTest(unittest.TestCase):
         self.assertEqual(entities(old, ("Moonwater", "concept"), ("Moonwater", "elixir")), {"Moonwater": "elixir"})
 
 
+class BookTypeResolveTest(unittest.TestCase):
+    TYPES = {"warding item": {"parent": "artifact", "description": "a charm"}, "relic": {"parent": "artifact", "description": "an old thing"}}
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.workdir = Path(tmp.name)
+        (self.workdir / "chapters").mkdir()
+        (self.workdir / "chapters" / "0001.txt").write_text(
+            "Ilse hung the Salt Ward over the door. Varn kept the Bone Charm and a Bone Charm Shard in his coat.\n", encoding="utf-8")
+        self.kb = Knowledge(power_types=self.TYPES)
+        for name, etype in (("Salt Ward", "warding item"), ("Salt Ward of Corvel", "artifact"), ("Bone Charm", "warding item"),
+                            ("Bone Charm Shard", "relic")):
+            self.kb.upsert_entity({"name": name, "type": etype, "summary": f"{name}, a charm of the quay"}, 1)
+        self.kb.synopses[1] = "Ilse hangs a ward."
+        self.pairs = candidate_pairs(self.workdir, self.kb, {}, 1)
+
+    def test_entries_of_a_book_type_and_its_parent_are_proposed_as_one_and_judged_as_the_parent_type(self):
+        key = ("Salt Ward", "Salt Ward of Corvel")
+        self.assertIn(key, self.pairs)
+        prompts = []
+
+        def reply(workdir, purpose, prompt, **kw):
+            prompts.append(prompt)
+            return {"same": False, "reason": "Two charms."}
+
+        with patch("annalist.resolve.cached_llm", side_effect=reply):
+            decide_pair(self.workdir, self.kb, {}, {}, *key, self.pairs[key])
+        self.assertIn("may describe the same artifact.", prompts[0])
+
+    def test_two_book_types_of_one_parent_are_never_proposed_as_one(self):
+        self.assertNotIn(("Bone Charm", "Bone Charm Shard"), self.pairs)
+
+    def test_a_merge_of_a_book_type_into_its_parent_keeps_the_book_type(self):
+        self.kb.apply_merges([{"a": "Salt Ward", "b": "Salt Ward of Corvel", "same": True, "canonical": "Salt Ward of Corvel",
+                               "revealed": {"basis": "quote", "chapter": 1}}])
+        merged = self.kb.entities["Salt Ward of Corvel"]
+        self.assertEqual((merged["type"], merged["aliases"]), ("warding item", ["Salt Ward"]))
+        self.assertNotIn("Salt Ward", self.kb.entities)
+
+
 if __name__ == "__main__":
+
     unittest.main()

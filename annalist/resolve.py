@@ -1,6 +1,6 @@
 import re
 from concurrent.futures import ThreadPoolExecutor
-from itertools import combinations
+from itertools import combinations, product
 from pathlib import Path
 
 from .files import read_json, write_json
@@ -10,6 +10,20 @@ from .names import (content_words, FUNCTION_WORDS, is_stub, NameIndex, parse_ali
                     name_words, names_of, near_spelling, ROLE_WORDS, short_names, UNTYPED)
 from .state import load_states, write_derived
 from .text import chapter_text, locate_quote, SENTENCE_END, sentence_of, text_window
+
+
+def kin_pairs(kb, typed):
+    groups = list(typed.items())
+    for i, (t, names) in enumerate(groups):
+        yield from combinations(names, 2)
+        for u, others in groups[i + 1:]:
+            if kb.types.kin(t, u):
+                yield from product(names, others)
+
+
+def shared_type(kb, a, b):
+    ta, tb = kb.entities[a]["type"], kb.entities[b]["type"]
+    return ta if ta == tb else kb.types.kind(ta) if kb.types.kin(ta, tb) else None
 
 
 def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partners=3):
@@ -38,10 +52,8 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
     for name, e in kb.entities.items():
         if e["type"] not in UNTYPED:
             typed.setdefault(e["type"], []).append(name)
-    for names in typed.values():
-        for i, a in enumerate(names):
-            for b in names[i + 1:]:
-                variants(a, b)
+    for a, b in kin_pairs(kb, typed):
+        variants(a, b)
     for a, e in kb.entities.items():
         if e["type"] in UNTYPED:
             for b in (b for names in typed.values() for b in names):
@@ -104,7 +116,7 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
             add(a, b, "hedged-identity")
     for holder, items in sorted(holdings(kb).items()):
         for a, b in combinations(sorted(items), 2):
-            if kb.entities[a]["type"] == kb.entities[b]["type"]:
+            if kb.types.kin(kb.entities[a]["type"], kb.entities[b]["type"]):
                 add(a, b, f"same-holder: {holder}")
     for a, b, n, passages in listed_together(workdir, kb, typed, max_chapter):
         for p in passages:
@@ -149,24 +161,23 @@ def false_names(kb, typed, people):
 
 
 def listed_together(workdir, kb, typed, max_chapter, least=2, span=5):
-    for names in typed.values():
-        for a, b in combinations(names, 2):
-            sa, sb = (set().union(*map(name_stems, names_of(kb.entities[x]))) for x in (a, b))
-            if len(sa & sb) < least or sa <= sb or sb <= sa:
+    for a, b in kin_pairs(kb, typed):
+        sa, sb = (set().union(*map(name_stems, names_of(kb.entities[x]))) for x in (a, b))
+        if len(sa & sb) < least or sa <= sb or sb <= sa:
+            continue
+        pa, pb = (name_pattern(names_of(kb.entities[x])) for x in (a, b))
+        lo = max(kb.entities[a]["first_chapter"], kb.entities[b]["first_chapter"])
+        for n in range(lo, min(max_chapter, lo + span) + 1):
+            text = chapter_text(str(workdir), n)
+            line = next((m for m in re.finditer(r"[^\n]+", text) if pa.search(m.group(0)) and pb.search(m.group(0))), None)
+            if not line:
                 continue
-            pa, pb = (name_pattern(names_of(kb.entities[x])) for x in (a, b))
-            lo = max(kb.entities[a]["first_chapter"], kb.entities[b]["first_chapter"])
-            for n in range(lo, min(max_chapter, lo + span) + 1):
-                text = chapter_text(str(workdir), n)
-                line = next((m for m in re.finditer(r"[^\n]+", text) if pa.search(m.group(0)) and pb.search(m.group(0))), None)
-                if not line:
-                    continue
-                hits = [h for p in (pa, pb) for h in p.finditer(line.group(0))]
-                listing = sentence_of(line.group(0), min(h.start() for h in hits), max(h.end() for h in hits))
-                passages = [{"chapter": n, "text": " ".join(listing.split())}]
-                passages += [p for x, y in ((pa, pb), (pb, pa)) if (p := named_alone(workdir, x, y, n, line.end(), max_chapter))]
-                yield a, b, n, passages
-                break
+            hits = [h for p in (pa, pb) for h in p.finditer(line.group(0))]
+            listing = sentence_of(line.group(0), min(h.start() for h in hits), max(h.end() for h in hits))
+            passages = [{"chapter": n, "text": " ".join(listing.split())}]
+            passages += [p for x, y in ((pa, pb), (pb, pa)) if (p := named_alone(workdir, x, y, n, line.end(), max_chapter))]
+            yield a, b, n, passages
+            break
 
 
 def named_alone(workdir, pattern, other, chapter, offset, max_chapter, context=4):
@@ -183,8 +194,12 @@ def group_meetings(typed, kb):
     def words(name):
         return [w.lower() for w in content_words(name)]
 
-    for a in typed.get("organization", []):
-        for b in typed.get("event", []):
+    def of_kind(kind):
+        return [n for t, names in typed.items() if kb.types.kind(t) == kind for n in names]
+
+    for a in of_kind("organization"):
+        for b in of_kind("event"):
+
             if any(len(x) == len(y) >= 2 and x[:-1] == y[:-1] and x[-1] != y[-1]
                    for x in map(words, names_of(kb.entities[a])) for y in map(words, names_of(kb.entities[b]))):
                 yield a, b
@@ -200,14 +215,13 @@ def frame(name):
 
 def same_frames(kb, typed):
     forms = [(k, name_stems(n)) for k, e in kb.entities.items() if e["type"] not in UNTYPED for n in names_of(e)]
-    for names in typed.values():
-        framed = [(x, f) for x in names for n in names_of(kb.entities[x]) if (f := frame(n))]
-        for (a, (ha, ia)), (b, (hb, ib)) in combinations(framed, 2):
-            if a == b or ha != hb or not ia or not ib or ia == ib:
-                continue
-            c = next((k for k, stems in forms if k not in (a, b) and ia | ib <= stems), None)
-            if c:
-                yield a, b, c
+    framed = [(x, f) for names in typed.values() for x in names for n in names_of(kb.entities[x]) if (f := frame(n))]
+    for (a, (ha, ia)), (b, (hb, ib)) in combinations(framed, 2):
+        if a == b or not kb.types.kin(kb.entities[a]["type"], kb.entities[b]["type"]) or ha != hb or not ia or not ib or ia == ib:
+            continue
+        c = next((k for k, stems in forms if k not in (a, b) and ia | ib <= stems), None)
+        if c:
+            yield a, b, c
 
 
 HEDGE = re.compile(r"\b(?:likely|probably|possibly|presumably|perhaps|apparently|may be|might be|seems to be|appears to be)\s+"
@@ -218,19 +232,19 @@ def hedged_identities(kb, by_entity):
     names = {}
     for e in kb.entities.values():
         if e["type"] not in UNTYPED:
-            names.setdefault(e["type"], []).extend(names_of(e))
+            names.setdefault(kb.types.kind(e["type"]), []).extend(names_of(e))
     patterns = {t: name_pattern(ns) for t, ns in names.items()}
     found = {}
     for a in sorted(kb.entities):
         e = kb.entities[a]
-        pattern = patterns.get(e["type"])
+        pattern = patterns.get(kb.types.kind(e["type"]))
         if not pattern:
             continue
         for text in [e["summary"]] + [f["claim"] for f in by_entity.get(a, [])]:
             for m in HEDGE.finditer(text):
                 hit = next((h for start in (m.start(1), m.end()) if start >= 0 and (h := pattern.match(text, start))), None)
                 b = kb.resolve(hit.group(0)) if hit else None
-                if b and b != a and kb.entities[b]["type"] == e["type"] and b not in found.get(a, []):
+                if b and b != a and kb.types.kin(kb.entities[b]["type"], e["type"]) and b not in found.get(a, []):
                     found.setdefault(a, []).append(b)
     return found
 
@@ -254,12 +268,12 @@ def equated(workdir, kb, typed, max_chapter, limit=200):
             for sentence in map(str.strip, SENTENCE_END.split(line)):
                 cue, spots = named(sentence)
                 for a, b in combinations(sorted(spots), 2):
-                    if kinds[a] == kinds[b] and min(spots[a], spots[b]) < cue:
+                    if kb.types.kin(kinds[a], kinds[b]) and min(spots[a], spots[b]) < cue:
                         yield a, b, {"chapter": n, "text": sentence}
     for a in sorted(kinds):
         for sentence in map(str.strip, SENTENCE_END.split(kb.entities[a]["summary"])):
             cue, spots = named(sentence)
-            yield from ((a, b, None) for b, at in sorted(spots.items()) if b != a and kinds[b] == kinds[a] and at > cue)
+            yield from ((a, b, None) for b, at in sorted(spots.items()) if b != a and kb.types.kin(kinds[b], kinds[a]) and at > cue)
 
 
 OWNS = re.compile(r"\b(?:owns?|owned|owner|holds?|held|holder|carr(?:y|ies|ied)|wields?|wielded|possess\w*|belongs?|property|keeps?|kept)\b",
@@ -378,13 +392,13 @@ def entity_card(kb, name, facts, other):
 
 def decide_pair(workdir, kb, by_entity, attached, a, b, info):
     evidence = "\n".join(f"- ch{p['chapter']}: \"{p['text']}\"" for p in info["evidence"]) or "(none)"
-    same_type = kb.entities[a]["type"] == kb.entities[b]["type"]
+    shared = shared_type(kb, a, b)
     listed = LISTED if any(r.startswith("listed-together") for r in info["rules"]) else ""
     reply = cached_llm(workdir, "resolve", RESOLVE_PROMPT.format(
-        type=kb.entities[a]["type"] if same_type else "person or thing", evidence=evidence, listing=listed,
+        type=shared or "person or thing", evidence=evidence, listing=listed,
         a=entity_card(kb, a, by_entity.get(a, []), b), b=entity_card(kb, b, by_entity.get(b, []), a)))
     same = reply.get("same") is True
-    choice = name_key(info["keep"]) if "keep" in info else name_key(reply.get("canonical_name") or "") if same_type else ""
+    choice = name_key(info["keep"]) if "keep" in info else name_key(reply.get("canonical_name") or "") if shared else ""
     canonical = min((a, b), key=lambda n: (kb.entities[n]["type"] in UNTYPED, bool(POSSESSIVE_END.search(n)), name_key(n) != choice,
                                            -len(by_entity.get(n, []))))
     decision = {"a": a, "b": b, "type": kb.entities[a]["type"], "rules": info["rules"], "same": same,
@@ -568,10 +582,10 @@ def reveal_chapter(workdir, kb, by_entity, attached, a, b, info, window=1000):
         return None
 
     def ask(shown, relaxed):
-        same_type = kb.entities[a]["type"] == kb.entities[b]["type"]
         try:
             return cached_llm(workdir, "reveal", REVEAL_PROMPT.format(
-                type=kb.entities[a]["type"] if same_type else "person or thing", a=a, b=b,
+                type=shared_type(kb, a, b) or "person or thing", a=a, b=b,
+
                 passages="\n".join(f"- ch{p['chapter']}: \"{p['text']}\"" for p in shown)), check=lambda r: problem(r, relaxed))
         except LLMError:
             return {"chapter": None}
