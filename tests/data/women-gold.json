@@ -1,0 +1,1243 @@
+{
+  "schema_version": 1,
+  "partial": true,
+  "book": {
+    "title": "Little Women",
+    "author": "Louisa May Alcott",
+    "source": "Project Gutenberg eBook #514",
+    "epub": "women.epub",
+    "notes": "Spine order: wrap0000 (cover), h-0 (Gutenberg header, title page and table of contents in one document), h-1..h-47 (chapters 1-47). h-1 opens with the heading PART 1 before CHAPTER ONE PLAYING PILGRIMS, so run chapter 1 is titled 'PART 1'; h-24 opens with PART 2 the same way. This key covers run chapters 1-12 only, so it sets partial. Entity types follow Annalist's vocabulary (character, place, organization, artifact, event, concept). The text uses U+2019 apostrophes and curly double quotes; compare names with them folded."
+  },
+  "chapters": [
+    {
+      "index": 1,
+      "title": "PART 1",
+      "href": "OEBPS/4955975989546571146_514-h-1.htm.html"
+    },
+    {
+      "index": 2,
+      "title": "CHAPTER TWO A MERRY CHRISTMAS",
+      "href": "OEBPS/4955975989546571146_514-h-2.htm.html"
+    },
+    {
+      "index": 3,
+      "title": "CHAPTER THREE THE LAURENCE BOY",
+      "href": "OEBPS/4955975989546571146_514-h-3.htm.html"
+    },
+    {
+      "index": 4,
+      "title": "CHAPTER FOUR BURDENS",
+      "href": "OEBPS/4955975989546571146_514-h-4.htm.html"
+    },
+    {
+      "index": 5,
+      "title": "CHAPTER FIVE BEING NEIGHBORLY",
+      "href": "OEBPS/4955975989546571146_514-h-5.htm.html"
+    },
+    {
+      "index": 6,
+      "title": "CHAPTER SIX BETH FINDS THE PALACE BEAUTIFUL",
+      "href": "OEBPS/4955975989546571146_514-h-6.htm.html"
+    },
+    {
+      "index": 7,
+      "title": "CHAPTER SEVEN AMY’S VALLEY OF HUMILIATION",
+      "href": "OEBPS/4955975989546571146_514-h-7.htm.html"
+    },
+    {
+      "index": 8,
+      "title": "CHAPTER EIGHT JO MEETS APOLLYON",
+      "href": "OEBPS/4955975989546571146_514-h-8.htm.html"
+    },
+    {
+      "index": 9,
+      "title": "CHAPTER NINE MEG GOES TO VANITY FAIR",
+      "href": "OEBPS/4955975989546571146_514-h-9.htm.html"
+    },
+    {
+      "index": 10,
+      "title": "CHAPTER TEN THE P.C. AND P.O.",
+      "href": "OEBPS/4955975989546571146_514-h-10.htm.html"
+    },
+    {
+      "index": 11,
+      "title": "CHAPTER ELEVEN EXPERIMENTS",
+      "href": "OEBPS/4955975989546571146_514-h-11.htm.html"
+    },
+    {
+      "index": 12,
+      "title": "CHAPTER TWELVE CAMP LAURENCE",
+      "href": "OEBPS/4955975989546571146_514-h-12.htm.html"
+    }
+  ],
+  "non_chapter_spine_items": [
+    {
+      "href": "OEBPS/wrap0000.html",
+      "kind": "cover"
+    },
+    {
+      "href": "OEBPS/4955975989546571146_514-h-0.htm.html",
+      "kind": "gutenberg_header",
+      "notes": "Also holds the title page and the table of contents."
+    }
+  ],
+  "entities": [
+    {
+      "id": "meg",
+      "name": "Meg March",
+      "type": "character",
+      "aliases": [
+        "Meg",
+        "Margaret",
+        "Margaret March",
+        "Miss Meg March",
+        "Miss Margaret",
+        "Miss March",
+        "Daisy",
+        "Daisey",
+        "Daisy March",
+        "Samuel Pickwick",
+        "S. Pickwick",
+        "Mr. Pickwick",
+        "Pickwick"
+      ],
+      "first_chapter": 1,
+      "notes": "Eldest sister, sixteen in ch 1. The Moffats call her Daisy (ch 9). Her Pickwick Club name, Samuel Pickwick, the club president, is given in ch 10. 'Miss March' is her formal title as the eldest; see must_not_merge."
+    },
+    {
+      "id": "jo",
+      "name": "Jo March",
+      "type": "character",
+      "aliases": [
+        "Jo",
+        "Josephine",
+        "Josephine March",
+        "Miss Josephine",
+        "Miss Jo",
+        "Josy-phine",
+        "Josyphine",
+        "Doctor Jo",
+        "Augustus Snodgrass",
+        "A. Snodgrass",
+        "Mr. Snodgrass",
+        "Snodgrass"
+      ],
+      "first_chapter": 1,
+      "notes": "Second sister, fifteen. Aunt March calls her 'Josy-phine'; Mr. Laurence calls her 'Doctor Jo' (ch 5). Pickwick Club name Augustus Snodgrass from ch 10, and she edits the club paper."
+    },
+    {
+      "id": "beth",
+      "name": "Beth March",
+      "type": "character",
+      "aliases": [
+        "Beth",
+        "Elizabeth",
+        "Elizabeth March",
+        "Miss Elizabeth March",
+        "Bethy",
+        "Betty",
+        "Little Miss Tranquility",
+        "Mouse",
+        "Tracy Tupman",
+        "T. Tupman",
+        "Tupman"
+      ],
+      "first_chapter": 1,
+      "notes": "Third sister, thirteen. Pickwick Club name Tracy Tupman from ch 10."
+    },
+    {
+      "id": "amy",
+      "name": "Amy March",
+      "type": "character",
+      "aliases": [
+        "Amy",
+        "Little Raphael",
+        "Nathaniel Winkle",
+        "N. Winkle",
+        "Mr. Winkle",
+        "Winkle"
+      ],
+      "first_chapter": 1,
+      "notes": "Youngest sister, twelve. Pickwick Club name Nathaniel Winkle from ch 10."
+    },
+    {
+      "id": "mrs_march",
+      "name": "Mrs. March",
+      "type": "character",
+      "aliases": [
+        "Marmee"
+      ],
+      "first_chapter": 1,
+      "notes": "The girls' mother, mostly called Marmee or Mother. Her forename is not given in ch 1-12."
+    },
+    {
+      "id": "mr_march",
+      "name": "Mr. March",
+      "type": "character",
+      "aliases": [
+        "Father",
+        "Papa"
+      ],
+      "first_chapter": 1,
+      "notes": "The girls' father, away at the war as an army chaplain. Called Father or Papa from ch 1; the name Mr. March first appears in ch 4. His forename is not given in ch 1-12."
+    },
+    {
+      "id": "laurie",
+      "name": "Laurie",
+      "type": "character",
+      "aliases": [
+        "Theodore Laurence",
+        "Mr. Theodore Laurence",
+        "Theodore",
+        "Laurie Laurence",
+        "the Laurence boy",
+        "Mr. Laurie",
+        "Dora",
+        "Sam Weller",
+        "Mr. Weller"
+      ],
+      "first_chapter": 2,
+      "notes": "Mr. Laurence's grandson, the boy next door. Ch 2 knows him only as 'the Laurence boy' and the old man's grandson; ch 3 names him Laurie and Theodore. Pickwick Club name Sam Weller from ch 10. 'Teddy' does not occur in ch 1-12. Never 'Mr. Laurence'; see must_not_merge."
+    },
+    {
+      "id": "mr_laurence",
+      "name": "Mr. Laurence",
+      "type": "character",
+      "aliases": [
+        "James Laurence",
+        "old Mr. Laurence",
+        "Mr. Lawrence",
+        "the old gentleman",
+        "Grandpa"
+      ],
+      "first_chapter": 2,
+      "notes": "Laurie's grandfather, the rich old neighbor. Forename James from the ch 6 letter. 'Mr. Lawrence' is a misspelling in the ch 5 text."
+    },
+    {
+      "id": "aunt_march",
+      "name": "Aunt March",
+      "type": "character",
+      "aliases": [],
+      "first_chapter": 1,
+      "notes": "Rich, lame, childless old lady; Jo's great-aunt (ch 5) and employer (ch 4). Never called Mrs. March in the text."
+    },
+    {
+      "id": "uncle_march",
+      "name": "Uncle March",
+      "type": "character",
+      "aliases": [],
+      "first_chapter": 4,
+      "notes": "Dead before the story opens; the library at Aunt March's house was his."
+    },
+    {
+      "id": "hannah",
+      "name": "Hannah",
+      "type": "character",
+      "aliases": [
+        "old Hannah"
+      ],
+      "first_chapter": 1,
+      "notes": "The Marches' servant since Meg was born. See ambiguities for 'Hannah Brown'."
+    },
+    {
+      "id": "brooke",
+      "name": "Brooke",
+      "type": "character",
+      "aliases": [
+        "Mr. Brooke"
+      ],
+      "first_chapter": 5,
+      "notes": "Laurie's tutor. Ch 2 mentions 'his tutor' without a name; ch 5 names him. His forename does not occur in ch 1-12."
+    },
+    {
+      "id": "sallie_gardiner",
+      "name": "Sallie Gardiner",
+      "type": "character",
+      "aliases": [
+        "Sallie",
+        "Miss Sallie"
+      ],
+      "first_chapter": 3,
+      "notes": "Meg's friend, of the Gardiner family that gives the New Year's Eve dance (ch 3); surname given in ch 11."
+    },
+    {
+      "id": "annie_moffat",
+      "name": "Annie Moffat",
+      "type": "character",
+      "aliases": [
+        "Annie"
+      ],
+      "first_chapter": 3
+    },
+    {
+      "id": "belle_moffat",
+      "name": "Belle Moffat",
+      "type": "character",
+      "aliases": [
+        "Belle",
+        "Miss Belle"
+      ],
+      "first_chapter": 9,
+      "notes": "Annie's engaged elder sister, who dresses Meg up for the party."
+    },
+    {
+      "id": "ned_moffat",
+      "name": "Ned Moffat",
+      "type": "character",
+      "aliases": [
+        "Ned",
+        "Mr. Ned"
+      ],
+      "first_chapter": 9
+    },
+    {
+      "id": "mrs_moffat",
+      "name": "Mrs. Moffat",
+      "type": "character",
+      "aliases": [],
+      "first_chapter": 9,
+      "notes": "Source of the gossip that Mrs. March plans to marry a daughter to Laurie."
+    },
+    {
+      "id": "mr_davis",
+      "name": "Mr. Davis",
+      "type": "character",
+      "aliases": [
+        "Davis",
+        "old Davis"
+      ],
+      "first_chapter": 4,
+      "notes": "Amy's schoolmaster, who strikes her palm over the limes (ch 7)."
+    },
+    {
+      "id": "jenny_snow",
+      "name": "Jenny Snow",
+      "type": "character",
+      "aliases": [
+        "Miss Snow"
+      ],
+      "first_chapter": 7
+    },
+    {
+      "id": "kate_vaughn",
+      "name": "Kate Vaughn",
+      "type": "character",
+      "aliases": [
+        "Kate",
+        "Miss Kate"
+      ],
+      "first_chapter": 12
+    },
+    {
+      "id": "fred_vaughn",
+      "name": "Fred Vaughn",
+      "type": "character",
+      "aliases": [
+        "Fred"
+      ],
+      "first_chapter": 12
+    },
+    {
+      "id": "miss_crocker",
+      "name": "Miss Crocker",
+      "type": "character",
+      "aliases": [
+        "Croaker"
+      ],
+      "first_chapter": 11
+    },
+    {
+      "id": "pip",
+      "name": "Pip",
+      "type": "character",
+      "aliases": [
+        "Pip March"
+      ],
+      "first_chapter": 11,
+      "notes": "Beth's canary; dies of neglect in ch 11 and is buried with an epitaph."
+    },
+    {
+      "id": "kings",
+      "name": "The Kings",
+      "type": "organization",
+      "aliases": [
+        "King family",
+        "the King children"
+      ],
+      "first_chapter": 1,
+      "notes": "The rich family whose four children Meg teaches as nursery governess (ch 4). Ch 1 mentions 'the King children'.",
+      "accepted_types": [
+        "organization",
+        "character"
+      ]
+    },
+    {
+      "id": "hummels",
+      "name": "The Hummels",
+      "type": "organization",
+      "aliases": [
+        "Hummel family"
+      ],
+      "first_chapter": 2,
+      "notes": "The poor German family the Marches give their Christmas breakfast to. The mother is never named in ch 1-12.",
+      "accepted_types": [
+        "organization",
+        "character"
+      ]
+    },
+    {
+      "id": "laurence_house",
+      "name": "Laurence house",
+      "type": "place",
+      "aliases": [
+        "Palace Beautiful",
+        "Laurence mansion",
+        "the big house",
+        "the great house",
+        "Mansion of Bliss"
+      ],
+      "first_chapter": 5,
+      "notes": "Ch 2 refers to it once as 'the big house next door'; ch 5 describes it and Beth names it the Palace Beautiful. Accept a page from ch 2."
+    },
+    {
+      "id": "plumfield",
+      "name": "Plumfield",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 11
+    },
+    {
+      "id": "pickwick_club",
+      "name": "Pickwick Club",
+      "type": "organization",
+      "aliases": [
+        "P.C.",
+        "P. C."
+      ],
+      "first_chapter": 10,
+      "notes": "The sisters' secret society, named for Dickens. Members take Dickens names. Laurie joins in ch 10."
+    },
+    {
+      "id": "pickwick_portfolio",
+      "name": "The Pickwick Portfolio",
+      "type": "artifact",
+      "aliases": [],
+      "first_chapter": 10,
+      "notes": "The club's weekly newspaper, edited by Jo.",
+      "accepted_types": [
+        "artifact",
+        "organization",
+        "concept"
+      ]
+    },
+    {
+      "id": "post_office",
+      "name": "Post office",
+      "type": "artifact",
+      "aliases": [
+        "P.O.",
+        "P. O.",
+        "the old martin house"
+      ],
+      "first_chapter": 10,
+      "notes": "Laurie's post office in the hedge between the two gardens. Not the 'private post office' Mr. Davis suppressed at school (ch 7).",
+      "accepted_types": [
+        "artifact",
+        "place",
+        "organization"
+      ]
+    },
+    {
+      "id": "cabinet_piano",
+      "name": "Cabinet piano",
+      "type": "artifact",
+      "aliases": [
+        "little cabinet piano",
+        "Beth's piano"
+      ],
+      "first_chapter": 6,
+      "notes": "Mr. Laurence's gift to Beth; it belonged to his dead granddaughter. Not the Marches' old piano (ch 1) nor the Laurences' grand piano (ch 5-6)."
+    },
+    {
+      "id": "jos_book",
+      "name": "Jo's book",
+      "type": "artifact",
+      "aliases": [
+        "Jo's manuscript",
+        "Jo's little book",
+        "Jo's fairy tales"
+      ],
+      "first_chapter": 8,
+      "notes": "Half a dozen fairy tales Jo had worked on for years; Amy burns the only copy."
+    },
+    {
+      "id": "pilgrims_progress",
+      "name": "Pilgrim's Progress",
+      "type": "artifact",
+      "aliases": [
+        "Pilgrims Progress"
+      ],
+      "first_chapter": 1,
+      "notes": "Bunyan's allegory, which the sisters played as children and now resolve to live by. Not the 'guidebooks' they find under their pillows in ch 2.",
+      "accepted_types": [
+        "artifact",
+        "concept"
+      ]
+    },
+    {
+      "id": "camp_laurence",
+      "name": "Camp Laurence",
+      "type": "event",
+      "aliases": [],
+      "first_chapter": 12,
+      "notes": "Laurie's picnic for the Vaughns at Longmeadow. The field itself is optional.",
+      "accepted_types": [
+        "event",
+        "place"
+      ]
+    }
+  ],
+  "optional_entities": [
+    {
+      "name": "Longmeadow",
+      "type": "place",
+      "notes": "The field where Camp Laurence is pitched (ch 12). May be a page of its own or folded into Camp Laurence."
+    },
+    {
+      "name": "Mrs. Gardiner",
+      "type": "character",
+      "notes": "Hosts the New Year's Eve dance (ch 3)."
+    },
+    {
+      "name": "Frank Vaughn",
+      "type": "character",
+      "aliases": [
+        "Frank"
+      ],
+      "notes": "The lame Vaughn twin Beth talks to (ch 12)."
+    },
+    {
+      "name": "Grace Vaughn",
+      "type": "character",
+      "notes": "Youngest Vaughn, Amy's friend at the picnic (ch 12). Not Grace King (ch 4)."
+    },
+    {
+      "name": "Mrs. King",
+      "type": "character",
+      "notes": "Meg's employer (ch 4). The family is the gold entity."
+    },
+    {
+      "name": "Mr. King",
+      "type": "character"
+    },
+    {
+      "name": "Mrs. Hummel",
+      "type": "character",
+      "notes": "The mother of the Hummels; the text says only 'a poor woman' and 'the Hummels'."
+    },
+    {
+      "name": "Joanna",
+      "type": "character",
+      "notes": "Beth's invalid doll (ch 6, 11, 12)."
+    },
+    {
+      "name": "Scrabble",
+      "type": "character",
+      "notes": "Jo's pet rat in the garret (ch 3)."
+    },
+    {
+      "name": "John",
+      "type": "character",
+      "notes": "A Laurence servant who walks Jo home (ch 5). Not Mr. Brooke."
+    },
+    {
+      "name": "The Witches Curse",
+      "type": "artifact",
+      "aliases": [
+        "The Witches Curse, an Operatic Tragedy"
+      ],
+      "notes": "Jo's Christmas play (ch 1-2). Its roles Hugo, Roderigo, Zara, Don Pedro, Hagar and Ferdinando are parts the sisters act, not people."
+    },
+    {
+      "name": "Hugo",
+      "type": "character",
+      "notes": "Villain of Jo's play, acted by Jo."
+    },
+    {
+      "name": "Major Lincoln",
+      "type": "character"
+    },
+    {
+      "name": "Hortense",
+      "type": "character"
+    },
+    {
+      "name": "Clara Moffat",
+      "type": "character",
+      "aliases": [
+        "Clara",
+        "Miss Clara"
+      ]
+    },
+    {
+      "name": "Mr. Moffat",
+      "type": "character"
+    },
+    {
+      "name": "Mr. Cutter",
+      "type": "character"
+    },
+    {
+      "name": "Susie Perkins",
+      "type": "character"
+    },
+    {
+      "name": "Katy Brown",
+      "type": "character"
+    },
+    {
+      "name": "Mrs. Snowball Pat Paw",
+      "type": "character",
+      "notes": "The club's lost cat, mourned in the Portfolio (ch 10)."
+    },
+    {
+      "name": "Poll",
+      "type": "character",
+      "notes": "Aunt March's parrot (ch 5)."
+    },
+    {
+      "name": "Mrs. Barker",
+      "type": "character"
+    },
+    {
+      "name": "Vevay",
+      "type": "place",
+      "notes": "Laurie's school abroad (ch 3)."
+    }
+  ],
+  "statuses": [
+    {
+      "entity": "mr_march",
+      "timeline": [
+        {
+          "chapter": 1,
+          "status": "alive (away at the war as an army chaplain)",
+          "quote": {
+            "chapter": 1,
+            "text": "He is well, and thinks he shall get through the cold season better than we feared."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "beth",
+      "timeline": [
+        {
+          "chapter": 1,
+          "status": "alive",
+          "quote": {
+            "chapter": 1,
+            "text": "“We’ve got Father and Mother, and each other,” said Beth contentedly from her corner."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "laurie",
+      "timeline": [
+        {
+          "chapter": 3,
+          "status": "alive",
+          "quote": {
+            "chapter": 3,
+            "text": "“I’m not Mr. Laurence, I’m only Laurie.”"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "meg",
+      "timeline": [
+        {
+          "chapter": 3,
+          "status": "alive (sprained ankle)",
+          "quote": {
+            "chapter": 3,
+            "text": "“I’ve sprained my ankle."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "uncle_march",
+      "timeline": [
+        {
+          "chapter": 4,
+          "status": "dead",
+          "quote": {
+            "chapter": 4,
+            "text": "which was left to dust and spiders since Uncle March died"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "mr_laurence",
+      "timeline": [
+        {
+          "chapter": 5,
+          "status": "alive",
+          "quote": {
+            "chapter": 5,
+            "text": "there, to her great dismay, stood old Mr. Laurence."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "amy",
+      "timeline": [
+        {
+          "chapter": 8,
+          "status": "alive; rescued after falling through the ice",
+          "quote": {
+            "chapter": 8,
+            "text": "together they got the child out, more frightened than hurt."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "pip",
+      "timeline": [
+        {
+          "chapter": 11,
+          "status": "dead (starved in his cage)",
+          "quote": {
+            "chapter": 11,
+            "text": "Pip, the canary, who lay dead in the cage"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "aunt_march",
+      "timeline": [
+        {
+          "chapter": 11,
+          "status": "alive (gone away to Plumfield for the summer)",
+          "quote": {
+            "chapter": 11,
+            "text": "“Aunt March went today, for which, oh, be joyful!” said Jo."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "brooke",
+      "timeline": [
+        {
+          "chapter": 12,
+          "status": "alive; means to enlist as a soldier once Laurie leaves for college",
+          "quote": {
+            "chapter": 12,
+            "text": "as soon as he is off, I shall turn soldier. I am needed."
+          }
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "source": "meg",
+      "target": "jo",
+      "type": "sister_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "said Meg, beginning to lecture in her elder-sisterly fashion"
+      }
+    },
+    {
+      "source": "beth",
+      "target": "amy",
+      "type": "sister_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "we will take this moment to give them a little sketch of the four sisters"
+      }
+    },
+    {
+      "source": "meg",
+      "target": "mrs_march",
+      "type": "daughter_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "While making these maternal inquiries Mrs. March got her wet things off"
+      }
+    },
+    {
+      "source": "jo",
+      "target": "mr_march",
+      "type": "daughter_of",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "I’m the man of the family now Papa is away"
+      }
+    },
+    {
+      "source": "mrs_march",
+      "target": "mr_march",
+      "type": "married_to",
+      "first_chapter": 1,
+      "lenient": true,
+      "quote": {
+        "chapter": 1,
+        "text": "for he told me to take special care of Mother while he was gone."
+      }
+    },
+    {
+      "source": "aunt_march",
+      "target": "jo",
+      "type": "great_aunt_of",
+      "first_chapter": 1,
+      "lenient": true,
+      "quote": {
+        "chapter": 1,
+        "text": "the needles flew as the girls made sheets for Aunt March"
+      }
+    },
+    {
+      "source": "aunt_march",
+      "target": "uncle_march",
+      "type": "widow_of",
+      "first_chapter": 4,
+      "lenient": true,
+      "quote": {
+        "chapter": 4,
+        "text": "which was left to dust and spiders since Uncle March died"
+      }
+    },
+    {
+      "source": "laurie",
+      "target": "mr_laurence",
+      "type": "grandson_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "“The Laurence boy’s grandfather!"
+      }
+    },
+    {
+      "source": "jo",
+      "target": "aunt_march",
+      "type": "works_as_paid_companion_to",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "she proposed to take her for a companion"
+      }
+    },
+    {
+      "source": "meg",
+      "target": "kings",
+      "type": "employed_to_teach_as_nursery_governess_by",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "At the Kings’ she daily saw all she wanted"
+      }
+    },
+    {
+      "source": "brooke",
+      "target": "laurie",
+      "type": "tutor_of",
+      "first_chapter": 5,
+      "lenient": true,
+      "quote": {
+        "chapter": 5,
+        "text": "Mr. Brooke, my tutor, doesn’t stay here, you know"
+      }
+    },
+    {
+      "source": "laurie",
+      "target": "jo",
+      "type": "friend_of",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "Both peeped and criticized and chatted till they felt like old acquaintances."
+      }
+    },
+    {
+      "source": "laurie",
+      "target": "amy",
+      "type": "rescued_from_the_ice",
+      "first_chapter": 8,
+      "quote": {
+        "chapter": 8,
+        "text": "held Amy up by his arm and hockey stick"
+      }
+    },
+    {
+      "source": "amy",
+      "target": "jos_book",
+      "type": "burned_and_destroyed",
+      "first_chapter": 8,
+      "quote": {
+        "chapter": 8,
+        "text": "Amy’s bonfire had consumed the loving work of several years"
+      }
+    },
+    {
+      "source": "mr_laurence",
+      "target": "beth",
+      "type": "friend_and_benefactor_of",
+      "first_chapter": 6,
+      "quote": {
+        "chapter": 6,
+        "text": "Your grateful friend and humble servant"
+      }
+    },
+    {
+      "source": "mr_davis",
+      "target": "amy",
+      "type": "teacher_of",
+      "first_chapter": 4,
+      "lenient": true,
+      "quote": {
+        "chapter": 4,
+        "text": "Young ladies, my eye is upon you!"
+      }
+    },
+    {
+      "source": "jenny_snow",
+      "target": "amy",
+      "type": "informed_against",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "informed Mr. Davis, the teacher, that Amy March had pickled limes in her desk."
+      }
+    },
+    {
+      "source": "hannah",
+      "target": "mrs_march",
+      "type": "servant_and_friend_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "who had lived with the family since Meg was born, and was considered by them all more as a friend than a servant"
+      }
+    },
+    {
+      "source": "sallie_gardiner",
+      "target": "meg",
+      "type": "friend_of",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "Meg knew Sallie and was at her ease very soon"
+      }
+    },
+    {
+      "source": "annie_moffat",
+      "target": "meg",
+      "type": "friend_who_invited",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "Sallie’s friend, Annie Moffat, took a fancy to me, and asked me to come and spend a week with her"
+      }
+    },
+    {
+      "source": "ned_moffat",
+      "target": "meg",
+      "type": "suitor_of",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "my Ned is quite wild about her."
+      }
+    },
+    {
+      "source": "brooke",
+      "target": "meg",
+      "type": "attracted_to",
+      "first_chapter": 12,
+      "quote": {
+        "chapter": 12,
+        "text": "He never talked to her much, but he looked at her a good deal"
+      }
+    },
+    {
+      "source": "fred_vaughn",
+      "target": "jo",
+      "type": "cheated_against_at_croquet",
+      "first_chapter": 12,
+      "quote": {
+        "chapter": 12,
+        "text": "He did cheat, I saw him."
+      }
+    },
+    {
+      "source": "laurie",
+      "target": "laurence_house",
+      "type": "lives_at",
+      "first_chapter": 5,
+      "lenient": true,
+      "quote": {
+        "chapter": 5,
+        "text": "few people went in and out, except the old gentleman and his grandson."
+      }
+    },
+    {
+      "source": "aunt_march",
+      "target": "plumfield",
+      "type": "stays_at",
+      "first_chapter": 11,
+      "quote": {
+        "chapter": 11,
+        "text": "Plumfield is about as gay as a churchyard"
+      }
+    },
+    {
+      "source": "laurie",
+      "target": "pickwick_club",
+      "type": "member_of",
+      "first_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "I propose Mr. Theodore Laurence as an honorary member of the P. C."
+      }
+    },
+    {
+      "source": "meg",
+      "target": "pickwick_club",
+      "type": "president_of",
+      "first_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "Pickwick, the president, read the paper"
+      }
+    },
+    {
+      "source": "laurie",
+      "target": "post_office",
+      "type": "created",
+      "first_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "I have set up a post office in the hedge in the lower corner of the garden"
+      }
+    },
+    {
+      "source": "mrs_march",
+      "target": "hummels",
+      "type": "benefactor_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "Mrs. March gave the mother tea and gruel, and comforted her with promises of help"
+      }
+    },
+    {
+      "source": "jo",
+      "target": "beth",
+      "type": "confidant_of",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "To Jo alone did the shy child tell her thoughts"
+      }
+    },
+    {
+      "source": "pip",
+      "target": "beth",
+      "type": "pet_of",
+      "first_chapter": 11,
+      "quote": {
+        "chapter": 11,
+        "text": "little Pip was laid in, with many tears by his tender-hearted mistress"
+      }
+    }
+  ],
+  "identity_reveals": [
+    {
+      "entity": "laurie",
+      "alias": "Laurie",
+      "reveal_chapter": 3,
+      "rule": "Ch 2 knows him only as 'the Laurence boy' and Mr. Laurence's grandson. No 'Laurie' on his page before ch 3.",
+      "quote": {
+        "chapter": 3,
+        "text": "“I’m not Mr. Laurence, I’m only Laurie.”"
+      }
+    },
+    {
+      "entity": "laurie",
+      "alias": "Theodore",
+      "reveal_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "My first name is Theodore, but I don’t like it"
+      }
+    },
+    {
+      "entity": "brooke",
+      "alias": "Brooke",
+      "reveal_chapter": 5,
+      "rule": "The tutor of ch 2 is unnamed. No 'Brooke' before ch 5.",
+      "quote": {
+        "chapter": 5,
+        "text": "Mr. Brooke, my tutor, doesn’t stay here, you know"
+      }
+    },
+    {
+      "entity": "mr_laurence",
+      "alias": "James Laurence",
+      "reveal_chapter": 6,
+      "rule": "His forename first appears in the signature of his ch 6 letter to Beth.",
+      "quote": {
+        "chapter": 6,
+        "text": "Your humble servant, James Laurence"
+      }
+    },
+    {
+      "entity": "meg",
+      "alias": "Daisy",
+      "reveal_chapter": 9,
+      "rule": "The Moffats' pet name for Meg, first used in ch 9.",
+      "quote": {
+        "chapter": 9,
+        "text": "“Daisy, dear, I’ve sent an invitation to your friend, Mr. Laurence, for Thursday."
+      }
+    },
+    {
+      "entity": "meg",
+      "alias": "Pickwick",
+      "reveal_chapter": 10,
+      "rule": "No Pickwick Club name on any sister's page before ch 10, where the club and its names are introduced.",
+      "quote": {
+        "chapter": 10,
+        "text": "Meg, as the eldest, was Samuel Pickwick"
+      }
+    },
+    {
+      "entity": "jo",
+      "alias": "Snodgrass",
+      "reveal_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "Jo, being of a literary turn, Augustus Snodgrass"
+      }
+    },
+    {
+      "entity": "beth",
+      "alias": "Tupman",
+      "reveal_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "Beth, because she was round and rosy, Tracy Tupman"
+      }
+    },
+    {
+      "entity": "amy",
+      "alias": "Winkle",
+      "reveal_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "Amy, who was always trying to do what she couldn’t, was Nathaniel Winkle"
+      }
+    },
+    {
+      "entity": "laurie",
+      "alias": "Sam Weller",
+      "reveal_chapter": 10,
+      "quote": {
+        "chapter": 10,
+        "text": "allow me to introduce myself as Sam Weller, the very humble servant of the club."
+      }
+    }
+  ],
+  "must_not_merge": [
+    {
+      "alias": "Mr. Laurence",
+      "entities": [
+        "mr_laurence",
+        "laurie"
+      ],
+      "rule": "In narration 'Mr. Laurence' is always the grandfather. Jo calls Laurie 'Mr. Laurence' in ch 3 and he corrects her; Belle Moffat uses it for Laurie in ch 9 and Meg answers as if she meant the grandfather. Keep two pages and never put 'Mr. Laurence' on Laurie's page.",
+      "quote": {
+        "chapter": 3,
+        "text": "“I’m not Mr. Laurence, I’m only Laurie.”"
+      }
+    },
+    {
+      "alias": "Miss March",
+      "entities": [
+        "meg",
+        "jo",
+        "beth",
+        "amy"
+      ],
+      "rule": "Every sister is addressed as Miss March: Meg in the ch 3 invitation, Jo by Laurie (ch 3), Beth on Mr. Laurence's letter (ch 6), Amy by Mr. Davis (ch 7). Keep four pages. As the eldest, Meg may carry 'Miss March' as an alias; Jo, Beth and Amy may not.",
+      "quote": {
+        "chapter": 3,
+        "text": "‘Mrs. Gardiner would be happy to see Miss March and Miss Josephine at a little dance on New Year’s Eve.’"
+      }
+    },
+    {
+      "alias": "Mrs. March (for Aunt March)",
+      "entities": [
+        "mrs_march",
+        "aunt_march"
+      ],
+      "rule": "Both are older March women and both appear from ch 1. 'Mrs. March' in the text is always Marmee; Aunt March is only ever 'Aunt March' or 'Aunt'. Keep two pages."
+    },
+    {
+      "alias": "Mr. March (for Uncle March)",
+      "entities": [
+        "mr_march",
+        "uncle_march"
+      ],
+      "rule": "Mr. March is the living father at the war; Uncle March died before the story (ch 4). Keep two pages and never give Uncle March the name Mr. March."
+    },
+    {
+      "alias": "Pickwick",
+      "entities": [
+        "meg",
+        "pickwick_club"
+      ],
+      "rule": "Pickwick, Mr. Pickwick and Samuel Pickwick are Meg's club name. The Pickwick Club (P.C.) is the organization she presides over. Keep two pages, and never put 'Pickwick' on the club's page as if it were a member.",
+      "quote": {
+        "chapter": 10,
+        "text": "Pickwick, the president, read the paper"
+      }
+    }
+  ],
+  "ambiguities": [
+    "Miss March: the text uses it for all four sisters. By etiquette it is the eldest's title, so the key lets Meg's page carry it and fails it on Jo's, Beth's or Amy's page. A stricter key would forbid it on every page.",
+    "Pickwick Club names (Samuel Pickwick, Augustus Snodgrass, Tracy Tupman, Nathaniel Winkle, Sam Weller) are Dickens characters the sisters and Laurie play in their club. The key models each as an alias of the real person from ch 10, so a separate page for a club name counts as a duplicate page. None of them is a person in the story.",
+    "Laurie's first chapter: ch 2 calls him 'the Laurence boy' and the old man's grandson; ch 3 names him. Accept 2 or 3. 'Teddy' does not occur in ch 1-12, so it is not required.",
+    "Mr. Brooke: ch 2 mentions Laurie's unnamed 'tutor'; ch 5 names Brooke. The tutor relation is lenient so that an unnamed tutor page from ch 2 merged into Brooke is not marked early. His forename does not occur in ch 1-12, and the 'John' of ch 5 is a Laurence servant.",
+    "Laurence house: ch 2 mentions 'the big house next door'; ch 5 describes it and Beth calls it the Palace Beautiful. Gold first_chapter is 5, so a page from ch 2 also passes. Laurie lives_at is lenient for the same reason.",
+    "Jo as Aunt March's companion: ch 1 has Jo complain of 'a nervous, fussy old lady' without naming her; ch 4 says it is Aunt March. A link shown in ch 1 or 2 is early. Likewise Meg's governess post: ch 1 has 'teaching those tiresome children' and 'the King children' as separate remarks, and ch 4 joins them.",
+    "Aunt March's kinship: 'Aunt March' from ch 1, 'her irascible relative' in ch 4, Jo's 'great-aunt' in ch 5. Lenient.",
+    "Uncle March as Aunt March's late husband is implied by his library in her house (ch 4), never stated. Lenient.",
+    "Hannah's surname: 'Hannah Brown will preside' in a ch 10 Portfolio advertisement may be a joke name, like 'Mrs. Beth Bouncer' and 'Miss Oranthy Bluggage' in the same column. Do not require it. Katy Brown (ch 7) is an unrelated schoolgirl.",
+    "The Christmas guidebooks of ch 2 ('that beautiful old story of the best life ever lived') are not Pilgrim's Progress. Do not record the girls receiving copies of Pilgrim's Progress.",
+    "Meg and Laurie: the romance is Moffat gossip in ch 9 ('Mrs. M. has made her plans'), not a fact. Never record laurie suitor_of meg. Mrs. Moffat's 'father a colonel in the army' is also a fib; Mr. March is a chaplain.",
+    "Brooke attracted_to Meg (ch 12) is shown, not stated: he looks at her 'a good deal', translates her German song and tutors her in German. A teaching row between them in ch 12 does not satisfy the romance item.",
+    "Three pianos: the Marches' old piano (ch 1), the Laurences' grand piano that Beth plays (ch 5-6), and the little cabinet piano Mr. Laurence gives Beth (ch 6), which belonged to his dead granddaughter. Only the last is a gold entity; do not merge them.",
+    "Christmas play roles: Jo acts Hugo and Roderigo, Meg acts Hagar and Don Pedro, Amy acts Zara (ch 2). These are parts in a play, not aliases.",
+    "Families: the Kings and the Hummels may be modelled as an organization or as a character page for the family. Mrs. King and Mr. King are named in ch 4; the Hummel mother is never named in ch 1-12.",
+    "Unnamed dead are not gold entities: Laurie's parents (ch 5), Mr. Laurence's granddaughter (ch 6), Mrs. March's mother (ch 8), and Mrs. March's father, Mr. Laurence's old friend (ch 2 and 5, dead by implication).",
+    "'Daisy' is Meg's nickname at the Moffats (ch 9, also spelled 'Daisey'). Jo's 'A regular daisy' in ch 12 is a compliment, not the name.",
+    "Pip is a canary typed as a character; if a wiki types him otherwise, his status is not scored.",
+    "Camp Laurence is the picnic (event); Longmeadow is the field (optional place). A single page with either name passes only if it carries 'Camp Laurence'.",
+    "Mr. Laurence calls Jo 'Doctor Jo' (ch 5) and Beth calls him her 'crochety friend' (ch 6); the girls also call him 'the old gentleman', which the key lists but does not need."
+  ]
+}

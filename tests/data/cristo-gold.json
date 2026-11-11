@@ -1,0 +1,1131 @@
+{
+  "schema_version": 1,
+  "partial": true,
+  "book": {
+    "title": "The Count of Monte Cristo",
+    "author": "Alexandre Dumas",
+    "source": "Project Gutenberg eBook #1184",
+    "epub": "cristo.epub",
+    "notes": "Spine order: wrap0000 (cover), h-0 (title page and full table of contents, run ch 1), h-1..h-16 (run ch 2-17 = book Chapters 1-16). Run chapter N is book Chapter N-1; every chapter number in this file is the run's. The gold covers run ch 1-17 only, through 'A Learned Italian'. Run ch 1 is front matter, so entity first_chapter values count story text from ch 2. Entity types follow Annalist's vocabulary (character, place, organization, artifact, event, concept). This translation spells the captain 'Leclere'. Compare names with apostrophes folded: the text uses U+2019 (Château d’If, Dantès’ father)."
+  },
+  "chapters": [
+    {
+      "index": 1,
+      "title": "THE COUNT OF MONTE CRISTO",
+      "href": "OEBPS/1036545485095569196_1184-h-0.htm.html"
+    },
+    {
+      "index": 2,
+      "title": "VOLUME ONE",
+      "href": "OEBPS/1036545485095569196_1184-h-1.htm.html"
+    },
+    {
+      "index": 3,
+      "title": "Chapter 2. Father and Son",
+      "href": "OEBPS/1036545485095569196_1184-h-2.htm.html"
+    },
+    {
+      "index": 4,
+      "title": "Chapter 3. The Catalans",
+      "href": "OEBPS/1036545485095569196_1184-h-3.htm.html"
+    },
+    {
+      "index": 5,
+      "title": "Chapter 4. Conspiracy",
+      "href": "OEBPS/1036545485095569196_1184-h-4.htm.html"
+    },
+    {
+      "index": 6,
+      "title": "Chapter 5. The Marriage Feast",
+      "href": "OEBPS/1036545485095569196_1184-h-5.htm.html"
+    },
+    {
+      "index": 7,
+      "title": "Chapter 6. The Deputy Procureur du Roi",
+      "href": "OEBPS/1036545485095569196_1184-h-6.htm.html"
+    },
+    {
+      "index": 8,
+      "title": "Chapter 7. The Examination",
+      "href": "OEBPS/1036545485095569196_1184-h-7.htm.html"
+    },
+    {
+      "index": 9,
+      "title": "Chapter 8. The Château d’If",
+      "href": "OEBPS/1036545485095569196_1184-h-8.htm.html"
+    },
+    {
+      "index": 10,
+      "title": "Chapter 9. The Evening of the Betrothal",
+      "href": "OEBPS/1036545485095569196_1184-h-9.htm.html"
+    },
+    {
+      "index": 11,
+      "title": "Chapter 10. The King’s Closet at the Tuileries",
+      "href": "OEBPS/1036545485095569196_1184-h-10.htm.html"
+    },
+    {
+      "index": 12,
+      "title": "Chapter 11. The Corsican Ogre",
+      "href": "OEBPS/1036545485095569196_1184-h-11.htm.html"
+    },
+    {
+      "index": 13,
+      "title": "Chapter 12. Father and Son",
+      "href": "OEBPS/1036545485095569196_1184-h-12.htm.html"
+    },
+    {
+      "index": 14,
+      "title": "Chapter 13. The Hundred Days",
+      "href": "OEBPS/1036545485095569196_1184-h-13.htm.html"
+    },
+    {
+      "index": 15,
+      "title": "Chapter 14. The Two Prisoners",
+      "href": "OEBPS/1036545485095569196_1184-h-14.htm.html"
+    },
+    {
+      "index": 16,
+      "title": "Chapter 15. Number 34 and Number 27",
+      "href": "OEBPS/1036545485095569196_1184-h-15.htm.html"
+    },
+    {
+      "index": 17,
+      "title": "Chapter 16. A Learned Italian",
+      "href": "OEBPS/1036545485095569196_1184-h-16.htm.html"
+    }
+  ],
+  "non_chapter_spine_items": [
+    {
+      "href": "OEBPS/wrap0000.html",
+      "kind": "cover"
+    }
+  ],
+  "entities": [
+    {
+      "id": "edmond_dantes",
+      "name": "Edmond Dantès",
+      "type": "character",
+      "aliases": [
+        "Dantès",
+        "Edmond",
+        "Edmond Dantes",
+        "M. Dantès",
+        "number 34"
+      ],
+      "first_chapter": 2,
+      "notes": "Mate of the Pharaon, arrested at his betrothal feast (ch 6), held in the Château d’If from ch 9. Becomes 'number 34' at the end of ch 15. Never married to Mercédès and never the Count of Monte Cristo in this scope; see must_not_merge."
+    },
+    {
+      "id": "old_dantes",
+      "name": "Old Dantès",
+      "type": "character",
+      "aliases": [
+        "Dantès’ father",
+        "Dantès's father",
+        "the elder Dantès",
+        "father Dantès",
+        "Edmond's father"
+      ],
+      "first_chapter": 3,
+      "notes": "Edmond's father. Called 'my father' in ch 2, first named as 'Dantès’ father' and 'old Dantès' in ch 3. No forename in this scope. Dies in ch 14."
+    },
+    {
+      "id": "mercedes",
+      "name": "Mercédès",
+      "type": "character",
+      "aliases": [
+        "Mercedes",
+        "the Catalane"
+      ],
+      "first_chapter": 2,
+      "notes": "Dantès's betrothed, a Catalan orphan. She refuses the name 'Madame Dantès' (ch 4) and the wedding never happens."
+    },
+    {
+      "id": "fernand",
+      "name": "Fernand",
+      "type": "character",
+      "aliases": [
+        "Fernand Mondego",
+        "the Catalan"
+      ],
+      "first_chapter": 4,
+      "notes": "Mercédès's cousin and rejected suitor. Described without a name in ch 3 ('a tall, strapping, black-eyed Catalan... whom she calls cousin'); named in ch 4. The surname Mondego is not in run ch 1-17; it is listed only so a wiki that uses it still matches."
+    },
+    {
+      "id": "morrel",
+      "name": "Morrel",
+      "type": "character",
+      "aliases": [
+        "M. Morrel",
+        "Monsieur Morrel",
+        "the shipowner"
+      ],
+      "first_chapter": 2,
+      "notes": "Owner of the Pharaon, head of Morrel & Son. His uncle Policar Morrel (ch 2, 6) and his unnamed son are other people."
+    },
+    {
+      "id": "danglars",
+      "name": "Danglars",
+      "type": "character",
+      "aliases": [
+        "M. Danglars",
+        "the supercargo"
+      ],
+      "first_chapter": 2,
+      "notes": "Supercargo of the Pharaon. Writes the anonymous denunciation in ch 5, signed 'a friend of the throne and religion'."
+    },
+    {
+      "id": "caderousse",
+      "name": "Caderousse",
+      "type": "character",
+      "aliases": [
+        "neighbor Caderousse",
+        "the tailor"
+      ],
+      "first_chapter": 3
+    },
+    {
+      "id": "leclere",
+      "name": "Captain Leclere",
+      "type": "character",
+      "aliases": [
+        "Leclere",
+        "Captain Leclère",
+        "Leclère"
+      ],
+      "first_chapter": 2,
+      "notes": "Dead before the story opens; this translation spells him without the accent."
+    },
+    {
+      "id": "villefort",
+      "name": "Gérard de Villefort",
+      "type": "character",
+      "aliases": [
+        "Villefort",
+        "M. de Villefort",
+        "de Villefort",
+        "Gérard",
+        "Gerard de Villefort"
+      ],
+      "first_chapter": 6,
+      "notes": "Deputy procureur at Marseilles, later king's procureur at Toulouse (ch 14). First named in ch 6 as 'M. de Villefort, the assistant procureur'; forename Gérard from ch 8. Son of Noirtier but uses a different surname; see must_not_merge."
+    },
+    {
+      "id": "noirtier",
+      "name": "Noirtier",
+      "type": "character",
+      "aliases": [
+        "M. Noirtier",
+        "Monsieur Noirtier",
+        "Count Noirtier",
+        "Citizen Noirtier",
+        "Villefort's father",
+        "the man in the blue frock-coat"
+      ],
+      "first_chapter": 7,
+      "notes": "Villefort's father: Girondin, then senator, a Bonapartist and vice-president of the Rue Saint-Jacques club. The full name 'M. Noirtier de Villefort' appears only as a later chapter title in the ch 1 table of contents."
+    },
+    {
+      "id": "renee",
+      "name": "Renée de Saint-Méran",
+      "type": "character",
+      "aliases": [
+        "Renée",
+        "Renee",
+        "Mademoiselle de Saint-Méran"
+      ],
+      "first_chapter": 7,
+      "notes": "Villefort's betrothed (ch 7), his wife from ch 14. Do not give her the alias 'Madame de Villefort': the text never uses it in scope, and later in the book it names another woman."
+    },
+    {
+      "id": "marquis_saint_meran",
+      "name": "Marquis de Saint-Méran",
+      "type": "character",
+      "aliases": [
+        "M. de Saint-Méran",
+        "the marquis"
+      ],
+      "first_chapter": 7
+    },
+    {
+      "id": "marquise_saint_meran",
+      "name": "Marquise de Saint-Méran",
+      "type": "character",
+      "aliases": [
+        "Madame de Saint-Méran",
+        "the marquise"
+      ],
+      "first_chapter": 7
+    },
+    {
+      "id": "salvieux",
+      "name": "Comte de Salvieux",
+      "type": "character",
+      "aliases": [
+        "M. de Salvieux",
+        "Salvieux"
+      ],
+      "first_chapter": 7
+    },
+    {
+      "id": "louis_xviii",
+      "name": "Louis XVIII",
+      "type": "character",
+      "aliases": [
+        "King Louis XVIII",
+        "Louis XVIII.",
+        "King Louis",
+        "the king"
+      ],
+      "first_chapter": 7
+    },
+    {
+      "id": "napoleon",
+      "name": "Napoleon",
+      "type": "character",
+      "aliases": [
+        "Napoleon Bonaparte",
+        "Napoléon",
+        "Bonaparte",
+        "M. de Bonaparte",
+        "the emperor",
+        "the usurper",
+        "the Corsican ogre",
+        "the Corsican"
+      ],
+      "first_chapter": 2,
+      "notes": "Called 'the emperor' in ch 2 (Dantès meets him on Elba), 'the usurper' from ch 5, named Napoleon from ch 6."
+    },
+    {
+      "id": "bertrand",
+      "name": "Marshal Bertrand",
+      "type": "character",
+      "aliases": [
+        "Bertrand",
+        "the grand marshal",
+        "the grand-marshal"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "faria",
+      "name": "Abbé Faria",
+      "type": "character",
+      "aliases": [
+        "Faria",
+        "the Abbé Faria",
+        "Abbe Faria",
+        "No. 27",
+        "Number 27",
+        "the mad abbé"
+      ],
+      "first_chapter": 15,
+      "notes": "Ch 9's jailer mentions him without a name ('an abbé became mad, who was in this chamber before you'); named Faria and No. 27 in ch 15; tunnels into Dantès's cell at the end of ch 16 and tells his story in ch 17."
+    },
+    {
+      "id": "quesnel",
+      "name": "General Quesnel",
+      "type": "character",
+      "aliases": [
+        "Quesnel"
+      ],
+      "first_chapter": 12
+    },
+    {
+      "id": "blacas",
+      "name": "Duc de Blacas",
+      "type": "character",
+      "aliases": [
+        "M. de Blacas",
+        "Blacas",
+        "De Blacas"
+      ],
+      "first_chapter": 11
+    },
+    {
+      "id": "dandre",
+      "name": "M. Dandré",
+      "type": "character",
+      "aliases": [
+        "Dandré",
+        "Baron Dandré",
+        "the minister of police"
+      ],
+      "first_chapter": 11
+    },
+    {
+      "id": "spada",
+      "name": "Cardinal Spada",
+      "type": "character",
+      "aliases": [
+        "Spada"
+      ],
+      "first_chapter": 15
+    },
+    {
+      "id": "marseilles",
+      "name": "Marseilles",
+      "type": "place",
+      "aliases": [
+        "Marseille"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "chateau_dif",
+      "name": "Château d’If",
+      "type": "place",
+      "aliases": [
+        "Chateau d'If"
+      ],
+      "first_chapter": 2,
+      "notes": "Passed by the Pharaon in ch 2; Dantès's prison from ch 9."
+    },
+    {
+      "id": "catalans",
+      "name": "The Catalans",
+      "type": "place",
+      "aliases": [
+        "Catalans",
+        "the village of the Catalans"
+      ],
+      "first_chapter": 2,
+      "notes": "The Catalan fishing village outside Marseilles where Mercédès and Fernand live. Also the name of its people.",
+      "accepted_types": [
+        "place",
+        "organization"
+      ]
+    },
+    {
+      "id": "la_reserve",
+      "name": "La Réserve",
+      "type": "place",
+      "aliases": [
+        "La Reserve"
+      ],
+      "first_chapter": 3,
+      "notes": "The tavern of Père Pamphile, scene of the plot (ch 5) and the betrothal feast (ch 6). Ch 2 names only 'La Réserve basin'."
+    },
+    {
+      "id": "elba",
+      "name": "Elba",
+      "type": "place",
+      "aliases": [
+        "Island of Elba",
+        "the Island of Elba"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "monte_cristo",
+      "name": "Monte Cristo",
+      "type": "place",
+      "aliases": [
+        "the island of Monte Cristo",
+        "island of Monte Cristo"
+      ],
+      "first_chapter": 2,
+      "notes": "In run ch 2-17 only an island Dantès once proposed stopping at. No Count of Monte Cristo appears in scope."
+    },
+    {
+      "id": "pharaon",
+      "name": "Pharaon",
+      "type": "artifact",
+      "aliases": [
+        "the Pharaon"
+      ],
+      "first_chapter": 2,
+      "notes": "Morrel's three-master; Dantès is its mate.",
+      "accepted_types": [
+        "artifact",
+        "place"
+      ]
+    },
+    {
+      "id": "morrel_and_son",
+      "name": "Morrel & Son",
+      "type": "organization",
+      "aliases": [
+        "Morrel and Son",
+        "Messrs. Morrel & Son"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "denunciation",
+      "name": "The anonymous denunciation",
+      "type": "artifact",
+      "aliases": [
+        "the denunciation",
+        "the anonymous letter",
+        "the letter of denunciation"
+      ],
+      "first_chapter": 5,
+      "notes": "Written by Danglars with his left hand in ch 5, pocketed by Fernand, read aloud by Villefort in ch 7.",
+      "accepted_types": [
+        "artifact",
+        "concept"
+      ]
+    },
+    {
+      "id": "elba_letter",
+      "name": "The letter from Elba",
+      "type": "artifact",
+      "aliases": [
+        "the Elba letter",
+        "the letter for Paris",
+        "the letter to M. Noirtier",
+        "the fatal letter"
+      ],
+      "first_chapter": 4,
+      "notes": "The letter the grand-marshal gives Dantès for Paris. Its addressee, M. Noirtier, is named in ch 8, where Villefort burns it.",
+      "accepted_types": [
+        "artifact",
+        "concept"
+      ]
+    },
+    {
+      "id": "bonapartist_club",
+      "name": "Bonapartist club of the Rue Saint-Jacques",
+      "type": "organization",
+      "aliases": [
+        "the Bonapartist club",
+        "the club in the Rue Saint-Jacques",
+        "the Bonapartist club in Paris",
+        "the Bonapartist committee in Paris"
+      ],
+      "first_chapter": 11,
+      "notes": "Meets at No. 53, Rue Saint-Jacques; Noirtier is its vice-president (ch 13). The denunciation's 'Bonapartist committee in Paris' (ch 5, 7) is taken to be the same body.",
+      "accepted_types": [
+        "organization",
+        "place"
+      ]
+    },
+    {
+      "id": "hundred_days",
+      "name": "The Hundred Days",
+      "type": "event",
+      "aliases": [
+        "Hundred Days",
+        "the return from Elba",
+        "Napoleon's return"
+      ],
+      "first_chapter": 14,
+      "notes": "The landing near Antibes is reported in ch 12; the period is named in ch 14.",
+      "accepted_types": [
+        "event",
+        "concept"
+      ]
+    }
+  ],
+  "statuses": [
+    {
+      "entity": "leclere",
+      "timeline": [
+        {
+          "chapter": 2,
+          "status": "dead",
+          "quote": {
+            "chapter": 2,
+            "text": "he died of brain-fever in dreadful agony"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "edmond_dantes",
+      "timeline": [
+        {
+          "chapter": 6,
+          "status": "arrested",
+          "quote": {
+            "chapter": 6,
+            "text": "“Edmond Dantès,” replied the magistrate, “I arrest you in the name of the law!”"
+          }
+        },
+        {
+          "chapter": 9,
+          "status": "imprisoned in the Château d’If",
+          "quote": {
+            "chapter": 9,
+            "text": "he was now confined in the Château d’If, that impregnable fortress"
+          }
+        },
+        {
+          "chapter": 16,
+          "status": "alive; imprisoned, gives up starving himself",
+          "quote": {
+            "chapter": 16,
+            "text": "and returned to his couch—he did not wish to die."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "old_dantes",
+      "timeline": [
+        {
+          "chapter": 3,
+          "status": "alive",
+          "quote": {
+            "chapter": 3,
+            "text": "This room was occupied by Dantès’ father."
+          }
+        },
+        {
+          "chapter": 14,
+          "status": "dead",
+          "quote": {
+            "chapter": 14,
+            "text": "he breathed his last in Mercédès’ arms"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "quesnel",
+      "timeline": [
+        {
+          "chapter": 12,
+          "status": "dead (police suspect assassination)",
+          "quote": {
+            "chapter": 12,
+            "text": "the death of General Quesnel will, perhaps, put us on the direct track of a great internal conspiracy"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "noirtier",
+      "timeline": [
+        {
+          "chapter": 13,
+          "status": "at large in Paris, disguised",
+          "quote": {
+            "chapter": 13,
+            "text": "Noirtier left the room when he had finished, with the same calmness"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "faria",
+      "timeline": [
+        {
+          "chapter": 15,
+          "status": "imprisoned in the Château d’If since 1811",
+          "quote": {
+            "chapter": 15,
+            "text": "I am the Abbé Faria, born at Rome."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "napoleon",
+      "timeline": [
+        {
+          "chapter": 2,
+          "status": "alive, in exile on Elba",
+          "quote": {
+            "chapter": 2,
+            "text": "“Very well, as far as I could judge from the sight of him.”"
+          }
+        },
+        {
+          "chapter": 12,
+          "status": "alive; escaped Elba and landed in France",
+          "quote": {
+            "chapter": 12,
+            "text": "the usurper left Elba on the 26th February, and landed on the 1st of March."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "fernand",
+      "timeline": [
+        {
+          "chapter": 14,
+          "status": "alive; conscripted into the army",
+          "quote": {
+            "chapter": 14,
+            "text": "Fernand departed with the rest"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "danglars",
+      "timeline": [
+        {
+          "chapter": 14,
+          "status": "alive; left Marseilles for Madrid",
+          "quote": {
+            "chapter": 14,
+            "text": "He then left for Madrid, and was no more heard of."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "caderousse",
+      "timeline": [
+        {
+          "chapter": 14,
+          "status": "alive; enrolled in the army, sent to the frontier",
+          "quote": {
+            "chapter": 14,
+            "text": "Caderousse was, like Fernand, enrolled in the army"
+          }
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "source": "old_dantes",
+      "target": "edmond_dantes",
+      "type": "father_of",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "This room was occupied by Dantès’ father."
+      }
+    },
+    {
+      "source": "edmond_dantes",
+      "target": "mercedes",
+      "type": "betrothed_to",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "“She is not my mistress,” replied the young sailor, gravely; “she is my betrothed.”"
+      }
+    },
+    {
+      "source": "fernand",
+      "target": "mercedes",
+      "type": "cousin_of",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "because you are the son of my father’s brother"
+      }
+    },
+    {
+      "source": "fernand",
+      "target": "mercedes",
+      "type": "suitor_of",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "Tell me for the hundredth time that you refuse my love"
+      }
+    },
+    {
+      "source": "fernand",
+      "target": "edmond_dantes",
+      "type": "rival_of",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "I did not know, when I came with such haste to you, that I was to meet an enemy here."
+      }
+    },
+    {
+      "source": "danglars",
+      "target": "edmond_dantes",
+      "type": "enemy_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "darting at Edmond a look gleaming with hate"
+      }
+    },
+    {
+      "source": "danglars",
+      "target": "denunciation",
+      "type": "author_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "write with the left hand (that the writing may not be recognized) the denunciation we propose."
+      }
+    },
+    {
+      "source": "fernand",
+      "target": "denunciation",
+      "type": "carried_off",
+      "first_chapter": 5,
+      "lenient": true,
+      "quote": {
+        "chapter": 5,
+        "text": "saw Fernand stoop, pick up the crumpled paper, and putting it into his pocket"
+      }
+    },
+    {
+      "source": "caderousse",
+      "target": "edmond_dantes",
+      "type": "neighbor_of",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "a little debt to our neighbor, Caderousse"
+      }
+    },
+    {
+      "source": "danglars",
+      "target": "morrel",
+      "type": "employed_by",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "here is your supercargo, M. Danglars"
+      }
+    },
+    {
+      "source": "edmond_dantes",
+      "target": "morrel",
+      "type": "employed_by",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "You have managed my affairs so well that I ought to allow you all the time you require for your own."
+      }
+    },
+    {
+      "source": "morrel",
+      "target": "pharaon",
+      "type": "owner_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "If I were sole owner we’d shake hands on it now, my dear Dantès"
+      }
+    },
+    {
+      "source": "mercedes",
+      "target": "catalans",
+      "type": "lives_at",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "I forgot that there was at the Catalans someone who expects you no less impatiently than your father—the lovely Mercédès."
+      }
+    },
+    {
+      "source": "edmond_dantes",
+      "target": "napoleon",
+      "type": "met",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "“Why, it was he who spoke to me, sir,” said Dantès, with a smile."
+      }
+    },
+    {
+      "source": "edmond_dantes",
+      "target": "elba_letter",
+      "type": "carried",
+      "first_chapter": 4,
+      "lenient": true,
+      "quote": {
+        "chapter": 4,
+        "text": "To Paris, no doubt to deliver the letter which the grand marshal gave him."
+      }
+    },
+    {
+      "source": "villefort",
+      "target": "renee",
+      "type": "betrothed_to",
+      "first_chapter": 7,
+      "valid_until_chapter": 13,
+      "superseded_by": "married_to",
+      "quote": {
+        "chapter": 7,
+        "text": "be merciful on this the day of our betrothal."
+      }
+    },
+    {
+      "source": "villefort",
+      "target": "renee",
+      "type": "married_to",
+      "first_chapter": 14,
+      "lenient": true,
+      "quote": {
+        "chapter": 14,
+        "text": "a fortnight afterwards he married Mademoiselle de Saint-Méran"
+      }
+    },
+    {
+      "source": "noirtier",
+      "target": "villefort",
+      "type": "father_of",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "He was—nay, probably may still be—a Bonapartist, and is called Noirtier; I, on the contrary, am a staunch royalist, and style myself de Villefort."
+      }
+    },
+    {
+      "source": "renee",
+      "target": "marquise_saint_meran",
+      "type": "daughter_of",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "“Never mind, dearest mother,” said a young and lovely girl"
+      }
+    },
+    {
+      "source": "renee",
+      "target": "marquis_saint_meran",
+      "type": "daughter_of",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "when he went six months ago to consult him upon the subject of your espousing his daughter"
+      }
+    },
+    {
+      "source": "marquis_saint_meran",
+      "target": "marquise_saint_meran",
+      "type": "married_to",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "the son-in-law of the Marquis and Marquise de Saint-Méran"
+      }
+    },
+    {
+      "source": "villefort",
+      "target": "louis_xviii",
+      "type": "servant_of",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "You are the king’s servant, and must go wherever that service calls you."
+      }
+    },
+    {
+      "source": "villefort",
+      "target": "edmond_dantes",
+      "type": "imprisoned",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "“I do not know what M. de Villefort promised you,” said the gendarme, “but I know we are taking you to the Château d’If."
+      }
+    },
+    {
+      "source": "elba_letter",
+      "target": "noirtier",
+      "type": "addressed_to",
+      "first_chapter": 8,
+      "lenient": true,
+      "quote": {
+        "chapter": 8,
+        "text": "“To Monsieur Noirtier, Rue Coq-Héron, Paris.”"
+      }
+    },
+    {
+      "source": "noirtier",
+      "target": "bonapartist_club",
+      "type": "vice_president_of",
+      "first_chapter": 13,
+      "quote": {
+        "chapter": 13,
+        "text": "“No. 53; yes, I am vice-president.”"
+      }
+    },
+    {
+      "source": "noirtier",
+      "target": "quesnel",
+      "type": "suspected_of_killing",
+      "first_chapter": 13,
+      "lenient": true,
+      "quote": {
+        "chapter": 13,
+        "text": "The description of the man who, on the morning of the day when General Quesnel disappeared, presented himself at his house."
+      }
+    },
+    {
+      "source": "edmond_dantes",
+      "target": "chateau_dif",
+      "type": "imprisoned_in",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "he was now confined in the Château d’If, that impregnable fortress"
+      }
+    },
+    {
+      "source": "faria",
+      "target": "chateau_dif",
+      "type": "imprisoned_in",
+      "first_chapter": 15,
+      "quote": {
+        "chapter": 15,
+        "text": "an old abbé, formerly leader of a party in Italy, who has been here since 1811"
+      }
+    },
+    {
+      "source": "faria",
+      "target": "spada",
+      "type": "secretary_of",
+      "first_chapter": 15,
+      "quote": {
+        "chapter": 15,
+        "text": "I was for twenty years Cardinal Spada’s secretary"
+      }
+    },
+    {
+      "source": "faria",
+      "target": "edmond_dantes",
+      "type": "companion_of",
+      "first_chapter": 16,
+      "quote": {
+        "chapter": 16,
+        "text": "If you are young, I will be your comrade; if you are old, I will be your son."
+      }
+    }
+  ],
+  "identity_reveals": [
+    {
+      "entity": "danglars",
+      "alias": "a friend of the throne and religion",
+      "reveal_chapter": 5,
+      "rule": "The denunciation is signed only 'a friend of the throne and religion'. The reader watches Danglars write it in ch 5; Dantès and Villefort never learn the author in this scope. Keep the signer on Danglars's page, not on a page of its own.",
+      "quote": {
+        "chapter": 5,
+        "text": "is informed by a friend of the throne and religion"
+      }
+    },
+    {
+      "entity": "noirtier",
+      "alias": "Villefort's father",
+      "reveal_chapter": 7,
+      "rule": "Villefort's father is first mentioned and named Noirtier in the same ch 7 conversation. Ch 8 repeats it ('Noirtier is the father of Villefort') and so does the king in ch 11. Father and son keep different surnames and stay two people.",
+      "quote": {
+        "chapter": 7,
+        "text": "He was—nay, probably may still be—a Bonapartist, and is called Noirtier"
+      }
+    },
+    {
+      "entity": "noirtier",
+      "alias": "the man in the blue frock-coat",
+      "reveal_chapter": 12,
+      "rule": "In ch 12 the police describe the stranger who lured General Quesnel to the Rue Saint-Jacques. The same man walks into Villefort's hotel at the end of ch 12 and calls him son; ch 13 opens 'M. Noirtier—for it was, indeed, he who entered'.",
+      "quote": {
+        "chapter": 12,
+        "text": "“Father!” cried Villefort, “then I was not deceived; I felt sure it must be you.”"
+      }
+    },
+    {
+      "entity": "faria",
+      "alias": "the mad abbé",
+      "reveal_chapter": 15,
+      "rule": "Ch 9's jailer tells of an unnamed abbé who went mad offering the governor a million francs. Ch 15 names him the Abbé Faria. No Faria name on the mad abbé before ch 15.",
+      "quote": {
+        "chapter": 15,
+        "text": "the inspector gazed curiously into the chamber of the mad abbé, as the prisoner was usually called"
+      }
+    },
+    {
+      "entity": "faria",
+      "alias": "No. 27",
+      "reveal_chapter": 15,
+      "rule": "The number is first given with the name in ch 15. The digger in ch 16 says only 'I am No. 27'; that is Faria, and he gives his name again in ch 17.",
+      "quote": {
+        "chapter": 15,
+        "text": "“No. 27,” said the inspector."
+      }
+    },
+    {
+      "entity": "edmond_dantes",
+      "alias": "number 34",
+      "reveal_chapter": 15,
+      "rule": "Dantès becomes number 34 when a new governor learns prisoners by cell number, at the end of ch 15. The ch 1 table of contents lists a chapter 'Number 34 and Number 27'; that title alone does not say who is who.",
+      "quote": {
+        "chapter": 15,
+        "text": "the unhappy young man was no longer called Edmond Dantès—he was now number 34."
+      }
+    }
+  ],
+  "must_not_merge": [
+    {
+      "alias": "Dantès",
+      "entities": [
+        "edmond_dantes",
+        "old_dantes"
+      ],
+      "rule": "Father and son share the surname. The bare 'Dantès' in the text is Edmond; the father is 'Dantès’ father', 'old Dantès', 'the elder Dantès'. Keep two pages: the father dies in ch 14, the son lives.",
+      "quote": {
+        "chapter": 3,
+        "text": "This room was occupied by Dantès’ father."
+      }
+    },
+    {
+      "alias": "Noirtier",
+      "entities": [
+        "villefort",
+        "noirtier"
+      ],
+      "rule": "Villefort has dropped his father's name. Father and son, never one person, and never a 'Noirtier' alias on Villefort's page. The ch 1 table of contents shows a later chapter 'M. Noirtier de Villefort'; that is the father's full name.",
+      "quote": {
+        "chapter": 7,
+        "text": "For my own part, I have laid aside even the name of my father"
+      }
+    },
+    {
+      "alias": "Saint-Méran",
+      "entities": [
+        "marquis_saint_meran",
+        "marquise_saint_meran",
+        "renee"
+      ],
+      "rule": "Three people share the name: the Marquis, the Marquise (Madame de Saint-Méran), and their daughter Renée (Mademoiselle de Saint-Méran). Keep three pages."
+    },
+    {
+      "alias": "Madame Dantès",
+      "entities": [
+        "mercedes",
+        "edmond_dantes"
+      ],
+      "rule": "Caderousse calls Mercédès 'Madame Dantès' in ch 4 and she refuses the name; the ch 6 wedding is stopped by the arrest. She is not Dantès's wife in this scope: no 'Madame Dantès' alias and no married_to relation.",
+      "quote": {
+        "chapter": 4,
+        "text": "“That is not my name, and in my country it bodes ill fortune, they say, to call a young girl by the name of her betrothed before he becomes her husband."
+      }
+    },
+    {
+      "alias": "the Count of Monte Cristo",
+      "entities": [
+        "edmond_dantes",
+        "monte_cristo"
+      ],
+      "rule": "Only the ch 1 title page and contents name a Count of Monte Cristo. In ch 2-17 Monte Cristo is an island and no count appears. Linking the Count to Dantès spoils a reveal far beyond this scope."
+    }
+  ],
+  "ambiguities": [
+    "Front matter: run ch 1 is the title page and the whole table of contents. It names later chapter titles such as 'The Château d’If', 'Danglars’ Signature', 'The House of Morrel & Son', 'Madame de Saint-Méran', 'M. Noirtier de Villefort', 'Number 34 and Number 27' and the book title 'The Count of Monte Cristo'. Entity first_chapter values count story text from ch 2; a wiki that shows these names from ch 1 still passes, because only late entities fail. Drawing a relation or identity from a title (Noirtier as Villefort's kin, Dantès as Number 34 or as the Count) is a leak.",
+    "Old Dantès: Dantès speaks of 'my father' in ch 2; the text first calls him 'Dantès’ father' in ch 3. Accept 2 or 3. No forename in scope.",
+    "Fernand: described without a name in ch 3 as Mercédès's Catalan cousin; named in ch 4. His surname Mondego is not in run ch 1-17.",
+    "The mad abbé: ch 9 mentions an abbé who went mad in Dantès's first cell. A separate 'mad abbé' page in ch 9-14 is fine if it joins Faria by ch 15.",
+    "The digger in ch 16: he calls himself only 'No. 27', which ch 15 tied to Faria; he names himself the Abbé Faria in ch 17. Linking at 16 or 17 both pass.",
+    "Napoleon: 'the emperor' in ch 2, 'the usurper' from ch 5, named in ch 6. An 'emperor' page from ch 2 that becomes Napoleon passes; first showing him at ch 5 or later is late.",
+    "Villefort's father: mentioned and named Noirtier in the same ch 7 passage. The father-son relation is ch 7; Villefort restates it in ch 8 and the king in ch 11.",
+    "The man in the blue frock-coat: described by the police in ch 12, revealed as Villefort's father at the end of ch 12, named M. Noirtier at the start of ch 13. Accept 12 or 13.",
+    "General Quesnel: the police and the king call his death murder; Noirtier says the general left the club free. In scope Noirtier is the man the police seek, not a proven killer, so noirtier-quesnel is lenient. Reject 'Quesnel drowned himself' as settled fact.",
+    "Who posted the denunciation: ch 5 shows Fernand pocketing it; in ch 6 Danglars guesses Fernand sent it. The posting itself is never shown, so fernand-denunciation is lenient.",
+    "The letter from Elba: in ch 2 Danglars says Leclere 'confided a letter' to Dantès; that is the captain's letter for the grand-marshal (ch 8). The letter for Paris first appears in ch 4. Its addressee, Noirtier, is only named in ch 8.",
+    "The Bonapartist 'committee in Paris' of the denunciation (ch 5, 7) is taken to be the Rue Saint-Jacques club that Noirtier helps lead (ch 11, 13). The text never says so outright; a separate page for the committee is not a scored error.",
+    "Marriages: Dantès and Mercédès are betrothed and never marry in scope. Villefort and Renée are betrothed in ch 7 and marry in ch 14. villefort-married_to-renee is lenient because the scorer's early check counts any romance row as stating the tie, so a correct ch 7 betrothal would fail it; the scorer does not read valid_until_chapter or superseded_by.",
+    "Two chapters are titled 'Father and Son': run ch 3 is Dantès and his father, run ch 13 is Noirtier and Villefort.",
+    "The jailer: the turnkey Dantès threatens in ch 9 is Antoine (named ch 15); he leaves with the old governor at the end of ch 15, so the jailer of ch 16-17 is another man. Neither is scored.",
+    "Statuses: 'arrested' and 'imprisoned' count as alive. Dantès starves himself in ch 16 but stops; Napoleon is alive throughout (exiled, then landed in France, then beaten at Waterloo in ch 14).",
+    "Spelling: this translation writes 'Leclere'; accept 'Leclère'."
+  ]
+}

@@ -12,3 +12,15 @@ A gold file lists the chapters, entities, statuses, relations, identity reveals,
 A reader key holds a reader's own answers to the book's questions, plus the merges, relations, and structure they expect. An LLM judges whether the wiki agrees with each answer, so this mode costs money. `--judge-model` picks the judge model. It writes `reader-eval.md` and `reader-eval.json`.
 
 `review.md`, which every build writes, is a cheaper first check. It lists problems that code can find, such as main characters with an empty status or power field, merges across types, and quotes that lack the words of their value.
+
+## Genre benchmark
+
+`tests/data/bench.py` scores Annalist on six public-domain novels that each stress a different problem: a mystery with false names, four sisters who share one form of address, Russian name forms, a story told in journals and letters, a first-person narrator, and prisoners known by numbers. Each book has a gold file, `tests/data/<name>-gold.json`, for its opening chapters. Every quote in a gold file is checked against the epub by `tests/data/check_gold.py`.
+
+```sh
+python3 tests/data/bench.py fetch      # download the epubs from Project Gutenberg
+python3 tests/data/bench.py build      # build each book's scoped chapters into runs/bench-<name>; costs money
+python3 tests/data/bench.py score      # score every built run and print one table
+```
+
+Pass book names to work on some of them, such as `bench.py build crime`. A change that fixes one book must not lower the others.

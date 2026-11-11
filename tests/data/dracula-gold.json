@@ -1,0 +1,979 @@
+{
+  "schema_version": 1,
+  "partial": true,
+  "book": {
+    "title": "Dracula",
+    "author": "Bram Stoker",
+    "source": "Project Gutenberg eBook #345",
+    "epub": "dracula.epub",
+    "notes": "Partial key: run chapters 1-10 only (book chapters I-X). Spine order: wrap0000 (cover), h-0 (Gutenberg header), h-1 (dedication 'To my dear friend Hommy-Beg' plus contents), h-2 (the unsigned prefatory note 'How these papers have been placed in sequence...'), h-3..h-12 (run chapters 1-10). Run chapter 1 opens with the title line 'D R A C U L A' before 'CHAPTER I'. Epistolary: each journal, letter, diary or cutting has its own narrator, and a fact about a narrator comes from that narrator's own 'I' (Harker ch 1-4, Mina and Lucy letters ch 5 and 9, Seward's diary from ch 5, the Dailygraph correspondent and the Demeter's captain in ch 7). Entity types follow Annalist's vocabulary (character, place, organization, artifact, event, concept). Compare names with apostrophes folded: the text uses U+2019."
+  },
+  "chapters": [
+    {
+      "index": 1,
+      "title": "D R A C U L A",
+      "href": "OEBPS/1617581820713377646_345-h-3.htm.html"
+    },
+    {
+      "index": 2,
+      "title": "CHAPTER II JONATHAN HARKER’S JOURNAL—continued",
+      "href": "OEBPS/1617581820713377646_345-h-4.htm.html"
+    },
+    {
+      "index": 3,
+      "title": "CHAPTER III JONATHAN HARKER’S JOURNAL—continued",
+      "href": "OEBPS/1617581820713377646_345-h-5.htm.html"
+    },
+    {
+      "index": 4,
+      "title": "CHAPTER IV JONATHAN HARKER’S JOURNAL—continued",
+      "href": "OEBPS/1617581820713377646_345-h-6.htm.html"
+    },
+    {
+      "index": 5,
+      "title": "CHAPTER V",
+      "href": "OEBPS/1617581820713377646_345-h-7.htm.html"
+    },
+    {
+      "index": 6,
+      "title": "CHAPTER VI MINA MURRAY’S JOURNAL",
+      "href": "OEBPS/1617581820713377646_345-h-8.htm.html"
+    },
+    {
+      "index": 7,
+      "title": "CHAPTER VII CUTTING FROM “THE DAILYGRAPH,” 8 AUGUST",
+      "href": "OEBPS/1617581820713377646_345-h-9.htm.html"
+    },
+    {
+      "index": 8,
+      "title": "CHAPTER VIII MINA MURRAY’S JOURNAL",
+      "href": "OEBPS/1617581820713377646_345-h-10.htm.html"
+    },
+    {
+      "index": 9,
+      "title": "CHAPTER IX",
+      "href": "OEBPS/1617581820713377646_345-h-11.htm.html"
+    },
+    {
+      "index": 10,
+      "title": "CHAPTER X",
+      "href": "OEBPS/1617581820713377646_345-h-12.htm.html"
+    }
+  ],
+  "non_chapter_spine_items": [
+    {
+      "href": "OEBPS/wrap0000.html",
+      "kind": "cover"
+    },
+    {
+      "href": "OEBPS/1617581820713377646_345-h-0.htm.html",
+      "kind": "gutenberg_header"
+    },
+    {
+      "href": "OEBPS/1617581820713377646_345-h-1.htm.html",
+      "kind": "dedication_and_table_of_contents"
+    },
+    {
+      "href": "OEBPS/1617581820713377646_345-h-2.htm.html",
+      "kind": "preface"
+    }
+  ],
+  "entities": [
+    {
+      "id": "harker",
+      "name": "Jonathan Harker",
+      "type": "character",
+      "aliases": [
+        "Jonathan",
+        "Harker",
+        "Mr. Harker",
+        "Mr. Jonathan Harker"
+      ],
+      "first_chapter": 1,
+      "notes": "Narrator of ch 1-4 (his shorthand journal). A newly qualified solicitor, clerk to Peter Hawkins of Exeter. Escapes the castle off-page; ch 8 finds him in a Buda-Pesth hospital."
+    },
+    {
+      "id": "mina",
+      "name": "Mina Murray",
+      "type": "character",
+      "aliases": [
+        "Mina",
+        "Miss Mina Murray",
+        "Miss Murray",
+        "Wilhelmina Murray",
+        "Miss Wilhelmina Murray",
+        "Wilhelmina",
+        "Mina Harker",
+        "Mrs. Harker",
+        "Madam Mina"
+      ],
+      "first_chapter": 1,
+      "notes": "Named only as 'Mina' in Harker's ch 1-4 journal; surname Murray from ch 5; 'Wilhelmina' from ch 8. Becomes Mina Harker in ch 9 (see identity_reveals). 'Madam Mina' is Van Helsing's form in later chapters, outside this key; it is listed only so full-book runs still match."
+    },
+    {
+      "id": "dracula",
+      "name": "Count Dracula",
+      "type": "character",
+      "aliases": [
+        "Dracula",
+        "the Count"
+      ],
+      "first_chapter": 1,
+      "notes": "The calèche driver of ch 1 is the Count (suspected ch 2, concluded ch 3); see ambiguities for why that is not a scored reveal. The ship's stowaway, the great dog, the bat and Renfield's 'Master' are reader inferences only in this scope."
+    },
+    {
+      "id": "lucy",
+      "name": "Lucy Westenra",
+      "type": "character",
+      "aliases": [
+        "Lucy",
+        "Miss Westenra",
+        "Miss Lucy",
+        "Miss Lucy Westenra"
+      ],
+      "first_chapter": 5
+    },
+    {
+      "id": "arthur",
+      "name": "Arthur Holmwood",
+      "type": "character",
+      "aliases": [
+        "Arthur",
+        "Art",
+        "Mr. Holmwood",
+        "Holmwood",
+        "Hon. Arthur Holmwood",
+        "Lord Godalming"
+      ],
+      "first_chapter": 5,
+      "notes": "Lucy's 'tall, curly-haired man' and suitor 'number Three' (ch 5). In ch 1-10 'Lord Godalming' is his father; Arthur inherits the title in run ch 13, outside this key. The alias is listed so that full-book runs are not penalised; it is excluded from matching by must_not_merge."
+    },
+    {
+      "id": "seward",
+      "name": "Dr. John Seward",
+      "type": "character",
+      "aliases": [
+        "Seward",
+        "Dr. Seward",
+        "John Seward",
+        "Jack Seward",
+        "Jack"
+      ],
+      "first_chapter": 5,
+      "notes": "First described unnamed in Lucy's first ch 5 letter (the 29-year-old doctor with a lunatic asylum), named later in ch 5. Narrator of his phonograph diary from ch 5."
+    },
+    {
+      "id": "morris",
+      "name": "Quincey P. Morris",
+      "type": "character",
+      "aliases": [
+        "Quincey Morris",
+        "Quincey",
+        "Mr. Morris",
+        "Morris",
+        "Mr. Quincey P. Morris"
+      ],
+      "first_chapter": 5
+    },
+    {
+      "id": "renfield",
+      "name": "Renfield",
+      "type": "character",
+      "aliases": [
+        "R. M. Renfield"
+      ],
+      "first_chapter": 5,
+      "notes": "Seward's 'zoöphagous (life-eating) maniac' (ch 6)."
+    },
+    {
+      "id": "van_helsing",
+      "name": "Abraham Van Helsing",
+      "type": "character",
+      "aliases": [
+        "Van Helsing",
+        "Professor Van Helsing",
+        "Dr. Van Helsing",
+        "the Professor"
+      ],
+      "first_chapter": 9
+    },
+    {
+      "id": "hawkins",
+      "name": "Peter Hawkins",
+      "type": "character",
+      "aliases": [
+        "Mr. Hawkins",
+        "Hawkins",
+        "Mr. Peter Hawkins"
+      ],
+      "first_chapter": 2
+    },
+    {
+      "id": "mrs_westenra",
+      "name": "Mrs. Westenra",
+      "type": "character",
+      "aliases": [
+        "Lucy's mother"
+      ],
+      "first_chapter": 6,
+      "notes": "Lucy calls her 'mamma' in ch 5; named Mrs. Westenra in ch 6. Accept first_chapter 5 or 6."
+    },
+    {
+      "id": "godalming_father",
+      "name": "Lord Godalming",
+      "type": "character",
+      "aliases": [
+        "Arthur's father"
+      ],
+      "first_chapter": 6,
+      "notes": "Arthur's father, ill throughout ch 6-10. Not Arthur in this scope."
+    },
+    {
+      "id": "swales",
+      "name": "Mr. Swales",
+      "type": "character",
+      "aliases": [
+        "Swales",
+        "old Mr. Swales"
+      ],
+      "first_chapter": 6,
+      "notes": "The near-hundred-year-old Whitby sailor Mina calls 'my old friend'."
+    },
+    {
+      "id": "three_women",
+      "name": "The three women",
+      "type": "character",
+      "aliases": [
+        "the weird sisters",
+        "the three terrible women",
+        "the three ghostly women",
+        "three young women"
+      ],
+      "first_chapter": 3,
+      "notes": "The three women in Castle Dracula: one fair, two dark. Modelled as one group entity; a wiki with three individual pages matches only through a group name. The text never calls them vampires or brides in this scope.",
+      "accepted_types": [
+        "character",
+        "organization"
+      ]
+    },
+    {
+      "id": "demeter_captain",
+      "name": "Captain of the Demeter",
+      "type": "character",
+      "aliases": [
+        "the captain",
+        "the Demeter's captain",
+        "the sea-captain",
+        "the dead steersman"
+      ],
+      "first_chapter": 7,
+      "notes": "Unnamed. Writes the ship's log, dies lashed to the wheel with a crucifix, and is buried in the Whitby churchyard. The log's 'I' is his. The Dailygraph calls his corpse 'the dead steersman'; the steersman who vanished on 30 July in the log is a different man."
+    },
+    {
+      "id": "demeter_mate",
+      "name": "First mate of the Demeter",
+      "type": "character",
+      "aliases": [
+        "the first mate",
+        "the mate"
+      ],
+      "first_chapter": 7,
+      "notes": "Unnamed, Roumanian. Goes mad hunting 'It' in the hold and jumps overboard on 3 August. Distinct from the second mate, who vanished on 29 July."
+    },
+    {
+      "id": "billington",
+      "name": "Samuel F. Billington",
+      "type": "character",
+      "aliases": [
+        "Billington",
+        "Mr. S. F. Billington",
+        "S. F. Billington",
+        "Samuel F. Billington & Son"
+      ],
+      "first_chapter": 3,
+      "notes": "Whitby solicitor of 7, The Crescent. The Count writes to him in ch 3; he takes possession of the Demeter's boxes in ch 7 and ships them to Carfax in ch 8. The firm 'Samuel F. Billington & Son' may get its own page.",
+      "accepted_types": [
+        "character",
+        "organization"
+      ]
+    },
+    {
+      "id": "sister_agatha",
+      "name": "Sister Agatha",
+      "type": "character",
+      "aliases": [
+        "Agatha"
+      ],
+      "first_chapter": 8,
+      "notes": "Nun at the Hospital of St. Joseph and Ste. Mary, Buda-Pesth, who nurses Harker."
+    },
+    {
+      "id": "szgany",
+      "name": "Szgany",
+      "type": "organization",
+      "aliases": [
+        "the Szgany",
+        "gipsies"
+      ],
+      "first_chapter": 4,
+      "notes": "The gipsy band who camp in the castle courtyard and work for the Count.",
+      "accepted_types": [
+        "organization",
+        "character",
+        "concept"
+      ]
+    },
+    {
+      "id": "castle_dracula",
+      "name": "Castle Dracula",
+      "type": "place",
+      "aliases": [
+        "the castle",
+        "Dracula's castle"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "transylvania",
+      "name": "Transylvania",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 1
+    },
+    {
+      "id": "bistritz",
+      "name": "Bistritz",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 1
+    },
+    {
+      "id": "borgo_pass",
+      "name": "Borgo Pass",
+      "type": "place",
+      "aliases": [
+        "the Borgo Pass"
+      ],
+      "first_chapter": 1
+    },
+    {
+      "id": "carfax",
+      "name": "Carfax",
+      "type": "place",
+      "aliases": [
+        "Carfax Abbey",
+        "the estate at Purfleet",
+        "the deserted house"
+      ],
+      "first_chapter": 2,
+      "notes": "The Count's estate at Purfleet, with an old chapel. Seward calls it 'the deserted house' in ch 8. 'Carfax Abbey' is not in the text; it is listed for matching only."
+    },
+    {
+      "id": "whitby",
+      "name": "Whitby",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 2
+    },
+    {
+      "id": "hillingham",
+      "name": "Hillingham",
+      "type": "place",
+      "aliases": [],
+      "first_chapter": 9,
+      "notes": "The Westenras' house."
+    },
+    {
+      "id": "seward_asylum",
+      "name": "Dr. Seward's asylum",
+      "type": "place",
+      "aliases": [
+        "Seward's asylum",
+        "Seward's lunatic asylum",
+        "the asylum",
+        "the lunatic asylum",
+        "the private lunatic asylum"
+      ],
+      "first_chapter": 5,
+      "notes": "Ch 2 mentions 'a private lunatic asylum' next to Carfax without an owner; ch 5 says Seward runs a lunatic asylum; ch 8 shows the two grounds share a wall. A page that starts at ch 2 is fine."
+    },
+    {
+      "id": "demeter",
+      "name": "Demeter",
+      "type": "artifact",
+      "aliases": [
+        "the Demeter",
+        "the schooner",
+        "the derelict"
+      ],
+      "first_chapter": 7,
+      "notes": "Russian schooner from Varna. The 'strange ship' the coastguard watches at the end of ch 6 is very likely her, but the text does not say so; a page that starts at ch 6 is fine.",
+      "accepted_types": [
+        "artifact",
+        "place"
+      ]
+    },
+    {
+      "id": "boxes",
+      "name": "The boxes of earth",
+      "type": "artifact",
+      "aliases": [
+        "the boxes",
+        "the great boxes",
+        "boxes of earth",
+        "the fifty boxes",
+        "the great wooden boxes"
+      ],
+      "first_chapter": 4,
+      "notes": "Fifty boxes filled with earth from the castle chapel (ch 4), the Demeter's cargo of 'great wooden boxes filled with mould' consigned to Billington (ch 7), and the fifty boxes Billington sends to the Carfax chapel (ch 8). The text matches them by count, contents, consignee and destination; one entity."
+    },
+    {
+      "id": "crucifix",
+      "name": "Harker's crucifix",
+      "type": "artifact",
+      "aliases": [
+        "the crucifix"
+      ],
+      "first_chapter": 1,
+      "notes": "Given to Harker at Bistritz by the landlord's wife; its beads check the Count in ch 2. A second crucifix is tied to the Demeter's wheel (ch 7); a wiki may keep them apart."
+    }
+  ],
+  "statuses": [
+    {
+      "entity": "harker",
+      "timeline": [
+        {
+          "chapter": 2,
+          "status": "alive (prisoner in Castle Dracula)",
+          "quote": {
+            "chapter": 2,
+            "text": "The castle is a veritable prison, and I am a prisoner!"
+          }
+        },
+        {
+          "chapter": 8,
+          "status": "alive; recovering from brain fever in a Buda-Pesth hospital",
+          "quote": {
+            "chapter": 8,
+            "text": "He has been under our care for nearly six weeks, suffering from a violent brain fever."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "dracula",
+      "timeline": [
+        {
+          "chapter": 4,
+          "status": "alive (undead; lies by day in a box of earth)",
+          "quote": {
+            "chapter": 4,
+            "text": "But as I did so the head turned, and the eyes fell full upon me"
+          }
+        }
+      ]
+    },
+    {
+      "entity": "lucy",
+      "timeline": [
+        {
+          "chapter": 10,
+          "status": "alive; gravely weakened by blood loss, kept going by transfusions",
+          "quote": {
+            "chapter": 10,
+            "text": "It is not too late. It beats, though but feebly."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "mrs_westenra",
+      "timeline": [
+        {
+          "chapter": 8,
+          "status": "alive; heart disease, given months to live",
+          "quote": {
+            "chapter": 8,
+            "text": "She confided to me that she has got her death-warrant."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "godalming_father",
+      "timeline": [
+        {
+          "chapter": 9,
+          "status": "alive; gravely ill",
+          "quote": {
+            "chapter": 9,
+            "text": "Am summoned to see my father, who is worse."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "swales",
+      "timeline": [
+        {
+          "chapter": 7,
+          "status": "dead (neck broken, found on the churchyard seat)",
+          "quote": {
+            "chapter": 7,
+            "text": "poor old Mr. Swales was found dead this morning on our seat, his neck being broken."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "demeter_captain",
+      "timeline": [
+        {
+          "chapter": 7,
+          "status": "dead (lashed to the wheel)",
+          "quote": {
+            "chapter": 7,
+            "text": "declared, after making examination, that the man must have been dead for quite two days."
+          }
+        }
+      ]
+    },
+    {
+      "entity": "demeter_mate",
+      "timeline": [
+        {
+          "chapter": 7,
+          "status": "presumed drowned (jumped overboard)",
+          "quote": {
+            "chapter": 7,
+            "text": "he sprang on the bulwark and deliberately threw himself into the sea."
+          }
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "source": "harker",
+      "target": "mina",
+      "type": "engaged_to_then_married_to",
+      "first_chapter": 5,
+      "lenient": true,
+      "quote": {
+        "chapter": 5,
+        "text": "When we are married I shall be able to be useful to Jonathan"
+      }
+    },
+    {
+      "source": "lucy",
+      "target": "arthur",
+      "type": "engaged_to",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "certainly tell Arthur. A woman ought to tell her husband everything"
+      }
+    },
+    {
+      "source": "seward",
+      "target": "lucy",
+      "type": "rejected_suitor_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "number One came just before lunch. I told you of him, Dr. John Seward, the lunatic-asylum man"
+      }
+    },
+    {
+      "source": "morris",
+      "target": "lucy",
+      "type": "rejected_suitor_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "Miss Lucy, I know I ain’t good enough to regulate the fixin’s of your little shoes"
+      }
+    },
+    {
+      "source": "morris",
+      "target": "arthur",
+      "type": "friend_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "We’ve told yarns by the camp-fire in the prairies"
+      }
+    },
+    {
+      "source": "morris",
+      "target": "seward",
+      "type": "friend_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "He’s coming, too, and we both want to mingle our weeps over the wine-cup"
+      }
+    },
+    {
+      "source": "seward",
+      "target": "arthur",
+      "type": "friend_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "There will only be one other, our old pal at the Korea, Jack Seward."
+      }
+    },
+    {
+      "source": "mina",
+      "target": "lucy",
+      "type": "friend_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "Mina, we have told all our secrets to each other since we were children"
+      }
+    },
+    {
+      "source": "arthur",
+      "target": "godalming_father",
+      "type": "son_of",
+      "first_chapter": 6,
+      "quote": {
+        "chapter": 6,
+        "text": "he is the Hon. Arthur Holmwood, only son of Lord Godalming"
+      }
+    },
+    {
+      "source": "lucy",
+      "target": "mrs_westenra",
+      "type": "daughter_of",
+      "first_chapter": 6,
+      "quote": {
+        "chapter": 6,
+        "text": "Lucy went out visiting with her mother"
+      }
+    },
+    {
+      "source": "van_helsing",
+      "target": "seward",
+      "type": "teacher_of",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "my old friend and master, Professor Van Helsing, of Amsterdam"
+      }
+    },
+    {
+      "source": "van_helsing",
+      "target": "lucy",
+      "type": "physician_of",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "Van Helsing made a very careful examination of the patient."
+      }
+    },
+    {
+      "source": "seward",
+      "target": "lucy",
+      "type": "physician_of",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "I at once took advantage of her reaction to make a diagnosis."
+      }
+    },
+    {
+      "source": "harker",
+      "target": "hawkins",
+      "type": "employee_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "He is discreet and silent, and has grown into manhood in my service."
+      }
+    },
+    {
+      "source": "dracula",
+      "target": "hawkins",
+      "type": "client_and_employer_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "You come to me not alone as agent of my friend Peter Hawkins, of Exeter, to tell me all about my new estate in London."
+      }
+    },
+    {
+      "source": "harker",
+      "target": "dracula",
+      "type": "guest_and_agent_of",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "a solicitor’s clerk sent out to explain the purchase of a London estate to a foreigner"
+      }
+    },
+    {
+      "source": "harker",
+      "target": "dracula",
+      "type": "imprisoned_by",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "He knows well that I am imprisoned; and as he has done it himself"
+      }
+    },
+    {
+      "source": "dracula",
+      "target": "castle_dracula",
+      "type": "lives_at_and_owns",
+      "first_chapter": 1,
+      "quote": {
+        "chapter": 1,
+        "text": "When I asked him if he knew Count Dracula, and could tell me anything of his castle"
+      }
+    },
+    {
+      "source": "dracula",
+      "target": "carfax",
+      "type": "purchased",
+      "first_chapter": 2,
+      "quote": {
+        "chapter": 2,
+        "text": "We went thoroughly into the business of the purchase of the estate at Purfleet."
+      }
+    },
+    {
+      "source": "dracula",
+      "target": "boxes",
+      "type": "owner_of_and_hidden_in",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "There, in one of the great boxes, of which there were fifty in all, on a pile of newly dug earth, lay the Count!"
+      }
+    },
+    {
+      "source": "dracula",
+      "target": "three_women",
+      "type": "master_of",
+      "first_chapter": 3,
+      "lenient": true,
+      "quote": {
+        "chapter": 3,
+        "text": "How dare you touch him, any of you? How dare you cast eyes on him when I had forbidden it?"
+      }
+    },
+    {
+      "source": "harker",
+      "target": "three_women",
+      "type": "attacked_by",
+      "first_chapter": 3,
+      "quote": {
+        "chapter": 3,
+        "text": "seemed about to fasten on my throat"
+      }
+    },
+    {
+      "source": "szgany",
+      "target": "dracula",
+      "type": "serves",
+      "first_chapter": 4,
+      "quote": {
+        "chapter": 4,
+        "text": "The Szgany has given me these, of which, though I know not whence they come, I shall, of course, take care."
+      }
+    },
+    {
+      "source": "renfield",
+      "target": "seward",
+      "type": "patient_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "I went down amongst the patients. I picked out one who has afforded me a study of much interest."
+      }
+    },
+    {
+      "source": "seward",
+      "target": "seward_asylum",
+      "type": "head_physician_of",
+      "first_chapter": 5,
+      "quote": {
+        "chapter": 5,
+        "text": "he has an immense lunatic asylum all under his own care"
+      }
+    },
+    {
+      "source": "seward_asylum",
+      "target": "carfax",
+      "type": "borders",
+      "first_chapter": 8,
+      "quote": {
+        "chapter": 8,
+        "text": "the high wall which separates our grounds from those of the deserted house"
+      }
+    },
+    {
+      "source": "renfield",
+      "target": "carfax",
+      "type": "escaped_to_and_visited",
+      "first_chapter": 8,
+      "quote": {
+        "chapter": 8,
+        "text": "I found him pressed close against the old ironbound oak door of the chapel."
+      }
+    },
+    {
+      "source": "demeter_captain",
+      "target": "demeter",
+      "type": "captain_of",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "two mates, cook, and myself (captain)."
+      }
+    },
+    {
+      "source": "demeter",
+      "target": "boxes",
+      "type": "carried_and_stored",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "with only a small amount of cargo—a number of great wooden boxes filled with mould."
+      }
+    },
+    {
+      "source": "billington",
+      "target": "boxes",
+      "type": "took_possession_of",
+      "first_chapter": 7,
+      "quote": {
+        "chapter": 7,
+        "text": "who this morning went aboard and formally took possession of the goods consigned to him."
+      }
+    },
+    {
+      "source": "boxes",
+      "target": "carfax",
+      "type": "stored_at",
+      "first_chapter": 8,
+      "quote": {
+        "chapter": 8,
+        "text": "You will please deposit the boxes, fifty in number, which form the consignment, in the partially ruined building forming part of the house"
+      }
+    },
+    {
+      "source": "lucy",
+      "target": "hillingham",
+      "type": "lives_at",
+      "first_chapter": 9,
+      "quote": {
+        "chapter": 9,
+        "text": "You are to come to lunch at Hillingham to-morrow, two o’clock, so as not to arouse any suspicion in Mrs. Westenra"
+      }
+    }
+  ],
+  "identity_reveals": [
+    {
+      "entity": "mina",
+      "alias": "Mina Harker",
+      "reveal_chapter": 9,
+      "rule": "Mina marries Jonathan in the Buda-Pesth hospital in ch 9. Before ch 9 she is Mina Murray, his fiancée; no 'Mina Harker' name and no married_to link.",
+      "quote": {
+        "chapter": 9,
+        "text": "Letter, Mina Harker to Lucy Westenra."
+      }
+    },
+    {
+      "entity": "mina",
+      "alias": "Mrs. Harker",
+      "reveal_chapter": 9,
+      "rule": "Same marriage. The form 'Mrs. Harker' is not in ch 1-10, but no page may use it before ch 9.",
+      "quote": {
+        "chapter": 9,
+        "text": "it is the first time I have written the words ‘my husband’"
+      }
+    }
+  ],
+  "must_not_merge": [
+    {
+      "alias": "the three women",
+      "entities": [
+        "dracula",
+        "three_women"
+      ],
+      "rule": "The three women in the castle are separate beings whom the Count commands and drives off Harker. Never fold them into the Count's page or give him their group name.",
+      "quote": {
+        "chapter": 3,
+        "text": "With a fierce sweep of his arm, he hurled the woman from him, and then motioned to the others"
+      }
+    },
+    {
+      "alias": "Jonathan Harker (the man in Harker's clothes)",
+      "entities": [
+        "harker",
+        "dracula"
+      ],
+      "rule": "In ch 4 the Count goes out in Harker's travelling suit so that villagers will think they see Harker posting his letters. Never record Harker as seen in the villages, and never give the Count the name Jonathan Harker.",
+      "quote": {
+        "chapter": 4,
+        "text": "he had on the suit of clothes which I had worn whilst travelling here"
+      }
+    },
+    {
+      "alias": "Lord Godalming",
+      "entities": [
+        "arthur",
+        "godalming_father"
+      ],
+      "rule": "In ch 1-10 Lord Godalming is Arthur's ailing father, a separate person. Arthur takes the title only in run ch 13. Keep two pages.",
+      "quote": {
+        "chapter": 6,
+        "text": "he is the Hon. Arthur Holmwood, only son of Lord Godalming"
+      }
+    },
+    {
+      "alias": "Mrs. Westenra",
+      "entities": [
+        "lucy",
+        "mrs_westenra"
+      ],
+      "rule": "Lucy (Miss Westenra) and her mother (Mrs. Westenra) share the surname. Keep two pages; the mother's heart disease and Lucy's blood loss are separate illnesses.",
+      "quote": {
+        "chapter": 6,
+        "text": "Her mother has spoken to me about it"
+      }
+    },
+    {
+      "alias": "the dead steersman",
+      "entities": [
+        "demeter_captain",
+        "demeter_mate"
+      ],
+      "rule": "The body lashed to the wheel, which the Dailygraph calls 'the dead steersman', is the captain who wrote the log. The first mate (Roumanian) jumped overboard on 3 August; the second mate vanished on 29 July; a crewman steersman vanished on 30 July. Keep the captain and the first mate on two pages and never give the mate the corpse's name.",
+      "quote": {
+        "chapter": 7,
+        "text": "Only self and mate and two hands left to work ship."
+      }
+    }
+  ],
+  "ambiguities": [
+    "The calèche driver is the Count. Ch 1 shows a driver who calls the Count 'my master'; ch 2 has Harker half-suspect it from the handshake; ch 3 states 'it must have been the Count himself who was the driver of the coach'. Not a scored reveal: a correct ch 1 driver page names the Count as his master, and the reveal check would read that as a leak. Linking driver and Count from ch 2 or 3 is right; doing it in ch 1 runs ahead of the text.",
+    "Reader inferences that ch 1-10 never state: the tall thin stowaway and 'It'/'Him' of the Demeter's log, the great dog that leaps ashore at Whitby, the bat at Lucy's window and over the asylum, the 'something long and black' with red eyes on the churchyard seat, and Renfield's 'Master' are all the Count. A wiki may hint at these, but merging them into the Count's page, or a fact such as 'the Count bit Lucy', runs ahead of the text in this scope.",
+    "The punctures on Lucy's throat: Mina blames her own safety-pin (ch 8); Seward and Van Helsing find two punctures but name no cause (ch 10). 'Bitten by a vampire' is inference.",
+    "The word 'vampire' appears once, in ch 1, as Harker's dictionary gloss of a peasant word. No one in ch 1-10 calls the Count or the three women vampires. Not scored.",
+    "The Russian ship the coastguard watches at the end of ch 6 is almost certainly the Demeter, but the text does not join them. Demeter's first_chapter is 7; a page from ch 6 passes.",
+    "Billington's 'our client' and the Carfax 'proprietor' in the ch 8 letters are the Count by inference from the ch 3 letter to Billington and the ch 2 purchase. The boxes are one artifact because ch 4, 7 and 8 match them by count, earth, consignee and the Carfax chapel.",
+    "Harker and Mina: affection shows in ch 1-4, the engagement is stated in ch 5, and they marry in ch 9. The scorer's early check treats any romance row as the same tie, so the pair has one lenient relation and the marriage is scored through the 'Mina Harker' reveal.",
+    "Lucy's suitor 'number Three' is Arthur: her P.S. does not name him, but the same ch 5 letter says she would tell Arthur as a woman tells her husband, and Quincey's ch 5 letter toasts Arthur as the man who won her. First_chapter 5.",
+    "Seward's asylum: ch 2 mentions a private lunatic asylum next to Carfax with no owner; ch 5 says Seward runs a lunatic asylum; ch 8 shows the grounds share a wall. The borders relation is first_chapter 8, but a row from ch 2 on the same page is text-supported and passes.",
+    "Count Dracula's status in ch 4: Harker finds him in a box 'either dead or asleep', then the head turns and the eyes open. He is not dead. 'alive' is the only active value in Annalist's status vocabulary.",
+    "The first mate jumps into the sea in fog and is not seen again: 'dead' and 'missing' both pass. The captain suspects the mate killed the crew, and the inquest leaves open whether the captain did; neither suspicion is fact.",
+    "Lucy at ch 10 and Mrs. Westenra at ch 8 are alive. Both die later in the book; any death status within ch 1-10 is a leak.",
+    "Arthur becomes Lord Godalming in run ch 13. The alias is listed on Arthur so full-book runs are not failed for carrying it, but in ch 1-10 the name means his father.",
+    "The fair woman in the castle whose face Harker 'seemed somehow to know' is never identified in this scope."
+  ]
+}
