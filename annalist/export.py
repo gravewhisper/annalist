@@ -155,12 +155,6 @@ def stored_theme(title):
     return next((s.get("theme") or {} for s in styles if name_key(s.get("title", "")) == name_key(title)), {})
 
 
-def titled(record, title):
-    aliases = [a for a in record["aliases"] if name_key(a["name"]) != name_key(title["name"])] + [{"name": record["name"], "chapter": record["first"]}]
-    return {**record, "name": title["name"], "name_chapter": title.get("chapter", record["first"]),
-            "aliases": sorted(aliases, key=lambda a: a["chapter"])}
-
-
 def version(path):
     return hashlib.sha1(path.read_bytes()).hexdigest()[:10]
 
@@ -218,7 +212,6 @@ def build(workdir, theme):
     out_entities = []
     for e in entities:
         page = names[e["name"]]
-        aliases = page.aliases
         record = {"id": ids[e["name"]], "name": page.name, "name_chapter": page.chapter, "type": e["type"],
                   "first": page.first, "aliases": page.aliases, "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e)}
         record["mention"] = first_mention(texts, record)
@@ -233,8 +226,8 @@ def build(workdir, theme):
             record["possibly"] = leads
         own = by_entity.get(e["name"], [])
         if len(own) >= 3:
-            unseen = last if len(aliases) < len(e["aliases"]) else 0
-            safe = max([e["last_chapter"], page.known(last)[1], unseen] + [a["chapter"] for a in aliases])
+            unseen = 0 if all(page.knows(a, last) for a in e["aliases"]) else last
+            safe = max([e["last_chapter"], page.known(last)[1], unseen] + [a["chapter"] for a in page.aliases])
             summary = entity_summary(workdir, e, own, safe, timelines, last, page)
             if summary:
                 record["summary"] = summary
@@ -248,7 +241,7 @@ def build(workdir, theme):
             history = arc_history(workdir, history_prompts(e, own, ties.get(e["name"], []), arcs, timelines, page), page)
             if history:
                 record["history"] = history
-        out_entities.append(titled(record, e["title"]) if e.get("title") else record)
+        out_entities.append(record)
         kept = {a["name"]: kept_prompts(a, own, ties.get(e["name"], []), arcs, timelines, last, names[a["name"]]) for a in reader_parts(e)}
         for a in e.get("absorbed", []):
             kind = a.get("type", e["type"])

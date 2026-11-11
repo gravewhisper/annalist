@@ -1,7 +1,7 @@
 import json
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .files import read_json
 from .names import name_key, parse_aliases, written_summary
@@ -111,14 +111,20 @@ class PageName:
     def known(self, chapter):
         if self.chapter <= chapter:
             return self.name, self.chapter
-        # No name is known yet: prose keeps the pipeline's name and counts it as known only from the title's chapter.
+        # Before any of the page's names is known, prose keeps the pipeline's name and counts it as known from the title's chapter.
         return next(((a["name"], a["chapter"]) for a in self.aliases if a["chapter"] <= chapter), (self.entry, self.chapter))
 
     def at(self, chapter):
         return self.known(chapter)[0]
 
     def knows(self, name, chapter):
-        return any(name_key(n) == name_key(name) and c <= chapter for n, c in [(self.name, self.chapter)] + [(a["name"], a["chapter"]) for a in self.aliases])
+        named = [(self.name, self.chapter)] + [(a["name"], a["chapter"]) for a in self.aliases]
+        return any(name_key(n) == name_key(name) and c <= chapter for n, c in named)
+
+    def titled(self, title):
+        old = [] if name_key(self.name) == name_key(title["name"]) else [{"name": self.name, "chapter": self.chapter}]
+        aliases = [a for a in self.aliases if name_key(a["name"]) != name_key(title["name"])] + old
+        return replace(self, name=title["name"], chapter=title.get("chapter", self.first), aliases=sorted(aliases, key=lambda a: a["chapter"]))
 
 
 def page_name(e, seen, blurbs, own_facts, texts, words, registry, absorbed, shown_at):
@@ -147,7 +153,8 @@ def page_name(e, seen, blurbs, own_facts, texts, words, registry, absorbed, show
     if real:
         aliases = [a for a in aliases if a["name"] != real["name"]] + [{"name": e["name"], "chapter": name_seen}]
         shown_name, name_seen = real["name"], real["chapter"]
-    return PageName(e["name"], shown_name, name_seen, first, sorted(aliases, key=lambda a: (a["chapter"], a["name"] != e["name"])))
+    page = PageName(e["name"], shown_name, name_seen, first, sorted(aliases, key=lambda a: (a["chapter"], a["name"] != e["name"])))
+    return page.titled(e["title"]) if e.get("title") else page
 
 
 def part_name(part, seen):

@@ -33,7 +33,8 @@ ECHOED = {
 }
 
 
-SAME_PERSON = {"entries": [{"name": "Captain Fenn", "same_as": "Odile Marr", "chapter": 4,
+RETITLED = {"name": "Livia Hale", "title": "Livia Rosemary Hale", "title_chapter": 4}
+SAME_PERSON = {"entries": [RETITLED, {"name": "Captain Fenn", "same_as": "Odile Marr", "chapter": 4,
                              "quotes": ["They buried Tomas Hale in the Guild plot behind the harbour chapel on a grey, windless morning."]},
                             {"name": "Bram Ostrow", "same_as": "Sabine Oake", "chapter": 5, "quotes": ["It was Bram who broke."]}],
                "questions": [{"id": "Q0003-04", "chapter": 5, "answer": "Bram carried the drawn key home wrapped in oilcloth.",
@@ -127,6 +128,15 @@ class AsOfLeakTest(unittest.TestCase):
         self.assertTrue([s for s in bram["summaries"] if s["chapter"] < 5])
         answered = next(q["resolved"] for q in self.wiki["questions"] if q["id"] == "Q0003-04")
         self.assertEqual((answered["shown"], "oilcloth" in answered["answer"]), (5, True))
+
+    def test_a_retitled_page_s_prose_names_the_title_from_its_chapter_and_never_before(self):
+        page = next(e for e in self.wiki["entities"] if e["name"] == RETITLED["title"])
+        prose = [(page["summary"]["chapter"], page["summary"]["text"])] + [(s["chapter"], s["text"]) for s in page["summaries"]]
+        prose += [(h["shown"], h["text"]) for h in page["history"]]
+        prose += [(p["chapter"], p["text"]) for key in ("personality", "appearance") for p in page["profile"].get(key, [])]
+        self.assertEqual({chapter >= RETITLED["title_chapter"] for chapter, _ in prose}, {False, True})
+        self.assertEqual(sorted((chapter, "rosemary" in words(text)) for chapter, text in prose),
+                         sorted((chapter, chapter >= RETITLED["title_chapter"]) for chapter, _ in prose))
 
     def test_the_fake_model_writes_its_prompt_words_into_every_echoed_field(self):
         v = self.wiki["volumes"][0]

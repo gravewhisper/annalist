@@ -47,10 +47,12 @@ def seed(root):
 
 
 class RevealedTitles(unittest.TestCase):
-    def pages(self):
+    def pages(self, corrections=None):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             seed(root)
+            if corrections:
+                (root / "corrections.json").write_text(json.dumps({"entries": corrections}), encoding="utf-8")
             return {(e["name"], e["type"]): e for e in build(root, {})[1]["entities"]}
 
     def test_descriptor_page_takes_the_real_name_from_its_reveal_chapter(self):
@@ -87,6 +89,18 @@ class RevealedTitles(unittest.TestCase):
     def test_a_surname_that_is_also_a_common_word_stays_in_the_title(self):
         self.assertIn(("Brenna Stone", "character"), self.pages())
 
+    def test_a_title_row_naming_the_revealed_name_shows_that_name_only_from_its_chapter(self):
+        page = self.pages([{"name": "Tide Reader expert", "title": "Mirela Danescu", "title_chapter": 4}])[("Mirela Danescu", "character")]
+        self.assertEqual(page["name_chapter"], 4)
+        self.assertEqual({a["name"]: a["chapter"] for a in page["aliases"]},
+                         {"Tide Reader expert": 1, "Mirela": 2, "Madam Mirela": 2, "Tide Reader Madam Mirela": 2})
+
+    def test_a_title_row_keeps_the_page_s_earlier_name_from_the_chapter_that_name_was_known(self):
+        page = self.pages([{"name": "Tide Reader expert", "title": "Mirela of the Tides", "title_chapter": 3}])[("Mirela of the Tides", "character")]
+        self.assertEqual(page["name_chapter"], 3)
+        self.assertEqual({a["name"]: a["chapter"] for a in page["aliases"]},
+                         {"Tide Reader expert": 1, "Mirela": 2, "Madam Mirela": 2, "Tide Reader Madam Mirela": 2, "Mirela Danescu": 4})
+
     def test_rank_word_alias_is_not_the_title_and_keeps_its_own_chapter(self):
         pages = self.pages()
         page = pages[("Mr. Q", "character")]
@@ -99,47 +113,66 @@ QUOTES = ["The word warden is common here, and every warden and bodyguard knows 
           "The harbor slept and the harbor woke while the Harbor waited.", "Oskar trimmed the lamp while the lamp warden slept.",
           "Brenna Stone sat on a stone, and the stone was cold as any stone."]
 ARCS = [{"name": "Gate", "start": 1, "end": 2}, {"name": "Tide", "start": 3, "end": 4}]
+TITLE = {"name": "Tide Reader expert", "title": "Mirela of the Tides", "title_chapter": 3}
 
 
-def written_about(subject):
-    return [{"purpose": "summary", "contains": f'page about "{subject}"', "reply": {"summary": f"Summary of {subject}."}},
-            {"purpose": "history", "contains": f'History of "{subject}"', "reply": {"paragraph": f"History of {subject}."}}]
+def written_about(*subjects):
+    return {"replies": [r for s in subjects for r in (
+        {"purpose": "summary", "contains": f'page about "{s}"', "reply": {"summary": f"Summary of {s}."}},
+        {"purpose": "history", "contains": f'History of "{s}"', "reply": {"paragraph": f"History of {s}."}})]}
 
 
-def seed_prose(root, corrections=None):
-    seed(root)
-    for n in (1, 4):
-        path = root / "state" / f"{n:04d}.json"
-        state = json.loads(path.read_text(encoding="utf-8"))
-        state["extraction"]["facts"] = [{"entity": "Tide Reader expert", "claim": f"The Tide Reader expert kept watch {k}.", "quotes": [q]}
-                                        for k, q in enumerate(QUOTES)]
-        path.write_text(json.dumps(state), encoding="utf-8")
-    (root / "arcs.json").write_text(json.dumps({"volumes": [{"arcs": ARCS}]}), encoding="utf-8")
-    (root / "book.json").write_text(json.dumps({"title": "T", "backend": {"name": "fake", "script": "script.json"}}), encoding="utf-8")
-    replies = [r for subject in ("Mirela Danescu", "Tide Reader expert", "Mirela of the Tides") for r in written_about(subject)]
-    (root / "script.json").write_text(json.dumps({"replies": replies}), encoding="utf-8")
-    if corrections:
-        (root / "corrections.json").write_text(json.dumps(corrections), encoding="utf-8")
-
-
-def rendered_page(corrections=None):
+@contextlib.contextmanager
+def prose_run():
     with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {k: v for k, v in os.environ.items() if not k.startswith("ANNALIST_")}, clear=True):
         root = Path(tmp)
-        seed_prose(root, corrections)
-        with contextlib.redirect_stdout(io.StringIO()):
-            cmd_render(Namespace(workdir=str(root), until=None, html=False, jobs=1))
-        wiki = build(root, {})[1]
-    page = next(e for e in wiki["entities"] if "Tide Reader expert" in [e["name"], *(a["name"] for a in e["aliases"])])
+        seed(root)
+        for n, entity in ((1, "Tide Reader expert"), (4, "Tide Reader expert"), (1, "Mr. Q")):
+            path = root / "state" / f"{n:04d}.json"
+            state = json.loads(path.read_text(encoding="utf-8"))
+            state["extraction"].setdefault("facts", []).extend(
+                {"entity": entity, "claim": f"{entity} kept watch {k}.", "quotes": [q]} for k, q in enumerate(QUOTES))
+            path.write_text(json.dumps(state), encoding="utf-8")
+        (root / "arcs.json").write_text(json.dumps({"volumes": [{"arcs": ARCS}]}), encoding="utf-8")
+        (root / "book.json").write_text(json.dumps({"title": "T", "backend": {"name": "fake", "script": "script.json"}}), encoding="utf-8")
+        (root / "script.json").write_text(json.dumps(written_about("Mirela Danescu", "Tide Reader expert", "Mr. Q")), encoding="utf-8")
+        yield root
+
+
+def render(root):
+    with contextlib.redirect_stdout(io.StringIO()):
+        cmd_render(Namespace(workdir=str(root), until=None, html=False, jobs=1))
+    page = next(e for e in build(root, {})[1]["entities"] if "Tide Reader expert" in [e["name"], *(a["name"] for a in e["aliases"])])
     return {"summary": page["summary"]["text"], "summaries": [(s["chapter"], s["text"]) for s in page["summaries"]],
             "history": [(h["arc"], h["shown"], h["text"]) for h in page["history"]]}
 
 
+def calls(root):
+    path = root / "calls.jsonl"
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
+
+
 class RevealedProse(unittest.TestCase):
     def test_a_described_page_s_prose_uses_the_description_before_the_reveal_and_the_real_name_from_it(self):
-        self.assertEqual(rendered_page(), {
-            "summary": "Summary of Mirela Danescu.",
-            "summaries": [(1, "Summary of Tide Reader expert."), (4, "Summary of Mirela Danescu.")],
-            "history": [("Gate", 2, "History of Tide Reader expert."), ("Tide", 4, "History of Mirela Danescu.")]})
+        with prose_run() as root:
+            self.assertEqual(render(root), {
+                "summary": "Summary of Mirela Danescu.",
+                "summaries": [(1, "Summary of Tide Reader expert."), (4, "Summary of Mirela Danescu.")],
+                "history": [("Gate", 2, "History of Tide Reader expert."), ("Tide", 4, "History of Mirela Danescu.")]})
+
+    def test_a_title_row_rewrites_its_page_s_prose_from_its_chapter_and_asks_nothing_about_other_paragraphs(self):
+        with prose_run() as root:
+            render(root)
+            asked = len(calls(root))
+            (root / "corrections.json").write_text(json.dumps({"entries": [TITLE]}), encoding="utf-8")
+            (root / "script.json").write_text(json.dumps(written_about(TITLE["title"])), encoding="utf-8")
+            prose = render(root)
+            again = calls(root)[asked:]
+        self.assertEqual(prose, {
+            "summary": "Summary of Mirela of the Tides.",
+            "summaries": [(1, "Summary of Tide Reader expert."), (4, "Summary of Mirela of the Tides.")],
+            "history": [("Gate", 2, "History of Tide Reader expert."), ("Tide", 4, "History of Mirela of the Tides.")]})
+        self.assertEqual(sorted(c["purpose"] for c in again), ["history", "summary", "summary"])
 
 
 if __name__ == "__main__":

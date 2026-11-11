@@ -20,7 +20,7 @@ A correction names an entry by its title or any of its aliases, and can change i
 }
 ```
 
-`title_chapter` is the chapter that reveals the title, and the page keeps its old name before it. Each infobox value needs a quote from its chapter, and the site hides the value until the slider reaches that chapter. A value with no matching quote is skipped with a warning. A value for a chapter that already has one replaces it, and any other value is added to the history. The field names are the ones in a character's infobox, plus the `extra_fields` keys in `book.json`.
+`title_chapter` is the chapter that reveals the title, and the page keeps its old name before it. The page text follows the same rule. A summary, History paragraph, Personality, or Appearance written as of a chapter before `title_chapter` uses the old name, and one written as of `title_chapter` or later uses the title. Each infobox value needs a quote from its chapter, and the site hides the value until the slider reaches that chapter. A value with no matching quote is skipped with a warning. A value for a chapter that already has one replaces it, and any other value is added to the history. The field names are the ones in a character's infobox, plus the `extra_fields` keys in `book.json`.
 
 An entry's `drop` removes a wrong value: one from a character's `trivia`, `appearance`, or `personality_evidence` list, or a dated infobox value. Each row gives the value's `chapter` and its text as the wiki shows it. Case and spacing do not matter:
 
@@ -83,7 +83,8 @@ A correction changes only the prompts of the pages it affects, so every other pa
 | `same_as` or `known_from` | The joined page's summary, its summaries at chapters from the link on, at most one per doubling of its fact count, its History for each finished arc that ends at or after the link, and its Personality when the other page brings personality evidence. |
 | `type` | The entry's summaries, since the prompt names the type, and its History when it becomes a character. |
 | `relations`, `drop_relations` | The History of both ends for the arc that holds the tie's chapter. |
-| `title`, `fields` | None. The title renames the page from `title_chapter`, and field values go into the infobox. |
+| `title` | The page's summaries, History paragraphs, Personality, and Appearance written as of `title_chapter` or later, since each prompt names the page. |
+| `fields` | None. Field values go into the infobox. |
 | `questions` | None. `sweep`, `answers`, and `ending` ask about fewer questions. |
 | `drop` | The Personality written from evidence you dropped. |
 
