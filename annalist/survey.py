@@ -73,13 +73,8 @@ def field_name(raw):
 CAPITALIZED = re.compile(r"(?<![\w'’-])[A-Z][\w'’-]*[a-z][\w'’-]*")
 
 
-def unseen_names(reply, material):
+def unseen_names(texts, material):
     seen = material.lower()
-    texts = [str(reply.get("power_system") or ""), str(reply.get("timeline_note") or "")]
-    texts += [f"{t.get('type', '')} {t.get('description', '')}" for t in reply.get("power_types") or [] if isinstance(t, dict)]
-    for f in reply.get("extra_fields") or []:
-        if isinstance(f, dict):
-            texts += [str(f.get("description") or "")] + [str(v) for v in f.get("values") or []]
     names = {m.group(0).rstrip("'’-") for text in texts for m in CAPITALIZED.finditer(text)
              if text[:m.start()].rstrip()[-1:] not in ("", ".", "!", "?", ":", ";", '"', "“", "(")}
     def found(word):
@@ -87,10 +82,19 @@ def unseen_names(reply, material):
     return sorted(w for w in names if not found(w))
 
 
+def survey_texts(reply):
+    texts = [str(reply.get("power_system") or ""), str(reply.get("timeline_note") or "")]
+    texts += [f"{t.get('type', '')} {t.get('description', '')}" for t in reply.get("power_types") or [] if isinstance(t, dict)]
+    for f in reply.get("extra_fields") or []:
+        if isinstance(f, dict):
+            texts += [str(f.get("description") or "")] + [str(v) for v in f.get("values") or []]
+    return texts
+
+
 def book_problems(reply, kb, material=None):
     problems = []
     if material is not None:
-        unseen = unseen_names(reply, material)
+        unseen = unseen_names(survey_texts(reply), material)
         if unseen:
             problems.append(f"the reply names {', '.join(unseen)}, which the material never mentions; describe the novel only from the material.")
     spoke = speakers(kb)

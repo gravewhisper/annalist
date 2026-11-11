@@ -1,10 +1,16 @@
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
+from annalist.files import read_jsonl, write_json
+from annalist.ladders import generate_ladder
 from annalist.state import Knowledge
 from tests.test_build import LATER_REPLIES, MiniBuild, plan_rows, ran, ROOT, site_views
 
@@ -231,6 +237,29 @@ class SameNameEntriesTest(unittest.TestCase):
         kb = self.kb(SPEC)
         kb.upsert_entity({"name": "Ashwalker", "type": "place"}, 4)
         self.assertEqual(sorted(kb.entities), ["Ashwalker", "Ashwalker (sect)"])
+
+
+class LadderSpecMaterialTest(unittest.TestCase):
+    def test_a_note_naming_ranks_the_order_and_types_never_show_is_sent_back(self):
+        book = {"title": "Wardens", "backend": {"name": "fake", "script": "script.json"},
+                "power_system": "Wardens of the harbour guilds rise through numbered circles.",
+                "power_types": {"guild": {"parent": "organization", "description": "a guild of wardens with its own circles"},
+                                "circle": {"parent": "concept", "description": "a numbered circle of a guild, such as Circle 7 or Circle 5"}}}
+        unshown = {"group_type": "guild", "step_type": "circle", "rank": "number", "direction": "descending",
+                   "note": "Each guild ranks its wardens from Circle 9, the weakest, to Circle 1, the strongest."}
+        shown = {**unshown, "note": "Each guild ranks its wardens by numbered circles, such as Circle 7 and Circle 5."}
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ, {k: v for k, v in os.environ.items()
+                                                                           if not k.startswith("ANNALIST_")}, clear=True):
+            write_json(Path(tmp) / "book.json", book)
+            write_json(Path(tmp) / "script.json", {"replies": [{"purpose": "ladder-spec", "reply": {"ladder": unshown}},
+                                                               {"purpose": "ladder-spec", "reply": {"ladder": shown}}]})
+            generate_ladder(tmp)
+            calls = read_jsonl(Path(tmp) / "calls.jsonl")
+            ladder = json.loads((Path(tmp) / "book.json").read_text(encoding="utf-8"))["ladder"]
+        self.assertEqual(len(calls), 2)
+        self.assertIn("Circle 1, Circle 9", calls[0]["error"])
+        self.assertIsNone(calls[1]["error"])
+        self.assertEqual(ladder["note"], shown["note"])
 
 
 if __name__ == "__main__":

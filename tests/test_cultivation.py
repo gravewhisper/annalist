@@ -30,15 +30,22 @@ def stage(name, chapter, quote):
     return {"name": name, "chapter": chapter, "quote": quote}
 
 
-LADDERS_REPLY = {"steps": [
-    {"entry": "Root Binding", "rank": 2, "chapter": 2, "quote": "Root Binding is the second realm",
-     "stages": [stage("Early Stage", 2, EARLY_MIDDLE_LATE), stage("Middle Stage", 2, EARLY_MIDDLE_LATE), stage("Late Stage", 2, EARLY_MIDDLE_LATE)]},
-    {"entry": "Pearl Forming", "rank": 3, "chapter": 4, "quote": "Pearl Forming is the third realm.", "stages": []},
-    {"entry": "Mist Gathering", "rank": 1, "chapter": 1, "quote": "Mist Gathering is the first realm",
-     "stages": [stage("First Layer", 1, NINE_LAYERS), stage("Third Layer", 1, "Tamsin Vey has reached the third layer of Mist Gathering."),
-                stage("Seventh Layer", 2, "Tamsin Vey has reached the seventh layer of Mist Gathering"),
-                stage("Ninth Layer", 1, NINE_LAYERS), stage("Tenth Layer", 1, "It has ten layers, from the first to the tenth")]},
-]}
+MIST_LAYERS = [stage("First Layer", 1, NINE_LAYERS), stage("Third Layer", 1, "Tamsin Vey has reached the third layer of Mist Gathering."),
+               stage("Seventh Layer", 2, "Tamsin Vey has reached the seventh layer of Mist Gathering"), stage("Ninth Layer", 1, NINE_LAYERS)]
+
+
+def ladders_reply(mist_layers):
+    return {"steps": [
+        {"entry": "Root Binding", "rank": 2, "chapter": 2, "quote": "Root Binding is the second realm",
+         "stages": [stage("Early Stage", 2, EARLY_MIDDLE_LATE), stage("Middle Stage", 2, EARLY_MIDDLE_LATE), stage("Late Stage", 2, EARLY_MIDDLE_LATE)]},
+        {"entry": "Pearl Forming", "rank": 3, "chapter": 4, "quote": "Pearl Forming is the third realm.",
+         "stages": [stage("Early Stage", 4, "Pearl Forming has an early stage of its own.")]},
+        {"entry": "Mist Gathering", "rank": 1, "chapter": 1, "quote": "Mist Gathering is the first realm", "stages": mist_layers},
+    ]}
+
+
+LADDERS_REPLY = ladders_reply(MIST_LAYERS)
+UNSHOWN_LAYER_REPLY = ladders_reply(MIST_LAYERS + [stage("Tenth Layer", 1, "It has ten layers, from the first to the tenth")])
 
 RISE = [("Third Layer of Mist Gathering", 1, "Tamsin Vey has reached the third layer of Mist Gathering."),
         ("Seventh Layer of Mist Gathering", 2, "Tamsin Vey has reached the seventh layer of Mist Gathering"),
@@ -56,6 +63,7 @@ def cultivation_script():
         replies += [{"purpose": "extract", "chapter": int(key), "reply": ext},
                     {"purpose": "support", "chapter": int(key), "reply": {"verdicts": [{"id": i, "verdict": "supported"} for i in ids]}}]
     replies += [{"purpose": "ladder-spec", "reply": {"ladder": SPEC}},
+                {"purpose": "ladders", "reply": UNSHOWN_LAYER_REPLY},
                 {"purpose": "ladders", "reply": LADDERS_REPLY},
                 {"purpose": "profile", "contains": 'the character "Tamsin Vey"', "reply": PROFILE},
                 {"purpose": "profile-support", "contains": "Tamsin Vey:",
@@ -116,6 +124,12 @@ class SharedLadderBuildTest(unittest.TestCase):
             ("Pearl Forming", 3, 4, []),
         ])
         self.assertEqual(ladders[0]["steps"][0]["stages"][2], stage("Seventh Layer", 2, "Tamsin Vey has reached the seventh layer of Mist Gathering"))
+
+    def test_a_sub_stage_named_by_a_rank_the_evidence_never_shows_sends_the_ladder_back_for_revision(self):
+        calls = self.book.calls("ladders")
+        self.assertEqual(len(calls), 2)
+        self.assertIn("Tenth", calls[0]["error"])
+        self.assertIsNone(calls[1]["error"])
 
     def test_wiki_json_carries_the_shared_ladder_by_id_with_stage_chapters(self):
         i = self.id

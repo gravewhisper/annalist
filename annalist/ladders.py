@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from .book import ladder_types, load_book
@@ -5,12 +6,27 @@ from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import name_key, name_pattern, names_of
 from .state import load_states, write_derived
+from .survey import unseen_names
 from .template import book_types
 from .text import check_quote, verified_quotes
 
 
 RANKS = ("number", "order")
 DIRECTIONS = ("ascending", "descending")
+
+
+RANKED = re.compile(r"(?<![\w'’-])(?:[A-Za-z][\w'’-]*\s+\d+|\d+(?:st|nd|rd|th)|second|third|fourth|fifth|sixth|seventh|eighth|ninth|"
+                    r"tenth|eleventh|twelfth|(?:thir|four|fif|six|seven|eigh|nine)teenth|twentieth)\b", re.I)
+
+
+def unseen_ranks(texts, material):
+    seen = " ".join(material.lower().split())
+    terms = {" ".join(m.group(0).split()) for text in texts for m in RANKED.finditer(text)}
+    return sorted(t for t in terms if not re.search(rf"(?<!\w){re.escape(t.lower())}(?!\w)", seen))
+
+
+def unseen_terms(texts, material):
+    return sorted(set(unseen_names(texts, material)) | set(unseen_ranks(texts, material)))
 
 
 LADDER_SPEC_PROMPT = """A reference wiki is being built from a novel. An earlier step named the order that the novel's power types belong to (a power or magic system, or a social, military, or other order) and described each power type:
@@ -72,7 +88,7 @@ def shape_of(ladder):
     return ladder.get("shape", "grouped")
 
 
-def ladder_problems(reply, power_types):
+def ladder_problems(reply, power_types, material=None):
     if "ladder" not in reply:
         return 'reply has no "ladder" key.'
     ladder = reply["ladder"]
@@ -82,7 +98,12 @@ def ladder_problems(reply, power_types):
         return "ladder must be an object or null."
     if shape_of(ladder) not in SHAPE_SPECS:
         return f"shape must be one of {', '.join(SHAPE_SPECS)}, not {ladder.get('shape')!r}."
-    return " ".join(SHAPE_SPECS[shape_of(ladder)][0](ladder, power_types)) or None
+    problems = SHAPE_SPECS[shape_of(ladder)][0](ladder, power_types)
+    terms = unseen_terms([str(ladder.get("note") or "")], material) if material is not None else []
+    if terms:
+        problems.append(f"the note names {', '.join(terms)}, which the order and power types above never mention; "
+                        f"describe the ladder only from them, without a rank they do not name.")
+    return " ".join(problems) or None
 
 
 def ladder_spec(raw):
@@ -102,7 +123,7 @@ def generate_ladder(workdir):
         prompt = LADDER_SPEC_PROMPT.format(power_system=book.get("power_system") or "(none described)",
                                            types="\n".join(f"- {t}: {d['description']}" for t, d in types.items()))
 
-        raw = cached_llm(workdir, "ladder-spec", prompt, check=lambda r: ladder_problems(r, types))["ladder"]
+        raw = cached_llm(workdir, "ladder-spec", prompt, check=lambda r: ladder_problems(r, types, prompt))["ladder"]
         spec = ladder_spec(raw) if raw else None
     write_json(path, {**book, "ladder": spec})
 
@@ -257,11 +278,21 @@ def read_shared(workdir, kb, spec, reply):
 
 
 def listed(key):
-    return lambda r: None if isinstance(r.get(key), list) else f"no {key} list"
+    return lambda r, material: None if isinstance(r.get(key), list) else f"no {key} list"
+
+
+def stage_problems(reply, material):
+    if not isinstance(reply.get("steps"), list):
+        return "no steps list"
+    names = [str(s.get("name") or "") for step in reply["steps"] if isinstance(step, dict)
+             for s in step.get("stages") or [] if isinstance(s, dict)]
+    terms = unseen_terms(names, material)
+    return (f"the sub-stage names use {', '.join(terms)}, which the entries and evidence above never show; "
+            f"name a sub-stage only as the evidence names it.") if terms else None
 
 
 SHAPE_STAGES = {"grouped": (grouped_prompt, listed("ladders"), read_grouped),
-                "shared": (shared_prompt, listed("steps"), read_shared)}
+                "shared": (shared_prompt, stage_problems, read_shared)}
 
 
 def cmd_ladders(args):
@@ -271,7 +302,8 @@ def cmd_ladders(args):
     ladders = []
     if spec:
         prompt, check, read = SHAPE_STAGES[shape_of(spec)]
-        reply = cached_llm(workdir, "ladders", prompt(workdir, kb, spec), check=check)
+        material = prompt(workdir, kb, spec)
+        reply = cached_llm(workdir, "ladders", material, check=lambda r: check(r, material))
         ladders = read(workdir, kb, spec, reply)
     write_json(workdir / "ladders.json", ladders)
     write_derived(workdir, kb)
