@@ -57,7 +57,10 @@ NEXT_SENTENCE = "Circle 3 came back to her"
 SCANNED_WIDER = {"ladders": SCANNED["ladders"] + [
     {"group": "Lantern School", "steps": [step("Ashen Bell", 3, 4, f'the Lantern School\'s {NEXT_SENTENCE}. "Ashen Bell.'),
                                           step("Marsh Lantern", 4, 4, "The Lantern School's Circle 4 is called Marsh Lantern"),
-                                          step("Corrow", 4, 4, 'reached a Circle 4, and Hennet only shrugged. "Corrow.')]}]}
+                                          step("Corrow", 4, 4, 'reached a Circle 4, and Hennet only shrugged. "Corrow.')]},
+    {"group": "Kestrel", "steps": [step("Hawk Warden", 2, 6, "The Circle 2 that follows Kestrel is Hawk Warden")]},
+    {"group": "Thornwick", "steps": [step("Thornwick", 1, 6, "they teach Circle 1 behind a locked gate"),
+                                     step("Bramble Sage", 2, 6, "Their Circle 2 is Bramble Sage")]}]}
 PROOFREAD = {"entries": [{"name": "Lampwright", "type": "circle", "chapter": 4, "quotes": ["Lampwright is the first circle of the Lantern School"],
                           "why": "Lampwright is a circle of the Lantern School."}],
              "relations": [], "drop_relations": [], "questions": []}
@@ -143,6 +146,17 @@ class NamedRanksBuildTest(unittest.TestCase):
                                              "quote": "Gloam is the name of our school and the name of its first circle"})
         ladder = next(l for l in self.wiki["ladders"] if l["group"] == school["id"])
         self.assertEqual(ladder["steps"][0], {"id": circle["id"], "rank": 1, "chapter": 3})
+
+    def test_a_school_named_after_its_first_circle_gets_that_circle_when_the_text_numbers_it_or_puts_the_next_circle_after_it(self):
+        kestrel = next(l for l in self.book.json("ladders.json") if l["group"] == "Kestrel")
+        self.assertEqual(kestrel["steps"][0], {"entry": "Kestrel", "rank": 1, "chapter": 6, "new": True,
+                                               "quote": "The Circle 2 that follows Kestrel is Hawk Warden"})
+        thornwick = next(l for l in self.book.json("ladders.json") if l["group"] == "Thornwick")
+        self.assertEqual(thornwick["steps"][0]["entry"], "Thornwick")
+        self.assertIn("Circle 1: Thornwick", thornwick["steps"][0]["quote"])
+        for name in ("Kestrel", "Thornwick"):
+            self.assertEqual(self.ladder(name)[:2], [(name, 1, 6), ({"Kestrel": "Hawk Warden", "Thornwick": "Bramble Sage"}[name], 2, 6)])
+            self.assertNotEqual(self.entries[(name, "circle")]["id"], self.entries[(name, "school")]["id"])
 
     def test_an_unlisted_step_needs_a_quote_that_names_it_and_a_name_no_other_entry_holds(self):
         steps = {s["entry"] for l in self.book.json("ladders.json") for s in l["steps"]}

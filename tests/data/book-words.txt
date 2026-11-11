@@ -172,3 +172,7 @@ Night Cantor
 Ember Abbot
 Gale Reader
 Aubin
+Kestrel
+Thornwick
+Hawk Warden
+Bramble Sage

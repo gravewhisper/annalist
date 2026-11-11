@@ -7,7 +7,7 @@ from .book import ladder_types, load_book, rank_type
 from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import function_word_name, name_key, name_pattern, names_of
-from .ranks import rank_mentions
+from .ranks import rank_mentions, rank_number
 from .resolve import decide_pair, name_chapters, reveal_passages
 from .state import load_states, write_derived
 from .survey import unseen_names
@@ -287,6 +287,55 @@ def read_grouped(workdir, kb, spec, reply, word):
     return sorted(ladders, key=lambda l: (l["chapter"], l["group"]))
 
 
+AFTER = re.compile(r"(?<!\w)(?:follows?|succeeds?|after|advancement\s+of)(?!\w)", re.I)
+BEFORE = re.compile(r"(?<!\w)(?:followed|succeeded)\s+by(?!\w)", re.I)
+
+
+def entry_rank(spec, ladders):
+    ranks = [s["rank"] for l in ladders for s in l["steps"]]
+    return (max if spec["direction"] == "descending" else min)(ranks) if ranks else None
+
+
+def own_entry_steps(workdir, kb, spec, word, ladders):
+    """A group named after its entry rank holds that rank once the text numbers it or puts the next rank right after the group."""
+    entry = entry_rank(spec, ladders)
+    if entry is None or not word:
+        return ladders
+    below = 1 if spec["direction"] == "descending" else -1
+    last = max(kb.synopses, default=0)
+    groups = {kb.resolve(l["group"], spec["group_type"]) or l["group"]: l for l in ladders}
+    placed = {name_key(s["entry"]) for l in ladders for s in l["steps"]}
+    rank_of = {(g, s["entry"]): s["rank"] for g, l in groups.items() for s in l["steps"]}
+    found = {}
+
+    def offer(group, chapter, quote):
+        e = kb.entities.get(group)
+        own = groups.get(group, {"steps": []})["steps"]
+        if not e or e["type"] != spec["group_type"] or any(s["rank"] == entry for s in own) or placed & set(map(name_key, names_of(e))):
+            return
+        place = verified_place(workdir, {"chapter": chapter, "quote": quote}, last)
+        name = next((n for n in names_of(e) if place and names_step(place["quote"], n, word)), None)
+        key = kb.resolve(name, spec["step_type"]) if name else None
+        if name and (key is None or kb.entities[key]["type"] == spec["step_type"]) and (group not in found or chapter < found[group]["chapter"]):
+            found[group] = {"entry": key or name, "rank": entry, **place, **({} if key else {"new": True})}
+
+    for m in rank_mentions(workdir, sorted(kb.synopses), word):
+        if rank_number(m["form"]) == entry:
+            offer(kb.resolve(m["name"], spec["group_type"]), m["chapter"], m["quote"])
+    for r in kb.relations:
+        for step, group, wording in ((r["source"], r["target"], AFTER), (r["target"], r["source"], BEFORE)):
+            if rank_of.get((group, step)) == entry - below and wording.search(r["type"]) and r["quotes"]:
+                offer(group, r["chapter"], r["quotes"][0])
+    out = [{**l, "steps": list(l["steps"])} for l in ladders]
+    for group, s in found.items():
+        ladder = groups.get(group) and next(l for l in out if l["group"] == groups[group]["group"])
+        if ladder is None:
+            out.append(ladder := {"group": group, "group_type": spec["group_type"], "steps": []})
+        ladder["steps"] = ranked(ladder["steps"] + [s], spec)
+        ladder["chapter"] = min(x["chapter"] for x in ladder["steps"])
+    return sorted(out, key=lambda l: (l["chapter"], l["group"]))
+
+
 def placed_stages(workdir, raw, last):
     stages = {}
     for s in raw if isinstance(raw, list) else []:
@@ -370,7 +419,10 @@ def cmd_ladders(args):
         prompt, check, read = SHAPE_STAGES[shape_of(spec)]
         material = prompt(workdir, kb, spec, word)
         reply = cached_llm(workdir, "ladders", material, check=lambda r: check(r, material))
-        ladders = judged_same_ranks(workdir, kb, read(workdir, kb, spec, reply, word))
+        ladders = read(workdir, kb, spec, reply, word)
+        if shape_of(spec) == "grouped":
+            ladders = own_entry_steps(workdir, kb, spec, word, ladders)
+        ladders = judged_same_ranks(workdir, kb, ladders)
     write_json(workdir / "ladders.json", ladders)
     write_derived(workdir, kb)
     log(workdir, f"ladders: {len(ladders)} {spec.get('group_type') or 'shared' if spec else 'group'} ladders with "

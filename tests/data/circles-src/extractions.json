@@ -92,5 +92,24 @@
     "relations": [],
     "questions_raised": [],
     "questions_resolved": []
+  },
+  "6": {
+    "synopsis": "A letter from Hennet tells of two new schools in the hills, Kestrel and Thornwick, and their first circles.",
+    "entities": [
+      {"name": "Hennet Larrow", "type": "character", "aliases": [], "summary": "A teacher of the Gloam School who writes to Corrow."},
+      {"name": "Kestrel", "type": "school", "aliases": [], "summary": "A new school in the hills, named after its first door."},
+      {"name": "Hawk Warden", "type": "circle", "aliases": [], "summary": "The second circle of Kestrel, which no student has reached."},
+      {"name": "Thornwick", "type": "school", "aliases": [], "summary": "A new school in the hills that keeps two circles."}
+    ],
+    "facts": [
+      {"entity": "Kestrel", "claim": "Every student of Kestrel begins as a Kestrel.",
+       "quotes": ["every student of Kestrel begins as a Kestrel"], "asserted_by": "Hennet Larrow", "status": "stated"}
+    ],
+    "relations": [
+      {"source": "Hawk Warden", "target": "Kestrel", "type": "follows", "quotes": ["The Circle 2 that follows Kestrel is Hawk Warden"],
+       "asserted_by": "Hennet Larrow", "status": "stated"}
+    ],
+    "questions_raised": [],
+    "questions_resolved": []
   }
 }
