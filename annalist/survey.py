@@ -7,11 +7,11 @@ from .files import read_json, write_json
 from .llm import cached_llm
 from .names import name_key, slug
 from .state import load_states
-from .template import base_field, BASE_TYPES, distinct_fields, overlapping_pairs, PROFILE_FIELDS, STORY_TIMELINE_KINDS
+from .template import base_field, BASE_TYPES, distinct_fields, ENTITY_TYPES, overlapping_pairs, PROFILE_FIELDS, STORY_TIMELINE_KINDS
 from .text import chapter_text
 
 
-BOOK_PROMPT = """You are setting up a reference wiki for a novel. From the material below, describe the novel's power or magic system, if it has one, so later steps can classify entities and fill character infoboxes. Use only this material.
+BOOK_PROMPT = """You are setting up a reference wiki for a novel, meant to rival a fan wiki for it. From the material below, decide what a fan wiki of this novel tracks that a wiki of any novel would not: the book-specific facts in each character's infobox, and the kinds of world entries it keeps pages for beyond the general types. A power or magic system is one source of these, never the only one: a fan wiki may track a character's cultivation stage or power class, but also a noble title or social rank, a military rank or regiment, a species or bloodline, a house or clan, or a ship. Later steps use your answer to classify entities and fill character infoboxes. Use only this material.
 
 CHAPTER TITLES:
 {titles}
@@ -20,15 +20,18 @@ CHAPTER TITLES:
 
 Reply with one JSON object:
 {{
-  "power_system": "one sentence naming the system and how characters gain or rank up in power; empty if there is none",
+  "power_system": "one sentence naming the order the fields and types below belong to: a power or magic system and how characters gain or rank up in it, or else the social, military, or other order the novel ranks its characters by; empty if the novel has none",
   "power_types": [{{"type": "lowercase singular noun", "description": "what entities of this type are"}}],
-  "relation_example": "one short lowercase relation label between two power-system entities, read as 'source <label> target'",
-  "extra_fields": [{{"name": "snake_case field name", "description": "what the character infobox should record and the exact format to write it in", "values": ["the class or rank names this field starts with, when it takes one of a few named values; else empty"]}}],
-  "power_keywords": ["lowercase words or word stems that mark a passage about a character's powers or a change in rank"],
+  "relation_example": "one short lowercase relation label between two entries of the types above, read as 'source <label> target'",
+  "extra_fields": [{{"name": "snake_case field name", "description": "what the character infobox should record and the exact format to write it in", "values": ["the class, rank, or title names this field starts with, when it takes one of a few named values; else empty"]}}],
+  "power_keywords": ["lowercase words or word stems that mark a passage stating or changing a character's extra field, or about entries of the types above"],
   "timeline_kind": "loop, flashback, or linear",
   "timeline_note": "one or two sentences on how the story moves through time"
 }}
-Rules: power_types lists the kinds of power-system entities (two to six), never the general types {base}. Include a type for specific powers or techniques. power_types are kinds of things (powers, techniques, items, ranks, schools, substances), never kinds of people: a person is always a character, however the novel classes people by their power, and a class or rank of people (a mutant, a hero class, a power category) is an extra field of the character, not a power type. Reuse an existing entity type name below when it is such a kind of thing; never keep one whose entries are people, even if the wiki so far used it. extra_fields lists the book-specific fact a fan-wiki infobox for this novel tracks per character as it changes over the story, such as their power, rank, or class: usually one field, two only when the book tracks two independent things, never a list of abilities and never one of the general fields {fields}. A field stays empty when the text does not state it, so never prescribe a placeholder value. power_keywords has five to twelve entries and leaves out character names. timeline_kind is loop when a character relives time and restarts undo events, flashback when the story often leaves its present for scenes set in the past, and linear otherwise; timeline_note says which (who loops and from what point, or which past periods recur), or that the story runs in order.
+GENERAL TYPES (type: what it covers):
+{base}
+
+Rules: power_types lists the kinds of world entries a fan wiki of this novel keeps that none of the general types above fits, such as the powers, techniques, ranks, schools, spells, or creatures of a power system. When the novel has a power or magic system, list two to six and include a type for specific powers or techniques. Otherwise list a type only when the novel names many entries of that kind and no general type covers them (a club or society is an organization, a book or letter is an item, a trial is an event), and list none when the general types cover the novel. power_types are kinds of things, never kinds of people: a person is always a character, however the novel classes people, and a class, rank, species, or title of people (a mutant, a hero class, a vampire, a baronet) is an extra field of the character, not a power type. Reuse an existing entity type name below when it is such a kind of thing; never keep one whose entries are people, even if the wiki so far used it. extra_fields lists the book-specific fact a fan-wiki infobox for this novel tracks per character as it changes over the story, such as their power, cultivation stage, class, title, rank, regiment, species, or house: usually one field, two only when the book tracks two independent things, none when the novel's characters differ only in the general fields. A field tracks one thing, so never join two in one field (a title or an occupation); never a list of abilities, a personality trait, or another name or code name for the character, and never one of the general fields {fields}. A field stays empty when the text does not state it, so never prescribe a placeholder value. power_keywords has five to twelve entries whenever extra_fields or power_types is not empty, is empty otherwise, and leaves out character names. timeline_kind is loop when a character relives time and restarts undo events, flashback when the story often leaves its present for scenes set in the past, and linear otherwise; timeline_note says which (who loops and from what point, or which past periods recur), or that the story runs in order.
 """
 
 
@@ -72,11 +75,16 @@ def book_problems(reply, kb):
     for f in reply.get("extra_fields") or []:
         if isinstance(f, dict) and str(f.get("name") or "").strip():
             base = base_field(field_name(f["name"]))
+            joined = next((b for b in map(base_field, re.split(r"_(?:or|and)_", field_name(f["name"]))) if b), None)
             if base:
                 problems.append(f'extra field "{f["name"]}" repeats the general field "{base.key}"; drop it.')
+            elif joined:
+                problems.append(f'extra field "{f["name"]}" joins the general field "{joined.key}" to another fact; keep only the other fact.')
             specs[field_name(f["name"])] = extra_field_spec(f)
     for a, b in overlapping_pairs(specs):
         problems.append(f'extra fields "{a}" and "{b}" track the same thing; keep one field for it.')
+    if specs and not [w for w in reply.get("power_keywords") or [] if str(w or "").strip()]:
+        problems.append("power_keywords is empty, so no passage about the extra fields can be found; list the words that mark one.")
     if reply.get("timeline_kind") not in STORY_TIMELINE_KINDS:
         problems.append(f"timeline_kind must be one of {', '.join(STORY_TIMELINE_KINDS)}, not {reply.get('timeline_kind')!r}.")
     return " ".join(problems) or None
@@ -111,7 +119,7 @@ def generate_book(workdir, kb, extracted, last=None):
                     + "\n\nCHAPTER SYNOPSES:\n" + "\n".join(f"Ch {n}: {kb.synopses[n]}" for n in sorted(kb.synopses)[:30]))
     else:
         material = "OPENING CHAPTERS:\n" + "\n\n".join(chapter_text(str(workdir), c["index"])[:3000] for c in chapters[:10])
-    reply = cached_llm(workdir, "book", BOOK_PROMPT.format(titles=titles, material=material, base=", ".join(sorted(BASE_TYPES)), fields=", ".join(PROFILE_FIELDS)),
+    reply = cached_llm(workdir, "book", BOOK_PROMPT.format(titles=titles, material=material, base="\n".join(f"- {t.name}: {t.description}" for t in ENTITY_TYPES.values()), fields=", ".join(PROFILE_FIELDS)),
                        check=lambda r: book_problems(r, extracted))
     source = read_json(workdir / "source.json", {})
     previous = read_json(workdir / "book.json", {})

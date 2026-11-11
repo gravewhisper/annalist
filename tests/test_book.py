@@ -131,5 +131,27 @@ class BookGenerationTest(unittest.TestCase):
         self.assertIsNone(book_problems(GOOD, Knowledge()))
 
 
+    def test_a_novel_without_powers_is_asked_what_its_fan_wiki_tracks_and_keeps_that_field(self):
+        ordinary = {"power_system": "Characters are ranked by the titles of the harbour gentry.", "power_types": [],
+                    "extra_fields": [{"name": "title", "description": "the character's title as the text gives it",
+                                      "values": ["Harbourmaster", "Lady of the Quay"]}],
+                    "power_keywords": ["harbourmaster", "lady", "title"], "timeline_kind": "linear", "timeline_note": "In order."}
+        write_json(self.workdir / "script.json", {"replies": [
+            {"purpose": "book", "contains": "never the only one: a fan wiki may track a character's cultivation stage or power class, "
+                                            "but also a noble title or social rank", "reply": ordinary}]})
+        generate_book(self.workdir, Knowledge(), Knowledge())
+        book = load_book(self.workdir)
+        self.assertEqual((book["power_types"], book["field_values"]), ({}, {"title": ["Harbourmaster", "Lady of the Quay"]}))
+        self.assertEqual(book["power_keywords"], ["harbourmaster", "lady", "title"])
+
+    def test_an_extra_field_with_no_keywords_to_find_it_is_rejected(self):
+        reply = {**GOOD, "power_keywords": []}
+        self.assertIn("power_keywords is empty", book_problems(reply, Knowledge()))
+        self.assertIsNone(book_problems({**reply, "extra_fields": []}, Knowledge()))
+
+    def test_an_extra_field_that_joins_a_general_field_to_another_fact_is_rejected(self):
+        reply = {**GOOD, "extra_fields": [{"name": "guild rank or affiliation", "description": "the rank, or else the guild"}]}
+        self.assertIn('extra field "guild rank or affiliation" joins the general field "affiliation"', book_problems(reply, Knowledge()))
+
 if __name__ == "__main__":
     unittest.main()
