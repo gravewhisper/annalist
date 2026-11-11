@@ -501,6 +501,7 @@ class Knowledge:
                 self.relations.append({"id": f"RG{s['chapter']:04d}-{made:03d}", "chapter": s["chapter"], "source": key, "target": group,
                                        "type": f"{self.entities[key]['type']} {s['rank']} of", "detail": "", "quotes": [s["quote"]],
                                        "asserted_by": "narrator", "status": "stated", "timeline": "main"})
+        self.apply_merges([d for row in ladders for d in row.get("same", [])], until)
 
     def ladder_step(self, s):
         key = self.resolve(s["entry"], self.step_type)

@@ -225,8 +225,12 @@ def ladder_records(ladders, registry, ids, step_type):
     for ladder in ladders:
         group = ladder["group"] and registry.resolve(ladder["group"], ladder["group_type"])
         if group or ladder["group"] is None:
-            records.append({"group": group and ids[group], "chapter": ladder["chapter"],
-                            "steps": [step_record(s, ids[registry.resolve(s["entry"], step_type) or s["entry"]]) for s in ladder["steps"]]})
+            steps = {}
+            for s in ladder["steps"]:
+                eid = ids[registry.resolve(s["entry"], step_type) or s["entry"]]
+                if eid not in steps or s["chapter"] < steps[eid]["chapter"]:
+                    steps[eid] = step_record(s, eid)
+            records.append({"group": group and ids[group], "chapter": ladder["chapter"], "steps": list(steps.values())})
     return records
 
 

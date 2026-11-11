@@ -1,4 +1,6 @@
+import copy
 import re
+from itertools import combinations
 from pathlib import Path
 
 from .book import ladder_types, load_book, rank_type
@@ -6,6 +8,7 @@ from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import function_word_name, name_key, name_pattern, names_of
 from .ranks import rank_mentions
+from .resolve import decide_pair, name_chapters, reveal_passages
 from .state import load_states, write_derived
 from .survey import unseen_names
 from .template import book_types
@@ -323,6 +326,39 @@ SHAPE_STAGES = {"grouped": (grouped_prompt, listed("ladders"), read_grouped),
                 "shared": (shared_prompt, stage_problems, read_shared)}
 
 
+def same_rank_pairs(kb, ladders):
+    pairs = {}
+    for ladder in ladders:
+        held = {}
+        for s in ladder["steps"]:
+            key = kb.resolve(s["entry"], kb.step_type)
+            if key and kb.entities[key]["type"] == kb.step_type:
+                held.setdefault(s["rank"], {}).setdefault(key, s["chapter"])
+        for rank, chapters in held.items():
+            for a, b in combinations(sorted(chapters), 2):
+                pairs[(a, b)] = {"group": ladder["group"], "rank": rank, "chapter": max(chapters[a], chapters[b])}
+    return pairs
+
+
+def judged_same_ranks(workdir, kb, ladders):
+    placed = copy.deepcopy(kb)
+    placed.apply_ladders(ladders)
+    pairs = same_rank_pairs(placed, [l for l in ladders if l["group"]])
+    if not pairs:
+        return ladders
+    by_entity, attached, last = {}, name_chapters(workdir, placed), max(placed.synopses, default=0)
+    for f in placed.facts:
+        by_entity.setdefault(f["entity"], []).append(f)
+    same = {}
+    for (a, b), pair in sorted(pairs.items()):
+        info = {"rules": ["same-rank"], "evidence": reveal_passages(workdir, placed, a, b, last)[0]}
+        d = {**decide_pair(workdir, placed, by_entity, attached, a, b, info), "rank": pair["rank"]}
+        if d["same"] and d["revealed"]["chapter"] is not None:
+            d["revealed"] = {**d["revealed"], "chapter": max(d["revealed"]["chapter"], pair["chapter"])}
+        same.setdefault(pair["group"], []).append(d)
+    return [{**l, "same": same[l["group"]]} if l["group"] in same else l for l in ladders]
+
+
 def cmd_ladders(args):
     workdir = Path(args.workdir).resolve()
     book = load_book(workdir)
@@ -334,7 +370,7 @@ def cmd_ladders(args):
         prompt, check, read = SHAPE_STAGES[shape_of(spec)]
         material = prompt(workdir, kb, spec, word)
         reply = cached_llm(workdir, "ladders", material, check=lambda r: check(r, material))
-        ladders = read(workdir, kb, spec, reply, word)
+        ladders = judged_same_ranks(workdir, kb, read(workdir, kb, spec, reply, word))
     write_json(workdir / "ladders.json", ladders)
     write_derived(workdir, kb)
     log(workdir, f"ladders: {len(ladders)} {spec.get('group_type') or 'shared' if spec else 'group'} ladders with "

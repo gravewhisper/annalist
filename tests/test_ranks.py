@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from annalist.ladders import ladder_needed
+from annalist.ladders import ladder_needed, same_rank_pairs
 from annalist.ranks import rank_mentions, stated_items, stated_steps
 from annalist.review import ranks_off_ladder
 from annalist.state import Knowledge
@@ -50,7 +50,8 @@ LADDERS = {"ladders": [
 LISTED_CIRCLES = "names Circle 1: Gloam; Circle 2: Wickbearer; Circle 3: Night Cantor; Circle 4: Ember Abbot"
 SCANNED = {"ladders": [LADDERS["ladders"][0],
                        {"group": "Gloam", "steps": LADDERS["ladders"][1]["steps"] + [
-                           step("Wickbearer", 2, 4, "Circle 2: Wickbearer."), step("Night Cantor", 3, 4, "Circle 3: Night Cantor."),
+                           step("Wickbearer", 2, 4, "Circle 2: Wickbearer."), step("Candlebearer", 2, 4, "Circle 2 was once called Candlebearer"),
+                           step("Night Cantor", 3, 4, "Circle 3: Night Cantor."),
                            step("Ember Abbot", 4, 4, "Circle 4: Ember Abbot.")]}]}
 NEXT_SENTENCE = "Circle 3 came back to her"
 SCANNED_WIDER = {"ladders": SCANNED["ladders"] + [
@@ -76,6 +77,10 @@ def circles_script():
                 {"purpose": "ladders", "contains": NEXT_SENTENCE, "reply": SCANNED_WIDER},
                 {"purpose": "ladders", "contains": LISTED_CIRCLES, "reply": SCANNED},
                 {"purpose": "proofread", "contains": "Lampwright", "reply": PROOFREAD},
+                {"purpose": "resolve", "contains": "Candlebearer", "reply": {"same": True, "canonical_name": "Wickbearer",
+                                                                           "reason": "One circle under its old and new name."}},
+                {"purpose": "reveal", "contains": "Candlebearer", "reply": {"chapter": 4, "quote": "Candlebearer, Wickbearer, they are about the same",
+                                                                          "reason": "Hennet says the two names are the same circle."}},
                 {"purpose": "ladders", "reply": LADDERS}]
     replies += [{"purpose": p, "reply": r} for p, r in LATER_REPLIES.items() if p != "book"]
     return {"replies": replies}
@@ -149,7 +154,7 @@ class NamedRanksBuildTest(unittest.TestCase):
     def test_ranks_a_passage_lists_at_once_reach_the_ladder_as_entries_dated_to_that_chapter(self):
         gloam = next(l for l in self.book.json("ladders.json") if l["group"] == "Gloam")
         self.assertEqual([(s["entry"], s["rank"], s["chapter"]) for s in gloam["steps"]],
-                         [("Gloam", 1, 3), ("Wickbearer", 2, 4), ("Night Cantor", 3, 4), ("Ember Abbot", 4, 4)])
+                         [("Gloam", 1, 3), ("Candlebearer", 2, 4), ("Wickbearer", 2, 4), ("Night Cantor", 3, 4), ("Ember Abbot", 4, 4)])
         made = {e["name"]: e["first_chapter"] for e in self.book.json("entities.json") if e["type"] == "circle"}
         self.assertEqual([made[n] for n in ("Wickbearer", "Night Cantor", "Ember Abbot")], [4, 4, 4])
 
@@ -176,7 +181,8 @@ class NamedRanksBuildTest(unittest.TestCase):
 
     def ladder(self, group):
         name = {e["id"]: e["name"] for e in self.wiki["entities"]}
-        ladder = next(l for l in self.wiki["ladders"] if l["group"] and name[l["group"]] == group)
+        called = {e["id"]: {e["name"]} | {a["name"] for a in e["aliases"]} for e in self.wiki["entities"]}
+        ladder = next(l for l in self.wiki["ladders"] if l["group"] and group in called[l["group"]])
         return [(name[s["id"]], s["rank"], s["chapter"]) for s in ladder["steps"]]
 
     def test_a_rank_that_corrections_or_proofread_file_under_the_rank_type_joins_its_ladder_at_its_chapter(self):
@@ -197,6 +203,13 @@ class NamedRanksBuildTest(unittest.TestCase):
         self.assertEqual([(s["entry"], s["rank"], s["chapter"]) for s in lantern["steps"]], [("Ashen Bell", 3, 4), ("Marsh Lantern", 4, 4)])
         self.assertEqual(self.ladder("Lantern School"), [("Lampwright", 1, 4), ("Lamplighter", 2, 4), ("Ashen Bell", 3, 4), ("Marsh Lantern", 4, 4)])
         self.assertNotIn("Corrow", {e["name"] for e in self.wiki["entities"]})
+
+    def test_one_rank_under_two_names_in_one_group_is_one_step_once_the_text_equates_them(self):
+        gloam = next(l for l in self.book.json("ladders.json") if l["group"] == "Gloam")
+        self.assertEqual([(d["a"], d["b"], d["same"], d["revealed"]) for d in gloam["same"]],
+                         [("Candlebearer", "Wickbearer", True, {"chapter": 4, "quote": "Candlebearer, Wickbearer, they are about the same", "basis": "quote"})])
+        self.assertEqual(self.ladder("Gloam"), [("Gloam", 1, 3), ("Wickbearer", 2, 4), ("Night Cantor", 3, 4), ("Ember Abbot", 4, 4)])
+        self.assertIn("Candlebearer", [a["name"] for a in self.entries[("Wickbearer", "circle")]["aliases"]])
 
     def test_an_item_named_after_a_rank_links_to_the_rank(self):
         name = {e["id"]: (e["name"], e["type"]) for e in self.wiki["entities"]}
@@ -243,6 +256,16 @@ class StatedStepsTest(unittest.TestCase):
                       ("Wick", "Corrow asked for the circle 3 Wick school formula.")],
                      [("Gloam", "is the first circle of", "Saltmere School"), ("Night Cantor", "is Circle 3 of", "Gloam")])
         self.assertEqual(stated_steps(kb, SPEC, "circle"), {"Night Cantor": "Night Cantor is Circle 3 of Gloam"})
+
+
+class SameRankPairsTest(unittest.TestCase):
+    def test_only_two_entries_at_one_rank_of_one_group_are_paired(self):
+        kb = Knowledge(SPEC, power_types=RankLadderSpecTest.TYPES)
+        for name in ("Candlebearer", "Wickbearer", "Night Cantor", "Tidewatcher"):
+            kb.upsert_entity({"name": name, "type": "circle"}, 1)
+        ladders = [{"group": "Gloam", "steps": [step("Wickbearer", 2, 4, "q"), step("Candlebearer", 2, 6, "q"), step("Night Cantor", 3, 4, "q")]},
+                   {"group": "Saltmere School", "steps": [step("Tidewatcher", 2, 1, "q")]}]
+        self.assertEqual(same_rank_pairs(kb, ladders), {("Candlebearer", "Wickbearer"): {"group": "Gloam", "rank": 2, "chapter": 6}})
 
 
 class StatedItemsTest(unittest.TestCase):
