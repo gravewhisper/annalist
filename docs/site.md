@@ -6,6 +6,8 @@ A category page shows its entries as a table. Select a column heading to sort by
 
 The search box matches the names and aliases known by the slider's chapter. It groups the matches by type, puts the group with the best match first, and shows each entry's first chapter. Enter opens the best match.
 
+A long entry page, one with five or more sections, lists them under its title: the summary, connections, the profile sections, and the Facts, Relations, and Mysteries tabs. A link to a section on another tab opens that tab first.
+
 The Graph page has these tabs:
 
 

@@ -484,26 +484,34 @@ function obsList(obs, self) {
   return obs.map(o => expandRow(`${linkify(o.value, self, o.chapter)} ${chLink(o.chapter)}${tlBadge(o.timeline)}`, quoteNoun(o.quotes), quotes(o.quotes))).join('');
 }
 
+const sectionHead = (key, title) => `<h3 id="sec-${key}" tabindex="-1">${title}</h3>`;
+const section = (key, title, body) => ({key, title, html: sectionHead(key, title) + body});
+
 function historySection(e) {
   const arcs = until(e.history || []);
-  if (!arcs.length) return '';
-  return `<h3>History</h3>${arcs.map(h => `<div class="chgroup"><h4><span class="chip">Ch ${h.start} to ${h.end}</span> ${esc(h.arc)}</h4><div class="prose"><p>${chapterRefs(linkify(h.text, e.id))}</p></div></div>`).join('')}`;
+  return arcs.length ? [section('history', 'History', arcs.map(h => `<div class="chgroup"><h4><span class="chip">Ch ${h.start} to ${h.end}</span> ${esc(h.arc)}</h4><div class="prose"><p>${chapterRefs(linkify(h.text, e.id))}</p></div></div>`).join(''))] : [];
 }
 
-function profileSection(e) {
+function profileSections(e) {
   const p = e.profile;
   if (!p) return historySection(e);
   const out = [];
   const appearance = until(p.lists.appearance || []);
-  if (appearance.length) out.push(`<h3>Appearance</h3>${obsList(appearance, e.id)}`);
+  if (appearance.length) out.push(section('appearance', 'Appearance', obsList(appearance, e.id)));
   const evidence = until(p.lists.personality_evidence || []);
   const para = latest(p.personality || []);
-  if (para) out.push(`<h3>Personality</h3><div class="prose"><p>${chapterRefs(linkify(para.text, e.id))}</p></div><div class="asof">Written from evidence up to chapter ${para.chapter}</div>${evidence.length ? expander(showHide(`the evidence (${evidence.length})`), obsList(evidence, e.id)).join('') : ''}`);
-  else if (evidence.length) out.push(`<h3>Personality</h3>${obsList(evidence, e.id)}`);
-  out.push(historySection(e));
+  if (para) out.push(section('personality', 'Personality', `<div class="prose"><p>${chapterRefs(linkify(para.text, e.id))}</p></div><div class="asof">Written from evidence up to chapter ${para.chapter}</div>${evidence.length ? expander(showHide(`the evidence (${evidence.length})`), obsList(evidence, e.id)).join('') : ''}`));
+  else if (evidence.length) out.push(section('personality', 'Personality', obsList(evidence, e.id)));
+  out.push(...historySection(e));
   const trivia = until(p.lists.trivia || []);
-  if (trivia.length) out.push(`<h3>Trivia</h3>${obsList(trivia, e.id)}`);
-  return out.join('');
+  if (trivia.length) out.push(section('trivia', 'Trivia', obsList(trivia, e.id)));
+  return out;
+}
+
+const TOC = {least: 5};
+function contentsList(items) {
+  const link = ([key, title, tab]) => `<a data-sec="${key}" data-in="${tab}" href="#${esc(hashFor(tab ? {tab} : {}))}">${title}</a>`;
+  return items.length < TOC.least ? '' : `<nav class="toc" aria-label="Contents">${items.map(link).join('')}</nav>`;
 }
 
 function factBadge(f) {
@@ -560,7 +568,8 @@ function renderEntity(id) {
   const xRels = groupRels(allRels.filter(r => role(r.timeline) === 'erased'));
   const names = visNames(e);
   const qs = D.questions.filter(q => qState(q) && names.some(t => q.question.includes(t) || q.quote?.includes(t)));
-  const profile = profileSection(e);
+  const parts = profileSections(e);
+  const profile = parts.map(x => x.html).join('');
   const groups = {};
   for (const f of fs) (groups[f.chapter] ||= []).push(f);
   const chs = Object.keys(groups).map(Number).sort((a, b) => b - a);
@@ -570,6 +579,10 @@ function renderEntity(id) {
   const leads = until(e.possibly || []).filter(p => vis(D.byId[live(p.id)])).map(p => `<div class="note">Possibly ${entLink(p.id)} (implied, ch ${p.chapter})${quotes(p.quote ? [p.quote] : [])}</div>`).join('');
   const tabs = [profile && ['profile', 'Profile'], ['facts', `Facts (${fs.length + xFs.length})`], ['relations', `Relations (${rels.length + xRels.length})`], ['mysteries', `Mysteries (${qs.length})`]].filter(Boolean);
   const tab = tabs.some(([k]) => k === S.tab) ? S.tab : tabs[0][0];
+  const ego = egoPanel(id);
+  const contents = contentsList([l.text && ['summary', 'Summary', ''], ladder && ['ladder', 'Ladder', ''], ego && ['connections', 'Connections', ''],
+    ...parts.map(x => [x.key, x.title, 'profile']),
+    ...[['facts', 'Facts', fs.length + xFs.length], ['relations', 'Relations', rels.length + xRels.length], ['mysteries', 'Mysteries', qs.length]].filter(t => t[2]).map(([k, t]) => ['tabs', t, k])].filter(Boolean));
   const infobox = `<aside class="infobox"><h3>${esc(name)}</h3><table>
     <tr><th>Type</th><td>${esc(cap(e.type))}</td></tr>
     ${aliases.length ? `<tr><th>Also known as</th><td>${aliases.map(esc).join('<br>')}</td></tr>` : ''}
@@ -584,10 +597,10 @@ function renderEntity(id) {
   else if (tab === 'relations') body = (rels.length ? `<div class="chgroup">${rels.slice().reverse().map(r => relRow(r, id, name)).join('')}</div>` : xRels.length ? '' : '<p class="muted">No relations recorded yet.</p>') + erasedSection([], xRels, id, name);
   else body = qs.length ? qs.map(mystCard).join('') : '<p class="muted">No mysteries mention this entry yet.</p>';
   return `<article class="entity">
-    <div class="ehead">${crumbs}<h1>${esc(name)}</h1><div class="subtitle">${esc(cap(e.type))} &middot; first appears in chapter ${e.first}</div></div>
+    <div class="ehead">${crumbs}<h1>${esc(name)}</h1><div class="subtitle">${esc(cap(e.type))} &middot; first appears in chapter ${e.first}</div>${contents}</div>
     ${infobox}
-    <div class="lede"><p>${linkify(l.text, id, l.chapter) || '<span class="muted">Nothing known yet.</span>'}</p>${l.chapter ? `<div class="asof">As understood at chapter ${l.chapter}</div>` : ''}${leads}${ladder ? `<h3>Ladder</h3>${ladderList(ladder)}` : ''}${egoPanel(id)}</div>
-    <nav class="tabs">${tabs.map(([k, t]) => `<a data-tab="${k}" href="#${esc(hashFor({tab: k}))}" class="${tab === k ? 'on' : ''}">${t}</a>`).join('')}</nav>
+    <div class="lede" id="sec-summary" tabindex="-1"><p>${linkify(l.text, id, l.chapter) || '<span class="muted">Nothing known yet.</span>'}</p>${l.chapter ? `<div class="asof">As understood at chapter ${l.chapter}</div>` : ''}${leads}${ladder ? `${sectionHead('ladder', 'Ladder')}${ladderList(ladder)}` : ''}${ego}</div>
+    <nav class="tabs" id="sec-tabs" tabindex="-1">${tabs.map(([k, t]) => `<a data-tab="${k}" href="#${esc(hashFor({tab: k}))}" class="${tab === k ? 'on' : ''}">${t}</a>`).join('')}</nav>
     <div class="ebody">${body}</div></article>`;
 }
 
@@ -1515,7 +1528,7 @@ function egoPanel(id) {
     drawn.some(d => d.aside) ? '<span><i class="swatch dot"></i>Flashback or aside</span>' : ''].join('');
   const more = drawn.length && all.length > drawn.length ? `<a ${goTo(`graph:${id}`)}>+${all.length - drawn.length} more</a>` : '';
   const figure = drawn.length ? expander(showHide('drawing'), `${ringSvg(D.byId[id], drawn)}<div class="egolegend">${marks}${more}</div>`).join('') : '';
-  return `<div class="egobox"><h3>Connections</h3><div class="conns">${connSections(id, all)}</div>`
+  return `<div class="egobox">${sectionHead('connections', 'Connections')}<div class="conns">${connSections(id, all)}</div>`
     + `<div class="asof">${all.length} connection${all.length > 1 ? 's' : ''} as of chapter ${S.n}. <a ${goTo(`graph:${id}`)}>Open in the graph</a> &middot; <a ${goTo(pairRoute(id, ''))}>How is ${esc(displayName(D.byId[id]))} connected to&hellip;</a> ${figure}</div></div>`;
 }
 
@@ -2873,6 +2886,7 @@ function wire() {
     if ((el = act('.ent'))) { ev.preventDefault(); return go({p: 'e:' + el.dataset.ent, tab: ''}); }
     if ((el = act('[data-res]'))) { $('q').value = ''; $('results').classList.remove('open'); return go({p: 'e:' + el.dataset.res, tab: ''}); }
     if ((el = act('[data-go]'))) { ev.preventDefault(); return go({p: el.dataset.go}); }
+    if ((el = act('[data-sec]'))) { ev.preventDefault(); if (el.dataset.in && el.dataset.in !== S.tab) go({tab: el.dataset.in}); return jump('sec-' + el.dataset.sec); }
     if ((el = act('[data-tab]'))) return go({tab: el.dataset.tab});
     if ((el = act('[data-m]'))) { more = 60; return go({m: el.dataset.m}); }
     if ((el = act('[data-sort]'))) { ev.preventDefault(); return go({sort: el.dataset.sort}); }

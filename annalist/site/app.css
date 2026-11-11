@@ -121,6 +121,12 @@ a.ccard:hover h3{color:var(--link)}
 .entity .ebody{grid-area:body;min-width:0}
 .entity .infobox{grid-area:ib;align-self:start;position:sticky;top:81px}
 .asof{font-size:13px;color:var(--muted)}
+.toc{display:flex;flex-wrap:wrap;margin:-16px 0 24px;font-size:13px;line-height:1.7}
+.toc a{color:var(--muted)}
+.toc a:hover{color:var(--link)}
+.toc a:not(:last-child)::after{content:"\00b7";display:inline-block;margin:0 .55em;color:var(--muted)}
+[id^="sec-"]{scroll-margin-top:72px}
+[id^="sec-"]:focus{outline:none}
 .infobox{border:1px solid var(--line);border-top:2px solid var(--accent);background:var(--card);border-radius:var(--radius)}
 .infobox h3{margin:0;padding:14px 16px 12px;text-align:center;font-size:18px;color:var(--heading);border-bottom:1px solid var(--line);background:var(--ib-head-bg);border-radius:calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0}
 .infobox table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.5}
@@ -204,7 +210,7 @@ blockquote{margin:8px 0 8px 16px;padding:0 0 0 12px;border-left:2px solid var(--
   .list li{flex-wrap:wrap}
   .ctable tbody th,.ctable thead th:first-child{position:sticky;left:0;z-index:1;background:var(--bg)}
   .ctable tbody th{min-width:140px;max-width:180px}
-  tr[id^="az-"]{scroll-margin-top:150px}
+  tr[id^="az-"],[id^="sec-"]{scroll-margin-top:150px}
   .gchips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:6px -16px;padding:0 16px}
   .gchips a{flex:none}
   .gctl{margin:4px 0}
