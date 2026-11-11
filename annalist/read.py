@@ -38,17 +38,20 @@ Extract what this chapter adds to the wiki. Reply with one JSON object of this e
 
 Rules:
 - synopsis: three to six sentences of plain prose saying what happens in this chapter, who is involved, and where it takes place.
-- entities: every character, place, organization, power-system element (e.g. {power_names}), artifact, event, or concept that matters in this chapter and is new or whose understanding changed. "type" is a short lowercase singular noun. Use these exact types where they fit: {base_types}. Elements of a power or magic system always take one of these instead of the general type they are a kind of: {power_types}. Choose another short noun only when none of these fits. Reuse the exact registry name and type for known entities so they merge. "summary" is one line describing the entity as currently understood.
+- entities: every character, place, organization, artifact, event, or concept that matters in this chapter and is new or whose understanding changed. "type" is a short lowercase singular noun. Use these exact types where they fit: {base_types}.{book_types} Choose another short noun only when none of these fits. Reuse the exact registry name and type for known entities so they merge. "summary" is one line describing the entity as currently understood.
 - aliases: an alias is only another name for the SAME thing, never a related thing. A secret identity or persona a character uses (a code name, a title they adopt) is an alias of that character. An object, card, symbol, place, or group connected to a character is a separate entity of its own type, never an alias (a playing card a character is linked to is an artifact entity, not an alias of the character). Entities of different types never merge, and they never share a name: if a card, title, place, or group would carry the same name as an entity of another type, name it distinctly ("The Crown card", not "The Crown"). Bare titles and roles ("Captain", "the inspector", "the landlord") are always discarded. Generic descriptions ("the mysterious man", "the red moon") are discarded unless you set "unique": true, which means this exact phrase is used in the book as a fixed name for this one entity and nothing else.
 - facts: concrete, specific claims this chapter establishes about an entity (identity, relationships, abilities, history, appearance, goals, rules of the world). Aim for 10 to 30 strong facts, not trivia. "entity" must be a registry name or an entity you list above.
 - quotes: one to three verbatim excerpts from this chapter. Each excerpt is ONE contiguous span of one or two sentences copied EXACTLY, character for character, from a single paragraph, at most 300 characters. No ellipses, no paraphrase, no stitching. This is checked by machine.
 - The claim must be fully supported by its quotes alone: a reader who sees only the quotes must be able to confirm every part of the claim. If a part needs another passage, add that passage as another quote. If it would need more than three, or a part is not in the text at all, split the claim or drop the unsupported part. Never state a cause, amount, purpose, or relationship the quotes do not show.
 - asserted_by: "narrator" when the narration itself states it, otherwise the name of the character who says or thinks it.
 - status: "stated" when the narrative presents it as true; "implied" when the text strongly suggests it without saying it; "belief" when a character believes, suspects, guesses, or claims it but the narrative has not confirmed it.
-- relations: links between two entities that this chapter shows: kinship, membership, mentorship, rivalry, employment, location, ownership, power-system structure, and similar. "source" and "target" are registry names or entities you list above. "type" is the predicate alone, a verb phrase or a role read as "source <type> target" ({relation_types}, "{power_relation}"); never fold an object, a third entity, or a circumstance into it. "detail" is whatever the sentence needs after the target, read as "source <type> target <detail>" ("of impersonating the baron", "to the innkeeper as payment"), or "" when nothing. Write names in type and detail as the book writes them. quotes, asserted_by, and status follow the same rules as facts, and the quotes alone must show the relation.
+- relations: links between two entities that this chapter shows: kinship, membership, mentorship, rivalry, employment, location, ownership, rank or hierarchy, and similar. "source" and "target" are registry names or entities you list above. "type" is the predicate alone, a verb phrase or a role read as "source <type> target" ({relation_types}, "{power_relation}"); never fold an object, a third entity, or a circumstance into it. "detail" is whatever the sentence needs after the target, read as "source <type> target <detail>" ("of impersonating the baron", "to the innkeeper as payment"), or "" when nothing. Write names in type and detail as the book writes them. quotes, asserted_by, and status follow the same rules as facts, and the quotes alone must show the relation.
 - questions_raised: genuine mysteries, foreshadowing, or unexplained details a careful reader would want answered later. "quote" is the one passage that raises it (same excerpt rules). Do not repeat an already open question.
 - questions_resolved: only open questions (by id from the list above) that THIS chapter clearly answers, with the answer and the quote from this chapter that answers it. Leave empty if none.
 """
+
+
+BOOK_TYPES_RULE = " Entries of this book's own types matter too. Each always takes its book type, never the general type that the book type is a kind of: {types}."
 
 
 def cmd_read(args):
@@ -111,10 +114,11 @@ def extract_chapter(workdir, kb, chapter, pending):
     book = load_book(workdir)
     view = with_unchecked(kb, pending) if pending else kb
     notes = reader_notes(view, load_corrections(workdir), n)
+    types = ", ".join(f"{t} (a kind of {spec['parent']}: {spec['description']})" for t, spec in book["power_types"].items())
     prompt = EXTRACT_PROMPT.format(knowledge=view.compact_view(text, book["view"], notes), n=n, title=chapter["title"], text=text,
-                                   power_names=", ".join(book["power_types"]), power_relation=book["relation_example"],
-                                   base_types=", ".join(ENTITY_TYPES), relation_types=", ".join(f'"{r}"' for r in RELATION_TYPES),
-                                   power_types=", ".join(f"{t} (a kind of {spec['parent']}: {spec['description']})" for t, spec in book["power_types"].items()))
+                                   power_relation=book["relation_example"], base_types=", ".join(ENTITY_TYPES),
+                                   relation_types=", ".join(f'"{r}"' for r in RELATION_TYPES),
+                                   book_types=BOOK_TYPES_RULE.format(types=types) if types else "")
     return llm(workdir, "extract", prompt, chapter=n), began, len(prompt)
 
 

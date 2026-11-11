@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from types import SimpleNamespace
 
+from annalist import read
 from annalist.book import load_book
 from annalist.evidence import affiliations
 from annalist.files import write_json
@@ -59,6 +60,29 @@ class BookTypeShapeTest(unittest.TestCase):
         self.assertEqual(list(book["power_types"]), ["school", "rank", "draught"])
         self.assertEqual(book["ladder"], LADDER)
         self.assertFalse(ladder_needed(book))
+
+
+class BookTypeExtractPromptTest(unittest.TestCase):
+    def extract_prompt(self, power_types):
+        sent = []
+        with tempfile.TemporaryDirectory() as tmp:
+            workdir = Path(tmp)
+            (workdir / "chapters").mkdir()
+            (workdir / "chapters" / "0001.txt").write_text("Ilse hung the Salt Ward over the door.\n", encoding="utf-8")
+            write_json(workdir / "book.json", {"timeline_kind": "linear", "power_types": power_types})
+            with patch.object(read, "llm", lambda workdir, purpose, prompt, **kw: sent.append(prompt) or {}):
+                read.extract_chapter(workdir, Knowledge(), {"index": 1, "title": "The Door"}, None)
+        return sent[0]
+
+    def test_a_book_without_book_types_is_asked_about_no_power_system_and_shown_no_empty_type_list(self):
+        prompt = self.extract_prompt({})
+        self.assertNotRegex(prompt, r"(?i)power[- ]system|magic system")
+        self.assertNotIn("(e.g. )", prompt)
+        self.assertNotRegex(prompt, r"kind of: \.")
+
+    def test_each_book_type_is_offered_with_its_parent_and_description(self):
+        prompt = self.extract_prompt({"warding item": {"parent": "artifact", "description": "a charm that keeps spirits off"}})
+        self.assertIn("warding item (a kind of artifact: a charm that keeps spirits off)", prompt)
 
 
 class BookTypeMatchTest(unittest.TestCase):

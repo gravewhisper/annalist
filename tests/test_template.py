@@ -52,7 +52,7 @@ class TemplateTest(unittest.TestCase):
         self.assertEqual(stable_fields({"job": "their job", "power_class": "class"}, {}), {"power_class": "class"})
 
     def test_extract_prompt_lists_the_registry(self):
-        prompt = EXTRACT_PROMPT.format(knowledge="", n=1, title="", text="", power_names="", power_types="",
+        prompt = EXTRACT_PROMPT.format(knowledge="", n=1, title="", text="", book_types="",
                                        power_relation="advances to", base_types=", ".join(ENTITY_TYPES),
                                        relation_types=", ".join(f'"{r}"' for r in RELATION_TYPES))
         self.assertIn("Use these exact types where they fit: character, place, organization, artifact, event, deity, creature, concept.", prompt)
