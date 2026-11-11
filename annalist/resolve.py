@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from itertools import combinations, product
 from pathlib import Path
 
+from .discover import NAME
 from .files import read_json, write_json
 from .llm import cached_llm, LLMError
 from .identify import identify_descriptors
@@ -111,6 +112,9 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
         add(a, b, f"false-name: '{cue}'")
     for a, b, evidence in equated(workdir, kb, typed, max_chapter):
         add(a, b, "equated-in-sentence", evidence)
+    for a, b, rule, passage in stated_renames(workdir, kb, max_chapter):
+        add(a, b, rule, passage)
+        pairs[tuple(sorted((a, b)))].setdefault("renamed", passage)
     for a, targets in hedged_identities(kb, by_entity).items():
         for b in targets:
             add(a, b, "hedged-identity")
@@ -276,6 +280,50 @@ def equated(workdir, kb, typed, max_chapter, limit=200):
             yield from ((a, b, None) for b, at in sorted(spots.items()) if b != a and kb.types.kin(kinds[b], kinds[a]) and at > cue)
 
 
+RENAMED = re.compile(
+    r"(?:,\s*|\s+)(?:(?:which|who|that)\s+)?(?:(?:was|were|is|are|had\s+been|has\s+been|have\s+been)\s+)?"
+    r"(?:(?:later|then|since|eventually|officially|soon)\s+)?"
+    r"(?:re-?named|changed\s+to|(?:became|came\s+to\s+be)\s+(?:known|called)|now\s+(?:called|known|named))(?:\s+(?:to|as))?\s+(?:the\s+)?"
+    r"|(?:,\s*|\s*\(\s*)(?:formerly|previously|originally)(?:\s+(?:known\s+as|called|named))?\s+(?:the\s+)?"
+    r"|,\s*whose\s+(?:original|old|former|previous|first)\s+name\s+(?:was|is)\s+(?:the\s+)?", re.I)
+NAME_BEFORE = re.compile(rf"(?:{NAME.pattern})$")
+
+
+def entry_named(kb, name):
+    return kb.resolve(name) or kb.resolve(" ".join(content_words(name)))
+
+
+def renamed_within(kb, old, new):
+    part = re.compile(rf"(?<!\w){re.escape(name_key(old))}(?!\w)")
+    for a, e in kb.entities.items():
+        for name in names_of(e):
+            key = name_key(name)
+            b = kb.resolve(part.sub(lambda _: name_key(new), key)) if key != name_key(old) and part.search(key) else None
+            if b and b != a:
+                yield a, b, name
+
+
+def stated_renames(workdir, kb, max_chapter):
+    def kin(a, b):
+        return a != b and kb.same_kind(kb.entities[a]["type"], kb.entities[b]["type"])
+
+    for n in sorted(c for c in kb.synopses if c <= max_chapter):
+        text = chapter_text(str(workdir), n)
+        for m in RENAMED.finditer(text):
+            before = NAME_BEFORE.search(text, text.rfind("\n", 0, m.start()) + 1, m.start())
+            after = NAME.match(text, m.end())
+            if not (before and after):
+                continue
+            old, new = (re.sub(r"['’]s$", "", x.group(0)) for x in (before, after))
+            passage = {"chapter": n, "text": " ".join(sentence_of(text, before.start(), after.end()).split())}
+            a, b = entry_named(kb, old), entry_named(kb, new)
+            if a and b and kin(a, b):
+                yield a, b, f"stated-rename: '{old}' / '{new}'", passage
+            for x, y in ((old, new), (new, old)):
+                yield from ((a, b, f"renamed-within: '{name}' / '{kb.entities[b]['name']}'", passage)
+                            for a, b, name in renamed_within(kb, x, y) if kin(a, b))
+
+
 OWNS = re.compile(r"\b(?:owns?|owned|owner|holds?|held|holder|carr(?:y|ies|ied)|wields?|wielded|possess\w*|belongs?|property|keeps?|kept)\b",
                   re.I)
 OWNED_BY = re.compile(r"\b(?:by|belongs?|property)\b", re.I)
@@ -404,7 +452,9 @@ def decide_pair(workdir, kb, by_entity, attached, a, b, info):
     decision = {"a": a, "b": b, "type": kb.entities[a]["type"], "rules": info["rules"], "same": same,
                 "canonical": canonical if same else "", "reason": str(reply.get("reason") or "").strip(), "source": "llm"}
     if same:
-        decision["revealed"] = reveal_chapter(workdir, kb, by_entity, attached, a, b, info)
+        stated = info.get("renamed")
+        decision["revealed"] = ({"chapter": stated["chapter"], "quote": stated["text"], "basis": "quote"} if stated
+                                else reveal_chapter(workdir, kb, by_entity, attached, a, b, info))
     return decision
 
 
