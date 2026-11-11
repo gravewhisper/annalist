@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import subprocess
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -19,6 +20,12 @@ class Request:
     purpose: str
     chapter: int | None = None
     effort: str | None = None
+    prefix: str = ""
+
+    def parts(self):
+        """The prompt's shared leading text, which many requests repeat and a backend may cache, and the rest."""
+        prefix = self.prefix if self.prompt.startswith(self.prefix) else ""
+        return prefix, self.prompt[len(prefix):]
 
 
 @dataclass(frozen=True)
@@ -49,11 +56,22 @@ def prompt_sha1(prompt):
     return hashlib.sha1(prompt.encode()).hexdigest()
 
 
+CACHE_WRITE, CACHE_READ = 1.25, 0.1
+
+
 def cost(prices, model, usage):
     price = prices.get(model)
     if price is None:
         return None
-    return round((usage.get("input_tokens", 0) * price["input"] + usage.get("output_tokens", 0) * price["output"]) / 1e6, 6)
+    prompt = (usage.get("input_tokens", 0) + CACHE_WRITE * (usage.get("cache_creation_input_tokens") or 0)
+              + CACHE_READ * (usage.get("cache_read_input_tokens") or 0))
+    return round((prompt * price["input"] + usage.get("output_tokens", 0) * price["output"]) / 1e6, 6)
+
+
+def cli_cache_env(cached):
+    if not cached:
+        return {**os.environ, "DISABLE_PROMPT_CACHING": "1"}
+    return {**{k: v for k, v in os.environ.items() if k != "DISABLE_PROMPT_CACHING"}, "CLAUDE_CODE_PROMPT_CACHE_TTL": "5m"}
 
 
 class ClaudeCLI:
@@ -64,14 +82,23 @@ class ClaudeCLI:
         self.workdir = workdir
 
     def complete(self, request):
+        prefix, rest = request.parts()
+        with tempfile.TemporaryDirectory() as tmp:
+            system = ["--system-prompt", request.system]
+            if prefix:
+                path = Path(tmp) / "system.txt"
+                path.write_text(f"{request.system}\n\n{prefix}", encoding="utf-8")
+                system = ["--system-prompt-file", str(path)]
+            return self.run(request, system, rest, cli_cache_env(bool(prefix)))
+
+    def run(self, request, system, stdin, env):
         try:
             proc = subprocess.run(
                 ["claude", "-p", "--output-format", "json", "--model", request.model,
                  *(["--effort", request.effort] if request.effort else []),
                  "--tools", "", "--strict-mcp-config", "--setting-sources", "",
-                 "--no-session-persistence", "--system-prompt", request.system],
-                input=request.prompt, capture_output=True, text=True, timeout=900, cwd=self.workdir,
-                env={**os.environ, "DISABLE_PROMPT_CACHING": "1"},
+                 "--no-session-persistence", *system],
+                input=stdin, capture_output=True, text=True, timeout=900, cwd=self.workdir, env=env,
             )
         except subprocess.TimeoutExpired:
             raise Transient("timeout after 900s")
@@ -158,7 +185,13 @@ class Anthropic:
     def payload(self, request):
         return {"model": ANTHROPIC_ALIASES.get(request.model, request.model),
                 "max_tokens": self.max_tokens, "system": request.system,
-                "messages": [{"role": "user", "content": request.prompt}]}
+                "messages": [{"role": "user", "content": self.content(request)}]}
+
+    def content(self, request):
+        prefix, rest = request.parts()
+        if not prefix:
+            return request.prompt
+        return [{"type": "text", "text": prefix, "cache_control": {"type": "ephemeral"}}, {"type": "text", "text": rest}]
 
     def complete(self, request):
         url = f"{self.base_url}/v1/messages"

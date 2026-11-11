@@ -103,7 +103,7 @@ Reply again with one JSON object that follows every rule above and fixes this.
 """
 
 
-def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, settings=None):
+def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, settings=None, prefix=""):
     tally("fresh")
     settings = settings or load_settings(workdir)
     model = settings.model_for(purpose)
@@ -122,7 +122,7 @@ def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, setti
         reply = transient = None
         try:
             reply = backend.complete(Request(system=SYSTEM_PROMPT, prompt=attempt_prompt, model=model, purpose=purpose, chapter=chapter,
-                                             effort=effort))
+                                             effort=effort, prefix=prefix))
         except Transient as exc:
             transient = exc
         except Fatal as exc:
@@ -185,7 +185,7 @@ def cached_reply(workdir, purpose, prompt, settings=None):
     return None
 
 
-def cached_llm(workdir, purpose, prompt, check=None, chapter=None, settings=None):
+def cached_llm(workdir, purpose, prompt, check=None, chapter=None, settings=None, prefix=""):
     settings = settings or load_settings(workdir)
     reply = cached_reply(workdir, purpose, prompt, settings)
     error = check(reply) if reply is not None and check else None
@@ -195,7 +195,7 @@ def cached_llm(workdir, purpose, prompt, check=None, chapter=None, settings=None
     if error:
         log(workdir, f"  {purpose}: cached reply rejected: {error}")
     reply = llm(workdir, purpose, prompt, chapter=chapter, check=check,
-                rejected=(json.dumps(reply, ensure_ascii=False), error) if error else None, settings=settings)
+                rejected=(json.dumps(reply, ensure_ascii=False), error) if error else None, settings=settings, prefix=prefix)
     write_json(cache_paths(workdir, settings, purpose, prompt)[0],
                {"purpose": purpose, "backend": settings.backend, "model": settings.model_for(purpose), "reply": reply})
     return reply

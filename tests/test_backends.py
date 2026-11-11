@@ -53,6 +53,16 @@ class AnthropicBackendTest(unittest.TestCase):
         self.assertEqual((reply.usage["input_tokens"], reply.usage["output_tokens"]), (1200, 300))
         self.assertAlmostEqual(reply.cost_usd, 1200 * 2 / 1e6 + 300 * 10 / 1e6)
 
+    def test_a_shared_prefix_is_sent_as_a_cached_block_and_cache_tokens_are_priced(self):
+        body = json.loads(payload("anthropic-message.json"))
+        body["usage"].update(cache_creation_input_tokens=1000, cache_read_input_tokens=10000)
+        post = Recorder(200, json.dumps(body))
+        reply = self.backend(post).complete(request(prompt="<book>text</book>\nAudit F1.", prefix="<book>text</book>\n"))
+        self.assertEqual(post.calls[0]["payload"]["messages"], [{"role": "user", "content": [
+            {"type": "text", "text": "<book>text</book>\n", "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": "Audit F1."}]}])
+        self.assertAlmostEqual(reply.cost_usd, (1200 + 1.25 * 1000 + 0.1 * 10000) * 2 / 1e6 + 300 * 10 / 1e6)
+
     def test_config_prices_override_the_table(self):
         backend = self.backend(Recorder(200, payload("anthropic-message.json")),
                                prices={"claude-sonnet-5-5": {"input": 1, "output": 1}})
@@ -128,7 +138,8 @@ class OpenAIBackendTest(unittest.TestCase):
 def stub_claude(directory, stdout, code=0):
     script = Path(directory) / "claude"
     script.write_text("#!/usr/bin/env python3\nimport json, os, sys\n"
-                      f"open({str(Path(directory) / 'argv.json')!r}, 'w').write(json.dumps({{'argv': sys.argv[1:], 'stdin': sys.stdin.read(), 'caching': os.environ.get('DISABLE_PROMPT_CACHING')}}))\n"
+                      "system = sys.argv[sys.argv.index('--system-prompt-file') + 1] if '--system-prompt-file' in sys.argv else None\n"
+                      f"open({str(Path(directory) / 'argv.json')!r}, 'w').write(json.dumps({{'argv': sys.argv[1:], 'stdin': sys.stdin.read(), 'caching': os.environ.get('DISABLE_PROMPT_CACHING'), 'ttl': os.environ.get('CLAUDE_CODE_PROMPT_CACHE_TTL'), 'system_file': open(system).read() if system else None}}))\n"
                       f"sys.stdout.write({stdout!r})\nsys.exit({code})\n")
     script.chmod(script.stat().st_mode | stat.S_IEXEC)
     return {"PATH": f"{directory}{os.pathsep}{os.environ['PATH']}"}
@@ -148,6 +159,26 @@ class ClaudeCLIBackendTest(unittest.TestCase):
         self.assertEqual(json.loads(reply.text), {"ok": True, "word": "lamp"})
         self.assertEqual(reply.cost_usd, 0.0000787)
         self.assertEqual((reply.usage["input_tokens"], reply.usage["output_tokens"]), (697, 18))
+
+    def test_a_shared_prefix_goes_to_a_cached_system_prompt_file_and_the_rest_to_stdin(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict(os.environ, {**stub_claude(tmp, payload("claude-cli-envelope.json")), "DISABLE_PROMPT_CACHING": "1"}):
+                ClaudeCLI(tmp, {}).complete(request(prompt="<book>The lamp burned.</book>\nReview the characters.",
+                                                    prefix="<book>The lamp burned.</book>\n"))
+            seen = json.loads((Path(tmp) / "argv.json").read_text())
+        self.assertEqual(seen["argv"][-2], "--system-prompt-file")
+        self.assertNotIn("--system-prompt", seen["argv"])
+        self.assertEqual(seen["system_file"], SYSTEM_PROMPT + "\n\n<book>The lamp burned.</book>\n")
+        self.assertEqual(seen["stdin"], "Review the characters.")
+        self.assertEqual((seen["caching"], seen["ttl"]), (None, "5m"))
+
+    def test_a_prefix_the_prompt_does_not_start_with_is_ignored_and_caching_stays_off(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict(os.environ, stub_claude(tmp, payload("claude-cli-envelope.json"))):
+                ClaudeCLI(tmp, {}).complete(request(prompt="Fix this JSON.", prefix="<book>The lamp burned.</book>\n"))
+            seen = json.loads((Path(tmp) / "argv.json").read_text())
+        self.assertEqual(seen["argv"][-2:], ["--system-prompt", SYSTEM_PROMPT])
+        self.assertEqual((seen["stdin"], seen["caching"], seen["ttl"]), ("Fix this JSON.", "1", None))
 
     def test_an_effort_is_passed_to_claude(self):
         with tempfile.TemporaryDirectory() as tmp:

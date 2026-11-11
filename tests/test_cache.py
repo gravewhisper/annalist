@@ -67,6 +67,20 @@ class CacheTest(unittest.TestCase):
         entry = json.loads(next((self.workdir / "cache").iterdir()).read_text(encoding="utf-8"))
         self.assertEqual((entry["backend"], entry["model"]), ("claude-cli", "sonnet"))
 
+    def test_a_cacheable_prefix_reaches_the_cli_but_leaves_the_reply_cache_key_alone(self):
+        self.book()
+        self.claude_replies({"summary": "fresh"})
+        prefix = "<book>The lamp burned.</book>\n"
+        self.assertEqual(cached_llm(str(self.workdir), "summary", prefix + PROMPT, prefix=prefix), {"summary": "fresh"})
+        seen = json.loads((self.bin / "argv.json").read_text())
+        self.assertEqual((seen["stdin"], seen["ttl"]), (PROMPT, "5m"))
+        self.assertTrue(seen["system_file"].endswith(prefix))
+        self.claude_replies(None, 1)
+        self.assertEqual(cached_llm(str(self.workdir), "summary", prefix + PROMPT), {"summary": "fresh"})
+        self.assertEqual(self.calls()[0]["prompt_sha1"], hashlib.sha1((prefix + PROMPT).encode()).hexdigest())
+        key = hashlib.sha1(f"claude-cli\nsonnet\n{prefix}{PROMPT}".encode()).hexdigest()[:16]
+        self.assertEqual([p.name for p in (self.workdir / "cache").iterdir()], [f"summary-{key}.json"])
+
     def test_a_reply_at_one_effort_is_never_reused_at_another(self):
         self.book()
         self.legacy_entry({"summary": "old"})
