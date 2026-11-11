@@ -88,7 +88,7 @@ main{flex:1;min-width:0;padding:32px 40px 96px;background:var(--bg)}
 .az{display:flex;flex-wrap:wrap;gap:2px;font-size:13px}
 .az a,.az span{min-width:22px;height:24px;display:inline-grid;place-items:center;border-radius:4px}
 .az a:hover{background:var(--hover);text-decoration:none}
-.az span{color:var(--muted);opacity:.45}
+.az span{color:var(--line-strong)}
 .ctable{overflow-x:auto;border-top:1px solid var(--line)}
 .ctable table{width:100%;border-collapse:collapse;font-size:14px}
 .ctable th,.ctable td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:baseline}
@@ -97,7 +97,7 @@ main{flex:1;min-width:0;padding:32px 40px 96px;background:var(--bg)}
 .ctable thead th{font-size:12px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
 .ctable thead a{color:var(--muted)}
 .ctable thead a:hover,.ctable thead [aria-sort] a{color:var(--fg);text-decoration:none}
-.ctable .sortmark{margin-left:4px;color:var(--accent)}
+.ctable .sortmark{margin-left:4px}
 .ctable tbody th{font-weight:normal;min-width:160px}
 .ctable tbody tr:hover{background:var(--hover)}
 .ctable .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
