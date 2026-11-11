@@ -84,7 +84,7 @@ class ThemeContrast(unittest.TestCase):
 
     def test_accent_marks_and_control_borders_reach_three_to_one(self):
         for name in THEMES:
-            for mode in ("light",):
+            for mode in MODES:
                 t = tokens(name, mode)
                 for surface in ("bg", "card", "frame", "top-bg"):
                     with self.subTest(theme=name, mode=mode, mark="accent", on=surface):
@@ -95,7 +95,7 @@ class ThemeContrast(unittest.TestCase):
 
     def test_graph_edges_at_rest_and_tie_bars_reach_three_to_one(self):
         for name in THEMES:
-            for mode in ("light",):
+            for mode in MODES:
                 t = tokens(name, mode)
                 for group in EDGES:
                     c = flat(t, "r-" + group, "card")
@@ -106,7 +106,7 @@ class ThemeContrast(unittest.TestCase):
 
     def test_links_differ_from_the_accent_and_are_blue_in_light_mode(self):
         for name in THEMES:
-            for mode in ("light",):
+            for mode in MODES:
                 t = tokens(name, mode)
                 with self.subTest(theme=name, mode=mode):
                     self.assertNotEqual(flat(t, "link", "bg"), flat(t, "accent", "bg"))
