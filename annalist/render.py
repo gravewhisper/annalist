@@ -2,6 +2,7 @@ import html
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from pathlib import Path
 
 from .book import load_book
@@ -251,13 +252,35 @@ Reply with one JSON object: {{"paragraph": "..."}}
 """
 
 
+APPEARANCE_PROMPT = """Write the Appearance section of a fan-wiki page about "{name}", a character in a novel, using ONLY the evidence below (chapter, description, quote). One short paragraph of two to four sentences in plain prose. Lead with the lasting features: build, height, hair, eyes, face, skin, and scars or other marks. Mention clothing, an injury, or a look seen in one scene only as a note dated to that scene, such as "At a banquet she wore a pale dress (ch 12)." Cite the chapter of each claim inline as (ch N). Do not add anything the evidence does not show and nothing from outside the novel.
+
+{evidence}
+
+Reply with one JSON object: {{"paragraph": "..."}}
+"""
+
+
+@dataclass(frozen=True)
+class Written:
+    purpose: str
+    prompt: str
+    least: int
+
+
+WRITTEN = {"appearance": Written("appearance", APPEARANCE_PROMPT, 2),
+           "personality_evidence": Written("personality", PERSONALITY_PROMPT, 1)}
+
+
 def visible(observations, until):
     return [o for o in observations if o.get("shown", o["chapter"]) <= until and o.get("quote_ok")]
 
 
-def personality_paragraph(workdir, name, evidence):
-    lines = "\n".join(f"- ch{o['chapter']}: {o['value']} | \"{o['quotes'][0]}\"" for o in evidence if o["quotes"])
-    return str(cached_llm(workdir, "personality", PERSONALITY_PROMPT.format(name=name, evidence=lines)).get("paragraph") or "").strip()
+def written_prompt(key, name, evidence):
+    quoted = [o for o in evidence if o["quotes"]]
+    if len(quoted) < WRITTEN[key].least:
+        return None
+    lines = "\n".join(f"- ch{o['chapter']}: {o['value']} | \"{o['quotes'][0]}\"" for o in quoted)
+    return WRITTEN[key].prompt.format(name=name, evidence=lines)
 
 
 def capitalized(value):
@@ -326,7 +349,7 @@ def arc_histories(workdir, kb, by_entity, arcs, pool):
     return histories
 
 
-def profile_sections(profile, personality, until, link, timelines, spoken):
+def profile_sections(profile, written, until, link, timelines, spoken):
     lines = []
     rows = infobox_rows(profile, until, link, timelines, spoken)
     if rows:
@@ -336,14 +359,15 @@ def profile_sections(profile, personality, until, link, timelines, spoken):
         if not shown:
             continue
         lines += [f"## {title}", ""]
-        if key == "personality_evidence":
-            lines += [cited_chapters(personality, until, link), ""]
-            continue
+        if written.get(key):
+            lines += [cited_chapters(written[key], until, link), "", f"<details><summary>The evidence ({len(shown)})</summary>", ""]
         for o in shown:
             tag = timeline_tag(timelines, o.get("timeline", "main"), until)
             lines.append(f"- {o['value']} ({link(o['chapter'])})" + (f" *({tag})*" if tag else ""))
             for q in o["quotes"][:1]:
                 lines += [blockquote(q), ""]
+        if written.get(key):
+            lines += ["</details>", ""]
     return lines
 
 
@@ -446,8 +470,8 @@ def cmd_render(args):
             for r in ties:
                 r.update(verified_quotes(workdir, r["chapter"], r["quotes"]))
             kept[part["name"]] = kept_prompts(part, by_entity.get(n, []), ties, arcs, kb.timelines, until)
-    evidence = {n: visible(p["lists"].get("personality_evidence", []), until) for n, p in profiles.items()
-                if n in kept or (n in kb.entities and kb.entities[n]["type"] == "character")}
+    prompts = [(n, key, prompt) for n, p in profiles.items() if n in kept or (n in kb.entities and kb.entities[n]["type"] == "character")
+               for key in WRITTEN if (prompt := written_prompt(key, n, visible(p["lists"].get(key, []), until)))]
     profiles = {k: v for k, v in profiles.items() if k in kb.entities}
     shown = display_names(kb.entities)
     for name, e in kb.entities.items():
@@ -473,8 +497,9 @@ def cmd_render(args):
                       [x for n in needs_summary for x in checkpoint_prompts(kb.entities[n], by_entity[n], kb.timelines).values()]
                       + [x for k in kept.values() for x in [k["summary"], *k["summaries"].values()] if x]))
         list(pool.map(lambda prompt: cached_llm(workdir, "history", prompt), [p for k in kept.values() for _, p in k["history"]]))
-        evidence = {n: v for n, v in evidence.items() if v}
-        personalities = dict(zip(evidence, pool.map(lambda n: personality_paragraph(workdir, n, evidence[n]), evidence)))
+        written = {}
+        for (n, key, _), reply in zip(prompts, pool.map(lambda job: cached_llm(workdir, WRITTEN[job[1]].purpose, job[2]), prompts)):
+            written.setdefault(n, {})[key] = str(reply.get("paragraph") or "").strip()
         histories = arc_histories(workdir, kb, by_entity, arcs, pool)
 
     def chapter_link(n, depth):
@@ -522,7 +547,7 @@ def cmd_render(args):
                  + (f" Also known as: {', '.join(aka)}.*" if aka else "*"), "",
                  summaries.get(name) or e["summary"] or "No summary yet.", ""]
         if name in profiles:
-            lines += profile_sections(profiles[name], personalities.get(name, ""), until, cite, kb.timelines, spoken.get(name, []))
+            lines += profile_sections(profiles[name], written.get(name, {}), until, cite, kb.timelines, spoken.get(name, []))
         if histories.get(name):
             lines += ["## History", ""]
         for arc, text in histories.get(name, []):

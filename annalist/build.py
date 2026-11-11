@@ -247,7 +247,7 @@ STAGES = (
     Stage("render", lambda run: cmd_render(namespace(run, until=None, html=True)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
                    "ending.json", "volumes", ARCS_FILE, "ladders.json", "corrections.json", "proofread.json"),
-          lambda run: ["wiki/index.md"], ("summary", "personality", "history"), code=("render",)),
+          lambda run: ["wiki/index.md"], ("summary", "personality", "appearance", "history"), code=("render",)),
     Stage("export", lambda run: cmd_export(Namespace(workdir=str(run.workdir), outdir=str(run.workdir / "site"), public=False, theme=None)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
                    "ending.json", "volumes", ARCS_FILE, "ladders.json", "families.json", "corrections.json", "proofread.json"),

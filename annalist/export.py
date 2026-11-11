@@ -12,7 +12,7 @@ from .files import read_json
 from .llm import cached_reply
 from .names import is_stub, name_key, parse_aliases, written_summary
 from .profile import page_profiles
-from .render import checkpoint_prompts, closed_arcs, history_prompts, kept_prompts, PERSONALITY_PROMPT, reader_parts, summary_prompt
+from .render import checkpoint_prompts, closed_arcs, history_prompts, kept_prompts, reader_parts, summary_prompt, WRITTEN, written_prompt
 from .state import load_states
 from .status import spoken_appearances
 from .template import type_parents, Types
@@ -127,12 +127,11 @@ def observations(rows):
              **({"shown": o["shown"]} if "shown" in o else {})} for o in rows if o.get("quote_ok")]
 
 
-def personality_history(workdir, name, evidence):
+def written_history(workdir, key, name, evidence):
     history = []
     for c in sorted({o.get("shown", o["chapter"]) for o in evidence}):
-        shown = [o for o in evidence if o.get("shown", o["chapter"]) <= c and o["quotes"]]
-        lines = "\n".join(f"- ch{o['chapter']}: {o['value']} | \"{o['quotes'][0]}\"" for o in shown)
-        reply = cached_reply(workdir, "personality", PERSONALITY_PROMPT.format(name=name, evidence=lines))
+        prompt = written_prompt(key, name, [o for o in evidence if o.get("shown", o["chapter"]) <= c])
+        reply = prompt and cached_reply(workdir, WRITTEN[key].purpose, prompt)
         if reply and reply.get("paragraph"):
             history.append({"chapter": c, "text": str(reply["paragraph"]).strip()})
     return history
@@ -141,10 +140,10 @@ def personality_history(workdir, name, evidence):
 def export_profile(workdir, name, profile, spoke):
     fields = {k: observations(v) for k, v in {**profile["fields"], **profile["extra"]}.items()}
     lists = {k: observations(v) for k, v in profile["lists"].items()}
-    evidence = [o for o in profile["lists"].get("personality_evidence", []) if o.get("quote_ok")]
+    written = {spec.purpose: written_history(workdir, key, name, [o for o in profile["lists"].get(key, []) if o.get("quote_ok")])
+               for key, spec in WRITTEN.items()}
     return {"fields": {k: v for k, v in fields.items() if v}, "lists": {k: v for k, v in lists.items() if v},
-            "spoke": [[c, tid] for c, tid in spoke],
-            "personality": personality_history(workdir, name, evidence)}
+            "spoke": [[c, tid] for c, tid in spoke], **written}
 
 
 def entity_summary(workdir, entity, facts, safe_chapter, timelines, last):

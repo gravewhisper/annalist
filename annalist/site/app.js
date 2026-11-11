@@ -494,16 +494,19 @@ function historySection(e) {
   return arcs.length ? [section('history', 'History', arcs.map(h => `<div class="chgroup"><h4><span class="chip">Ch ${h.start} to ${h.end}</span> ${esc(h.arc)}</h4><div class="prose"><p>${chapterRefs(linkify(h.text, e.id))}</p></div></div>`).join(''))] : [];
 }
 
+function writtenSection(e, key, title, observations, paragraphs) {
+  const evidence = until(observations || []);
+  const para = latest(paragraphs || []);
+  if (para) return [section(key, title, `<div class="prose"><p>${chapterRefs(linkify(para.text, e.id))}</p></div><div class="asof">Written from evidence up to chapter ${para.chapter}</div>${evidence.length ? expander(showHide(`the evidence (${evidence.length})`), obsList(evidence, e.id)).join('') : ''}`)];
+  return evidence.length ? [section(key, title, obsList(evidence, e.id))] : [];
+}
+
 function profileSections(e) {
   const p = e.profile;
   if (!p) return historySection(e);
   const out = [];
-  const appearance = until(p.lists.appearance || []);
-  if (appearance.length) out.push(section('appearance', 'Appearance', obsList(appearance, e.id)));
-  const evidence = until(p.lists.personality_evidence || []);
-  const para = latest(p.personality || []);
-  if (para) out.push(section('personality', 'Personality', `<div class="prose"><p>${chapterRefs(linkify(para.text, e.id))}</p></div><div class="asof">Written from evidence up to chapter ${para.chapter}</div>${evidence.length ? expander(showHide(`the evidence (${evidence.length})`), obsList(evidence, e.id)).join('') : ''}`));
-  else if (evidence.length) out.push(section('personality', 'Personality', obsList(evidence, e.id)));
+  out.push(...writtenSection(e, 'appearance', 'Appearance', p.lists.appearance, p.appearance));
+  out.push(...writtenSection(e, 'personality', 'Personality', p.lists.personality_evidence, p.personality));
   out.push(...historySection(e));
   const trivia = until(p.lists.trivia || []);
   if (trivia.length) out.push(section('trivia', 'Trivia', obsList(trivia, e.id)));

@@ -49,6 +49,7 @@ LATER_REPLIES = {
     "profile-field": {"observations": []},
     "summary": {"summary": "A figure of Corvel Quay and the Lamplighters' Guild."},
     "personality": {"paragraph": "Careful and stubborn (ch 1)."},
+    "appearance": {"paragraph": "Tall, with salt in his hair (ch 1)."},
     "history": {"paragraph": "Ines kept the lamp and searched for the cut page (ch 1)."},
     "arcs": {"arcs": [{"name": "The Missing Page", "start": 1}]},
     "arc": {"name": "The Missing Page", "summary": "Ines follows the cut page of the Salt Ledger to the Gannet's wreck."},

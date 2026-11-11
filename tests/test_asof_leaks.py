@@ -14,6 +14,7 @@ ECHOED = {
     "discover": {"entries": [{"id": "C1", "type": "concept", "summary": ECHO}, {"id": "C2", "type": "concept", "summary": ECHO}]},
     "summary": {"summary": ECHO},
     "personality": {"paragraph": ECHO},
+    "appearance": {"paragraph": ECHO},
     "history": {"paragraph": ECHO},
     "arc": {"name": ECHO, "summary": ECHO},
     "volume": {"overview": ECHO, "character_development": [{"character": "Ines Varro", "development": ECHO, "chapters": [1]}]},
@@ -53,7 +54,10 @@ def echo_script():
             r["reply"] = {**r["reply"], "payoff": ECHO}
         elif r["purpose"] == "profile":
             r["reply"] = {**r["reply"], "personality_evidence": [
-                {"value": "steady", "chapter": 1, "quotes": [PROFILE_QUOTE], "asserted_by": "narrator"}]}
+                {"value": "steady", "chapter": 1, "quotes": [PROFILE_QUOTE], "asserted_by": "narrator"}], "appearance": [
+                {"value": "nineteen", "chapter": 1, "quotes": [PROFILE_QUOTE], "asserted_by": "narrator"},
+                {"value": "a white scar", "chapter": 3, "quotes": ["small and quick, with a white scar across the back of her left hand."],
+                 "asserted_by": "narrator"}]}
         elif r["purpose"] == "death":
             r["reply"] = {**r["reply"], "circumstances": ECHO}
         elif r["purpose"] == "extract" and r["chapter"] == 4:
@@ -95,6 +99,9 @@ class AsOfLeakTest(unittest.TestCase):
             said = words(json.dumps(r["reply"], ensure_ascii=False))
             if r.get("chapter"):
                 known[r["chapter"]] |= said
+            elif r["purpose"] == "profile":
+                for o in [o for rows in r["reply"].values() for o in rows]:
+                    known[o["chapter"]] |= words(json.dumps(o, ensure_ascii=False))
             elif ECHO not in json.dumps(r["reply"]):
                 tool |= said
         cls.later = {}
@@ -127,6 +134,7 @@ class AsOfLeakTest(unittest.TestCase):
         echoed = {"discover": next(e for e in entities if e["name"] == "Frostmonth")["blurbs"][0][1],
                   "summary": next(e["summary"]["text"] for e in entities if e.get("summary")),
                   "personality": next(e["profile"]["personality"][0]["text"] for e in entities if (e.get("profile") or {}).get("personality")),
+                  "appearance": next(e["profile"]["appearance"][0]["text"] for e in entities if (e.get("profile") or {}).get("appearance")),
                   "history": next(e["history"][0]["text"] for e in entities if e.get("history")),
                   "arc": v["arcs"][0]["summary"], "arc name": v["arcs"][0]["name"],
                   "history heading": next(e["history"][0]["arc"] for e in entities if e.get("history")), "volume": v["overview"], "events": v["key_events"][0]["event"],

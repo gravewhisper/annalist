@@ -16,6 +16,7 @@ class Rate:
 
 RATES = {
     "answers": Rate(input_tokens=2855.32, output_tokens=238.31, wall_s=1.8199),
+    "appearance": Rate(input_tokens=71.39, output_tokens=21.16, wall_s=0.3442),
     "arc": Rate(input_tokens=108.91, output_tokens=60.17, wall_s=0.3706),
     "arcs": Rate(input_tokens=88.99, output_tokens=0.74, wall_s=0.0109),
     "book": Rate(input_tokens=47.7, output_tokens=3.3, wall_s=0.0368),
