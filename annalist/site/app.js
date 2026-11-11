@@ -2292,7 +2292,8 @@ function holdersAt(stepOf, power, groupIds, stagesOf) {
       const stage = staged.at(-1)?.stage || null;
       const stages = stagesOf.get(cur.step) || [];
       const rose = staged.filter(ev => stages.indexOf(ev.stage) < stages.indexOf(stage)).map(ev => ({stage: ev.stage, chapter: ev.chapter}));
-      placed.push({holder, group: cur.group, step: cur.step, since, passed, earlier: sameLadder.filter(x => !passed.includes(x)), stage, rose: rose.slice(-1)});
+      const reached = stage ? Math.min(...staged.filter(ev => ev.stage === stage).map(ev => ev.chapter)) : since;
+      placed.push({holder, group: cur.group, step: cur.step, since: reached, passed, earlier: sameLadder.filter(x => !passed.includes(x)), stage, rose: rose.slice(-1)});
     }
   }
   return placed.sort((a, b) => a.since - b.since || byName(a.holder, b.holder));

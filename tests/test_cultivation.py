@@ -150,6 +150,7 @@ class SharedLadderBuildTest(unittest.TestCase):
         self.assertEqual(self.holders(out["graph:ladder@2"]["model"]),
                          {"Mist Gathering": [("Tamsin Vey", "Seventh Layer")], "Root Binding": []})
         self.assertIn("rose from Third Layer (ch 1)", visible(out["graph:ladder@2"]["html"]))
+        self.assertIn("Seventh Layer since ch 2", visible(out["graph:ladder@2"]["html"]))
         self.assertEqual(self.holders(out["graph:ladder@3"]["model"])["Mist Gathering"], [("Tamsin Vey", "Ninth Layer")])
         self.assertNotIn("Pearl Forming", visible(out["graph:ladder@3"]["html"]))
         at4 = self.holders(out["graph:ladder@4"]["model"])
