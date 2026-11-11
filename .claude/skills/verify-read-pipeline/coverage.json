@@ -1,5 +1,5 @@
 {
-  "sync_commit": "5887ed5",
+  "sync_commit": "be5460e",
   "covers": [
     {
       "file": "annalist/read.py",
@@ -22,7 +22,7 @@
     {
       "file": "annalist/read.py",
       "function": "extract_chapter",
-      "fingerprint": "d4332c6d61f0e18d",
+      "fingerprint": "ce7f1c71671e0036",
       "model": "View, ExtractOk, ExtractFails"
     },
     {
@@ -64,7 +64,7 @@
     {
       "file": "annalist/state.py",
       "function": "Knowledge.upsert_entity",
-      "fingerprint": "b81d394f95ee108e",
+      "fingerprint": "3daddc141277ec92",
       "model": "assumption: reads the entity dicts in out, never writes them"
     },
     {
