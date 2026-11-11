@@ -1,6 +1,5 @@
 import hashlib
 import json
-from collections import Counter
 import re
 import shutil
 import sys
@@ -10,14 +9,14 @@ from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .families import read_families, relation_family
 from .files import read_json
 from .llm import cached_reply
-from .names import is_stub, name_key, parse_aliases, written_summary
+from .names import is_stub, name_key
+from .pages import read_pages
 from .profile import page_profiles
 from .render import checkpoint_prompts, closed_arcs, history_prompts, kept_prompts, reader_parts, summary_prompt, WRITTEN, written_prompt
 from .state import load_states
 from .status import spoken_appearances
 from .template import type_parents, Types
-from .text import chapter_text, mention_quote, verified_quotes
-from .titles import page_title, revealed_name
+from .text import mention_quote
 
 SITE = Path(__file__).resolve().parent / "site"
 THEMES = Path(__file__).resolve().parent / "themes"
@@ -26,100 +25,9 @@ def entity_id(name):
     return hashlib.sha1(name.encode()).hexdigest()[:8]
 
 
-def mentions(names, text):
-    lower = text.lower()
-    return {n for n in names if re.search(r"(?<!\w)" + re.escape(n.lower()) + r"(?!\w)", lower)}
-
-
-def read_states(workdir):
-    for path in sorted((workdir / "state").glob("[0-9][0-9][0-9][0-9].json")):
-        yield json.loads(path.read_text(encoding="utf-8"))
-
-
-class Registry:
-    def __init__(self, entities):
-        self.entities = {e["name"]: e for e in entities}
-        self.index = {}
-        for e in entities:
-            for n in [e["name"]] + e["aliases"]:
-                self.index.setdefault(name_key(n), []).append(e["name"])
-
-    def resolve(self, name, etype=""):
-        found = list(dict.fromkeys(self.index.get(name_key(name), [])))
-        typed = [n for n in found if self.entities[n]["type"] == name_key(etype)]
-        if len(typed) == 1:
-            return typed[0]
-        return found[0] if len(found) == 1 else None
-
-
 def timeline(row):
     tid = row.get("timeline", "main")
     return {} if tid == "main" else {"timeline": tid}
-
-
-class Absorbed:
-    def __init__(self, entities):
-        self.entries = {a["name"]: {**a, "into": e["name"]} for e in entities for a in e.get("absorbed", [])}
-        self.owner = {(a["into"], name_key(n)): a for a in self.entries.values() for n in [a["name"]] + a["aliases"]}
-
-    def page(self, canonical, filed, chapter):
-        a = self.entries.get(filed)
-        return filed if a and a["into"] == canonical and chapter < a["chapter"] else canonical
-
-    def page_for_name(self, canonical, name, chapter):
-        a = self.owner.get((canonical, name_key(name)))
-        return a["name"] if a and chapter < a["chapter"] else canonical
-
-    def floor(self, canonical, name, chapter):
-        a = self.owner.get((canonical, name_key(name)))
-        return max(chapter, a["chapter"]) if a else chapter
-
-
-def first_seen(registry, facts, relations, states, timelines, absorbed):
-    seen = {}
-
-    def note(page, chapter, text):
-        for n in mentions(names(page), text):
-            key = (page, n)
-            seen[key] = min(seen.get(key, chapter), chapter)
-
-    def names(page):
-        e = registry.entities.get(page) or absorbed.entries[page]
-        return [e["name"]] + e["aliases"]
-
-    for f in facts:
-        note(absorbed.page(f["entity"], f.get("filed"), f["chapter"]), f["chapter"], " | ".join([f["claim"]] + f["quotes"]))
-    for r in relations:
-        for end in ("source", "target"):
-            if r[end] in registry.entities:
-                note(absorbed.page(r[end], (r.get("filed") or {}).get(end), r["chapter"]), r["chapter"], " | ".join(r["quotes"]))
-    blurbs = {}
-    for state in states:
-        n = state["chapter"]
-        labels = (state.get("timelines") or {}).get("labels") or {}
-        for i, rec in enumerate(state["extraction"].get("entities") or [], 1):
-            if not isinstance(rec, dict) or not rec.get("name"):
-                continue
-            canonical = registry.resolve(str(rec["name"]), str(rec.get("type") or ""))
-            if not canonical:
-                continue
-            page = absorbed.page_for_name(canonical, str(rec["name"]), n)
-            own = {name_key(x): x for x in names(page)}
-            for alias in [str(rec["name"])] + parse_aliases(rec.get("aliases")):
-                if name_key(alias) in own:
-                    key = (page, own[name_key(alias)])
-                    seen[key] = min(seen.get(key, n), n)
-            summary = written_summary(rec)
-            history = blurbs.setdefault(page, [])
-            tid = labels.get(f"E{i}") if labels.get(f"E{i}") in timelines else "main"
-            if summary and (not history or history[-1][1] != summary):
-                history.append([n, summary] + ([tid] if tid != "main" else []))
-    return seen, blurbs
-
-
-def first_named(texts, name, before):
-    pattern = re.compile(r"(?<!\w)" + re.escape(name) + r"(?!\w)")
-    return next((n for n in sorted(texts) if n < before and name in texts[n] and pattern.search(texts[n])), before)
 
 
 def observations(rows):
@@ -271,36 +179,21 @@ def build(workdir, theme):
     title = book.get("title") or workdir.name
     kb = load_states(workdir, ladders=True, corrections=EVERY_CORRECTION)
     entities = list(kb.entities.values())
-    facts = [{**f, **verified_quotes(workdir, f["chapter"], f["quotes"])} for f in kb.facts]
-    relations = [{**r, **verified_quotes(workdir, r["chapter"], r["quotes"])} for r in kb.relations]
-    states = list(read_states(workdir))
-    registry = Registry(entities)
-    absorbed = Absorbed(entities)
+    pages = read_pages(workdir, kb)
+    facts, relations, states, registry, absorbed = pages.facts, pages.relations, pages.states, pages.registry, pages.absorbed
+    blurbs, texts, words, fact_page, rel_ends, names = pages.blurbs, pages.texts, pages.words, pages.fact_page, pages.rel_ends, pages.names
     timelines = kb.timelines
-    seen, blurbs = first_seen(registry, facts, relations, states, timelines, absorbed)
-    for d in read_json(workdir / "discover.json", {"entities": []})["entities"]:
-        canonical = registry.resolve(d["name"], d["type"])
-        if canonical:
-            page = absorbed.page_for_name(canonical, d["name"], d["chapter"])
-            seen[(page, d["name"])] = min(seen.get((page, d["name"]), d["chapter"]), d["chapter"])
-        if canonical and d["summary"]:
-            blurbs[page] = sorted(blurbs.get(page, []) + [[d["chapter"], d["summary"]]], key=lambda b: b[0])
     spoken = spoken_appearances(facts + relations, lambda name, n: (c := registry.resolve(name)) and absorbed.page_for_name(c, name, n))
     titles = {c["index"]: c["title"] for c in read_json(workdir / "chapters.json", [])}
     chapters = [{"n": s["chapter"], "title": titles.get(s["chapter"], str(s["chapter"])),
                  "synopsis": str(s["extraction"].get("synopsis") or "").strip()} for s in states]
     last = max((c["n"] for c in chapters), default=0)
-    texts = {c["n"]: chapter_text(workdir, c["n"]) for c in chapters}
     by_entity = {}
     for f in facts:
         by_entity.setdefault(f["entity"], []).append(f)
     profiles, missed = correct_profiles(kb, page_profiles(workdir, entities, read_json(workdir / "profiles.json", {"characters": {}})["characters"]),
                                         kb.corrections)
     ids = {name: entity_id(name) for name in [e["name"] for e in entities] + list(absorbed.entries)}
-    fact_page = {f["id"]: absorbed.page(f["entity"], f.get("filed"), f["chapter"]) for f in facts}
-    rel_ends = [{end: absorbed.page(r[end], (r.get("filed") or {}).get(end), r["chapter"]) for end in ("source", "target")}
-                for r in relations]
-    words = Counter(w for text in texts.values() for w in re.findall(r"\w+", text))
     present = {}
     for state in states:
         for rec in state["extraction"].get("entities") or []:
@@ -324,37 +217,10 @@ def build(workdir, theme):
 
     out_entities = []
     for e in entities:
-        name_seen = seen.get((e["name"], e["name"]), e["first_chapter"])
-        aliases = [{"name": a, "chapter": absorbed.floor(e["name"], a, seen[(e["name"], a)])} for a in e["aliases"]
-                   if (e["name"], a) in seen and a != e.get("written")]
-        first = e["first_chapter"]
-        if e.get("absorbed"):
-            shown = [c for (page, _), c in seen.items() if page == e["name"]] + [b[0] for b in blurbs.get(e["name"], [])]
-            shown += [f["chapter"] for f in facts if fact_page[f["id"]] == e["name"]]
-            shown += [r["chapter"] for r, ends in zip(relations, rel_ends) if e["name"] in ends.values()]
-            first = min(shown, default=e["first_chapter"])
-        else:
-            first = first_named(texts, e["name"], first)
-            name_seen = min(name_seen, first)
-        shown_name = e.get("written", e["name"])
-        own_names = [a for a in e["aliases"] if len(set(registry.index[name_key(a)])) == 1]
-        if not e.get("absorbed") and "written" not in e:
-            own = [b[1] for b in blurbs.get(e["name"], [])] + [x for f in by_entity.get(e["name"], []) for x in [f["claim"], *f["quotes"]]]
-            shown_name, used = page_title(e["name"], own_names, own, texts)
-            first = min([first, *used.values()])
-            aliases = [{**a, "chapter": min(a["chapter"], used.get(a["name"], a["chapter"]))} for a in aliases if a["name"] != shown_name]
-            if shown_name != e["name"]:
-                aliases.append({"name": e["name"], "chapter": name_seen})
-                name_seen = max(first, used[shown_name])
-        real = None
-        if e["type"] == "character" and shown_name == e["name"]:
-            real = revealed_name(e["name"], [a for a in aliases if a["name"] in own_names], words)
-        if real:
-            aliases = [a for a in aliases if a["name"] != real["name"]] + [{"name": e["name"], "chapter": name_seen}]
-            shown_name, name_seen = real["name"], real["chapter"]
-        record = {"id": ids[e["name"]], "name": shown_name, "name_chapter": name_seen, "type": e["type"],
-                  "first": first, "aliases": sorted(aliases, key=lambda a: (a["chapter"], a["name"] != e["name"])),
-                  "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e)}
+        page = names[e["name"]]
+        name_seen, aliases = page.chapter, page.aliases
+        record = {"id": ids[e["name"]], "name": page.name, "name_chapter": page.chapter, "type": e["type"],
+                  "first": page.first, "aliases": page.aliases, "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e)}
         record["mention"] = first_mention(texts, record)
         if e["type"] == "character":
             record["present"] = sorted(present.get(e["name"], ()))
@@ -386,11 +252,9 @@ def build(workdir, theme):
         kept = {a["name"]: kept_prompts(a, own, ties.get(e["name"], []), arcs, timelines, last) for a in reader_parts(e)}
         for a in e.get("absorbed", []):
             kind = a.get("type", e["type"])
-            aliases = [{"name": x, "chapter": seen[(a["name"], x)]} for x in a["aliases"] if (a["name"], x) in seen]
-            part = {"id": ids[a["name"]], "name": a["name"], "name_chapter": seen.get((a["name"], a["name"]), a["first_chapter"]),
-                    "type": kind, "first": a["first_chapter"], "aliases": sorted(aliases, key=lambda x: x["chapter"]),
-                    "blurbs": blurbs.get(a["name"], []), "merged": {"into": ids[e["name"]], "chapter": a["chapter"]},
-                    **nameless(kind, a)}
+            named = names[a["name"]]
+            part = {"id": ids[a["name"]], "name": named.name, "name_chapter": named.chapter, "type": kind, "first": named.first, "aliases": named.aliases,
+                    "blurbs": blurbs.get(a["name"], []), "merged": {"into": ids[e["name"]], "chapter": a["chapter"]}, **nameless(kind, a)}
             part["mention"] = first_mention(texts, part)
             if kind == "character":
                 part["present"] = sorted(present.get(a["name"], ()))
