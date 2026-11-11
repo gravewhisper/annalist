@@ -1,6 +1,6 @@
 :root{--heading-font:Georgia,"Times New Roman",serif;--quote-font:Georgia,"Times New Roman",serif;--body-font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--radius:6px;--measure:68ch}
-:root[data-theme="light"]{--bg:#f6f5f2;--fg:#1e1f24;--muted:#686a72;--line:#dddbd4;--card:#fbfaf8;--accent:#2f6f8f;--g1:#2a78d6;--g2:#eb6834;--g3:#1baf7a;--g4:#eda100;--g5:#e87ba4;--g6:#008300;--g7:#6250d6;--g8:#e34948;--edge:#8d8c86;--r-close:#8457c2;--r-allies:#3d8a5c;--r-conflict:#c8463d;--r-belong:#b08422;--r-things:#aaa397;--h1:#6366f1;--h2:#0891b2;--h3:#ca8a04;--h4:#be185d;--h5:#16a34a;--h6:#9333ea;--dim:.12;--s1:#55697d;--s2:#8b6b4f;--s3:#4e7d63;--s4:#80607a;--s5:#857a45;--s6:#4d7d88;color-scheme:light}
-:root[data-theme="dark"]{--bg:#111215;--fg:#e2e2e6;--muted:#8f909a;--line:#26272e;--card:#16171b;--accent:#6ea8c9;--g1:#3987e5;--g2:#d95926;--g3:#199e70;--g4:#c98500;--g5:#d55181;--g6:#008300;--g7:#9085e9;--g8:#e66767;--edge:#6d6e78;--r-close:#b393ec;--r-allies:#6cc28f;--r-conflict:#ee7b70;--r-belong:#d9b25a;--r-things:#5f596d;--h1:#818cf8;--h2:#22d3ee;--h3:#facc15;--h4:#f472b6;--h5:#4ade80;--h6:#c084fc;--dim:.14;--s1:#8fa3b8;--s2:#c4a07f;--s3:#86b398;--s4:#b693ad;--s5:#bdb07a;--s6:#82b3be;color-scheme:dark}
+:root[data-theme="light"]{--bg:#f4f4f2;--fg:#1b1c21;--muted:#5b5d65;--line:#dcdad3;--card:#ffffff;--accent:#2a6584;--link-line:color-mix(in srgb,var(--link) 22%,transparent);--fade:0;--edge-rest:.6;--g1:#2a78d6;--g2:#eb6834;--g3:#1baf7a;--g4:#eda100;--g5:#e87ba4;--g6:#008300;--g7:#6250d6;--g8:#e34948;--edge:#8d8c86;--r-close:#8457c2;--r-allies:#3d8a5c;--r-conflict:#c8463d;--r-belong:#a07818;--r-things:#858074;--h1:#6366f1;--h2:#0891b2;--h3:#ca8a04;--h4:#be185d;--h5:#16a34a;--h6:#9333ea;--dim:.12;--s1:#55697d;--s2:#8b6b4f;--s3:#4e7d63;--s4:#80607a;--s5:#857a45;--s6:#4d7d88;color-scheme:light}
+:root[data-theme="dark"]{--link-line:color-mix(in srgb,var(--link) 30%,transparent);--fade:1;--edge-rest:.35;--bg:#111215;--fg:#e2e2e6;--muted:#8f909a;--line:#26272e;--card:#16171b;--accent:#6ea8c9;--g1:#3987e5;--g2:#d95926;--g3:#199e70;--g4:#c98500;--g5:#d55181;--g6:#008300;--g7:#9085e9;--g8:#e66767;--edge:#6d6e78;--r-close:#b393ec;--r-allies:#6cc28f;--r-conflict:#ee7b70;--r-belong:#d9b25a;--r-things:#5f596d;--h1:#818cf8;--h2:#22d3ee;--h3:#facc15;--h4:#f472b6;--h5:#4ade80;--h6:#c084fc;--dim:.14;--s1:#8fa3b8;--s2:#c4a07f;--s3:#86b398;--s4:#b693ad;--s5:#bdb07a;--s6:#82b3be;color-scheme:dark}
 :root{--link:var(--accent);--heading:var(--fg);--hover:color-mix(in srgb,var(--fg) 6%,transparent);--shadow:0 6px 24px #00000026}
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -14,7 +14,7 @@ h1{font-size:34px;margin:0}
 h2{font-size:20px;margin:40px 0 8px}
 h3{font-size:16px}
 .muted{color:var(--muted)}
-.ent{color:var(--link);cursor:pointer;border-bottom:1px solid color-mix(in srgb,var(--link) 30%,transparent)}
+.ent{color:var(--link);cursor:pointer;border-bottom:1px solid var(--link-line)}
 .ent:hover{border-bottom-color:var(--link);text-decoration:none}
 
 .top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
@@ -273,7 +273,7 @@ svg.graph .gnode.focus text{font-weight:700}
 #graph.orbit .gnode circle:not(.hit){fill:color-mix(in srgb,var(--fg) 42%,var(--card));stroke:var(--card);stroke-width:1.5}
 #graph.orbit .gnode.focus circle:not(.hit){fill:var(--fg);stroke:var(--card);stroke-width:2}
 #graph.orbit .gnode:hover circle:not(.hit),#graph.orbit .gnode:focus-visible circle:not(.hit),#graph.orbit .gbubble:hover circle:not(.hit),#graph.orbit .gbubble:focus-visible circle:not(.hit){stroke:var(--accent);stroke-width:2}
-#graph.orbit path.edge{stroke-width:1.25px;opacity:.35;transition:opacity .12s}
+#graph.orbit path.edge{stroke-width:1.25px;opacity:var(--edge-rest);transition:opacity .12s}
 #graph.orbit .gnode,#graph.orbit .gbubble,#graph.orbit .lbl,#graph.orbit .band{transition:opacity .12s}
 #graph.orbit .lbl{font-size:calc(12.5px / var(--k));font-weight:500;dominant-baseline:central;stroke:var(--card);stroke-width:calc(3px / var(--k))}
 #graph.orbit .lbl.big{font-size:calc(13.5px / var(--k));font-weight:600}
@@ -283,7 +283,7 @@ svg.graph .gnode.focus text{font-weight:700}
 .gpanel .gcard{position:static;width:auto;margin:12px 0;box-shadow:none}
 #graph.whole .gnode circle:not(.hit):not(.ring){r:calc(var(--r) * 1px / var(--k))}
 #graph.whole .gnode circle.ring{r:calc((var(--r) + 4) * 1px / var(--k))}
-#graph.whole path.edge{stroke-width:1px;opacity:.28}
+#graph.whole path.edge{stroke-width:1px;opacity:calc(var(--edge-rest) * .8)}
 #graph.whole .gnode:not(.focus) circle:not(.hit):not(.ring){stroke-width:1}
 #graph.orbit.hl .band{opacity:var(--dim)}
 #graph.orbit.hl .lbl:not(.on){opacity:.15}
@@ -345,7 +345,7 @@ svg.ego .gnode:focus-visible text.lbl{text-decoration:underline}
 .cwho{min-width:0}
 .crole{color:var(--muted)}
 .cwho .sus{color:var(--fg)}
-.cwho small{font-size:11px;color:var(--muted);opacity:.8}
+.cwho small{font-size:11px;color:var(--muted);opacity:calc(1 - .2 * var(--fade))}
 .csince{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .cbar{position:relative;height:10px;align-self:center}
 .cbar::before{content:"";position:absolute;left:0;right:0;top:4.5px;height:1px;background:var(--line)}
@@ -365,9 +365,9 @@ svg.ego .gnode:focus-visible text.lbl{text-decoration:underline}
 .gquiet a.part{opacity:.7}
 .gquiet a[data-ggr]:not(.on) .swatch{opacity:.25}
 .gquiet a[data-ggr]:not(.on){text-decoration:line-through;text-decoration-color:var(--line)}
-.gquiet small{font-size:11px;color:var(--muted);opacity:.7;font-variant-numeric:tabular-nums}
+.gquiet small{font-size:11px;color:var(--muted);opacity:calc(1 - .3 * var(--fade));font-variant-numeric:tabular-nums}
 .gquiet .swatch{width:16px;height:4px;border-radius:2px}
-.gq-lab{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);opacity:.8}
+.gq-lab{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);opacity:calc(1 - .2 * var(--fade))}
 .gq-sep{width:1px;height:14px;background:var(--line);margin:0 4px}
 .gmoref{margin:0 0 10px;font-size:13px}
 .gmoref summary{cursor:pointer;color:var(--muted);font-size:12px;width:max-content}

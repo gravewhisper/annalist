@@ -1,0 +1,57 @@
+import json
+import re
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CSS = (ROOT / "annalist" / "site" / "app.css").read_text(encoding="utf-8")
+THEMES = {"default": {}, **{p.stem: json.loads(p.read_text(encoding="utf-8"))["theme"]
+                            for p in sorted((ROOT / "annalist" / "themes").glob("*.json"))}}
+
+
+def tokens(name, mode):
+    body = re.search(r':root\[data-theme="%s"\]\{([^}]*)\}' % mode, CSS).group(1)
+    found = dict(re.findall(r"--([\w-]+):([^;]+)", body))
+    return {**found, **THEMES[name].get(mode, {})}
+
+
+def rgb(h):
+    return [int(h[i:i + 2], 16) for i in (1, 3, 5)]
+
+
+def over(fg, bg, alpha):
+    return "#" + "".join("%02x" % round(a * alpha + b * (1 - alpha)) for a, b in zip(rgb(fg), rgb(bg)))
+
+
+def ratio(a, b):
+    def lum(h):
+        c = [v / 255 for v in rgb(h)]
+        c = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    hi, lo = sorted((lum(a), lum(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+class ThemeContrast(unittest.TestCase):
+    def test_text_meets_wcag_aa_on_page_and_card_in_every_theme(self):
+        for name in THEMES:
+            for mode in ("light", "dark"):
+                t = tokens(name, mode)
+                for role in ("fg", "muted", "link", "accent"):
+                    colour = t.get(role) or t["accent"]
+                    for surface in ("bg", "card"):
+                        with self.subTest(theme=name, mode=mode, text=role, on=surface):
+                            self.assertGreaterEqual(ratio(colour, t[surface]), 4.5)
+
+    def test_small_counts_in_light_themes_meet_wcag_aa(self):
+        for name in THEMES:
+            t = tokens(name, "light")
+            faded = over(t["muted"], t["bg"], 1 - 0.2 * float(t.get("fade", 1)))
+            with self.subTest(theme=name):
+                self.assertGreaterEqual(ratio(faded, t["bg"]), 4.5)
+
+    def test_light_cards_are_brighter_than_the_page(self):
+        for name in THEMES:
+            t = tokens(name, "light")
+            with self.subTest(theme=name):
+                self.assertGreater(ratio(t["card"], t["bg"]), 1.05)

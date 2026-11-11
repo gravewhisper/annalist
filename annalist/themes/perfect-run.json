@@ -7,19 +7,15 @@
       "https://cdn.jsdelivr.net/npm/@fontsource/oxanium@5.0.13/700.css"
     ],
     "light": {
-      "bg": "#f2f5f8",
-      "fg": "#16202b",
-      "muted": "#566476",
-      "line": "#d6dde6",
+      "bg": "#f0f3f7",
+      "fg": "#141d27",
+      "muted": "#4d5a6b",
+      "line": "#d4dbe4",
       "card": "#ffffff",
-      "hover": "#e8edf3",
-      "accent": "#c8302a",
-      "accentfg": "#ffffff",
-      "link": "#0a5fbf",
-      "heading": "#0f2a44",
-      "quotebg": "#ebf0f6",
-      "glow": "#d6eaff",
-      "glow2": "#ffe1d9"
+      "hover": "#e5eaf1",
+      "accent": "#c02c26",
+      "link": "#0956ae",
+      "heading": "#0f2a44"
     },
     "dark": {
       "bg": "#0a0e14",
@@ -29,12 +25,8 @@
       "card": "#111823",
       "hover": "#1a2432",
       "accent": "#ff5242",
-      "accentfg": "#0a0e14",
       "link": "#52c4ff",
-      "heading": "#f2f6fa",
-      "quotebg": "#141d29",
-      "glow": "#0c2a46",
-      "glow2": "#3a1515"
+      "heading": "#f2f6fa"
     }
   }
 }
