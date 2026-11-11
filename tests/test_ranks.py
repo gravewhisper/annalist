@@ -3,6 +3,7 @@ import subprocess
 import sys
 import unittest
 
+from annalist.ladders import ladder_needed
 from annalist.state import Knowledge
 from annalist.survey import book_problems
 from tests.test_build import LATER_REPLIES, MiniBuild, ROOT
@@ -85,6 +86,18 @@ class NamedRanksBuildTest(unittest.TestCase):
         self.assertEqual(book["power_types"]["circle"], {"parent": "concept", "description": "a named rank within a school, such as Tidewatcher"})
         self.assertEqual(list(book["extra_fields"]), ["current_circle"])
 
+    def test_a_ladder_whose_steps_are_an_item_kind_instead_of_the_rank_type_is_asked_again(self):
+        calls = self.book.calls("ladder-spec")
+        self.assertEqual(len(calls), 2)
+        self.assertIn('step_type must be "circle", the type of the ranks themselves', calls[0]["error"])
+        self.assertIsNone(calls[1]["error"])
+        self.assertEqual(self.book.json("book.json")["ladder"], SPEC)
+
+    def test_an_item_named_after_a_rank_links_to_the_rank(self):
+        name = {e["id"]: (e["name"], e["type"]) for e in self.wiki["entities"]}
+        links = {(name[r["source"]], r["type"], name[r["target"]]) for r in self.wiki["relations"]}
+        self.assertIn((("Tidewatcher elixir", "elixir"), "elixir of", ("Tidewatcher", "circle")), links)
+
 
 class RankWordTest(unittest.TestCase):
     NOVEL = "Ours begins at Circle 1: Tidewatcher."
@@ -100,6 +113,19 @@ class RankWordTest(unittest.TestCase):
 
     def test_a_book_without_named_ranks_needs_no_rank_type(self):
         self.assertIsNone(book_problems({**NO_RANK_TYPE, "rank_word": ""}, Knowledge(), None, self.NOVEL))
+
+
+class RankLadderSpecTest(unittest.TestCase):
+    TYPES = {"school": {"parent": "organization", "description": "a school"}, "circle": {"parent": "concept", "description": "a named rank"},
+             "elixir": {"parent": "artifact", "description": "a drink"}}
+
+    def test_a_stored_ladder_stepping_through_an_item_kind_is_regenerated_once_the_book_has_a_rank_type(self):
+        on_items = {"rank_word": "circle", "power_types": self.TYPES, "ladder": {**SPEC, "step_type": "elixir"}}
+        self.assertTrue(ladder_needed(on_items))
+        self.assertFalse(ladder_needed({**on_items, "ladder": SPEC}))
+
+    def test_a_book_without_a_rank_word_keeps_any_valid_ladder(self):
+        self.assertFalse(ladder_needed({"power_types": self.TYPES, "ladder": {**SPEC, "step_type": "elixir"}}))
 
 
 if __name__ == "__main__":

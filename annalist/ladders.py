@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from .book import ladder_types, load_book
+from .book import ladder_types, load_book, rank_type
 from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import name_key, name_pattern, names_of
@@ -43,7 +43,7 @@ Decide whether the novel has a power ladder, and which of two shapes it has:
 Reply with one JSON object:
 {{"ladder": {{"shape": "grouped", "group_type": "the power type of the groups", "step_type": "the power type of the ranked steps", "rank": "number when the novel numbers the steps, order when it only names them in sequence", "direction": "ascending when a higher number is stronger, descending when a lower number is stronger", "note": "one sentence on how the steps rank within a group"}}}}
 or {{"ladder": {{"shape": "shared", "step_type": "the power type of the ranked steps", "rank": "number or order, as above", "direction": "ascending or descending, as above", "note": "one sentence on how the steps rank and how each splits into sub-stages"}}}}
-or {{"ladder": null}} when the power types form no such ladder. Every type is written exactly as listed above, and group_type and step_type are two different types.
+or {{"ladder": null}} when the power types form no such ladder. Every type is written exactly as listed above, and group_type and step_type are two different types. The steps are the ranks themselves: when a power type holds the ranks, step_type is that type, never an item type whose entries are named after or made for a rank, such as a brew or a manual for each rank.
 """
 
 
@@ -88,7 +88,7 @@ def shape_of(ladder):
     return ladder.get("shape", "grouped")
 
 
-def ladder_problems(reply, power_types, material=None):
+def ladder_problems(reply, power_types, material=None, rank=None):
     if "ladder" not in reply:
         return 'reply has no "ladder" key.'
     ladder = reply["ladder"]
@@ -99,6 +99,9 @@ def ladder_problems(reply, power_types, material=None):
     if shape_of(ladder) not in SHAPE_SPECS:
         return f"shape must be one of {', '.join(SHAPE_SPECS)}, not {ladder.get('shape')!r}."
     problems = SHAPE_SPECS[shape_of(ladder)][0](ladder, power_types)
+    if rank and name_key(ladder.get("step_type") or "") != rank:
+        problems.append(f'step_type must be "{rank}", the type of the ranks themselves; an item named after a rank links to that rank '
+                        f'and is not a step.')
     terms = unseen_terms([str(ladder.get("note") or "")], material) if material is not None else []
     if terms:
         problems.append(f"the note names {', '.join(terms)}, which the order and power types above never mention; "
@@ -111,7 +114,7 @@ def ladder_spec(raw):
 
 
 def ladder_needed(book):
-    return "ladder" not in book or ladder_problems({"ladder": book["ladder"]}, book.get("power_types") or {}) is not None
+    return "ladder" not in book or ladder_problems({"ladder": book["ladder"]}, book.get("power_types") or {}, rank=rank_type(book)) is not None
 
 
 def generate_ladder(workdir):
@@ -123,7 +126,7 @@ def generate_ladder(workdir):
         prompt = LADDER_SPEC_PROMPT.format(power_system=book.get("power_system") or "(none described)",
                                            types="\n".join(f"- {t}: {d['description']}" for t, d in types.items()))
 
-        raw = cached_llm(workdir, "ladder-spec", prompt, check=lambda r: ladder_problems(r, types, prompt))["ladder"]
+        raw = cached_llm(workdir, "ladder-spec", prompt, check=lambda r: ladder_problems(r, types, prompt, rank_type(book)))["ladder"]
         spec = ladder_spec(raw) if raw else None
     write_json(path, {**book, "ladder": spec})
 

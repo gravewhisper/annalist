@@ -11,7 +11,7 @@ The `book` stage writes `book.json`. It and `corrections.json` are the only file
 - `extra_fields` lists the extra infobox fields for characters, such as a power class, a cultivation stage, a noble title, a civil-service rank, or a species.
 - `power_keywords` lists words that mark a passage about the extra fields or the entries of `power_types`. It is empty only when both are empty.
 - `timeline_kind` is `linear`, `loop`, or `flashback`. `timeline_note` explains it to the `timelines` stage.
-- `ladder` describes the power ladder in one of two shapes. Set it to `null` for a book without one.
+- `ladder` describes the power ladder in one of two shapes. Set it to `null` for a book without one. When the book has a rank type, `step_type` is that type, and an item named after a rank, such as one brew per rank, links to its rank instead of being a step. A stored ladder that steps through another type is generated again.
   - A grouped ladder has named groups that each rank their own steps, such as schools with circles: `group_type`, `step_type`, `rank`, `direction`, and `note`.
   - A shared ladder is one series of steps that everyone climbs, such as cultivation realms: `"shape": "shared"`, `step_type`, `rank`, `direction`, and `note`. The `ladders` stage also lists each step's sub-stages in order, such as numbered layers or early, middle and late. Groups such as sects stay ordinary power types.
 - `complete` marks the book as finished. Only then does the `ending` stage run.
