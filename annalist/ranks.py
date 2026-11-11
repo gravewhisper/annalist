@@ -1,6 +1,6 @@
 import re
 
-from .names import function_word_name, names_of
+from .names import content_words, function_word_name, names_of
 from .text import chapter_text, sentence_of, text_window
 
 
@@ -15,7 +15,7 @@ def rank_form(word):
 
 
 def stated_steps(kb, spec, word):
-    form = rank_form(word)
+    form, head = rank_form(word), re.escape(spec["group_type"].split()[-1])
     of_rank = re.compile(rf"{form}(?:\s+\w+)?\s+of$")
     claims = [f["claim"] for f in kb.facts if re.search(form, f["claim"])]
     found = {}
@@ -24,8 +24,9 @@ def stated_steps(kb, spec, word):
             continue
         named = "|".join(re.escape(n) for n in sorted(names_of(e), key=len, reverse=True))
         step = re.compile(rf"(?<!\w)(?:{named})(?:\s*[,:(]\s*|\s+(?:is|was|becomes|became)\s+)(?:(?:a|an|the)\s+)?{form}"
-                          rf"|{form}\s*[:,]?\s+(?:the\s+)?(?:{named})(?![\w'’])")
-        group = re.compile(rf"{form}\s+of\s+(?:the\s+)?(?:{named})(?!\w)|(?<!\w)(?:{named})['’]s\s+{form}")
+                          rf"|{form}\s*[:,]?\s+(?:the\s+)?(?:{named})(?![\w'’]|\s+(?i:{head}))")
+        group = re.compile(rf"{form}\s+of\s+(?:the\s+)?(?:{named})(?!\w)|(?<!\w)(?:{named})['’]s\s+{form}"
+                           rf"|{form}\s+(?:the\s+)?(?:{named})\s+(?i:{head})")
         steps = [c for c in claims if step.search(c)] + [f"{k} {r['type']} {r['target']}" for r in kb.relations
                                                          if r["source"] == k and of_rank.search(r["type"])]
         ranked = any(group.search(c) for c in claims) or any(r["target"] == k and of_rank.search(r["type"]) for r in kb.relations)
@@ -55,7 +56,7 @@ def rank_mentions(workdir, chapters, word):
     for n in chapters:
         text = chapter_text(str(workdir), n)
         for m in sorted((m for p in patterns for m in p.finditer(text)), key=lambda m: m.start()):
-            if not function_word_name(m["name"]):
-                found.append({"chapter": n, "name": m["name"], "form": " ".join(m.group(0).split()),
-                              "quote": rank_quote(text, m.start(), m.end())})
+            name = " ".join(content_words(m["name"]))
+            if name and not (function_word_name(re.split(r"['’]", name)[0]) or name.lower().startswith(word.lower())):
+                found.append({"chapter": n, "name": name, "form": " ".join(m.group(0).split()), "quote": rank_quote(text, m.start(), m.end())})
     return found

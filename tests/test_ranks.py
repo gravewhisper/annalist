@@ -6,9 +6,11 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from annalist.ladders import ladder_needed
 from annalist.ranks import rank_mentions, stated_steps
+from annalist.review import ranks_off_ladder
 from annalist.state import Knowledge
 from annalist.survey import book_problems
 from tests.test_build import LATER_REPLIES, MiniBuild, ROOT, site_views
@@ -194,7 +196,8 @@ class StatedStepsTest(unittest.TestCase):
                                                             "Wick": "Wick is the second circle of Lantern"})
 
     def test_an_entry_the_text_also_gives_ranks_of_its_own_stays_a_group(self):
-        kb = self.kb([("Lantern", "Circle 1: Lantern is where every student begins."), ("Lantern", "Circle 2 of Lantern is Wick.")],
+        kb = self.kb([("Lantern", "Circle 1: Lantern is where every student begins."), ("Lantern", "Circle 2 of Lantern is Wick."),
+                      ("Wick", "Corrow asked for the circle 3 Wick school formula.")],
                      [("Gloam", "is the first circle of", "Saltmere School"), ("Night Cantor", "is Circle 3 of", "Gloam")])
         self.assertEqual(stated_steps(kb, SPEC, "circle"), {"Night Cantor": "Night Cantor is Circle 3 of Gloam"})
 
@@ -202,7 +205,8 @@ class StatedStepsTest(unittest.TestCase):
 class RankMentionTest(unittest.TestCase):
     def test_the_scan_finds_the_rank_word_and_a_number_next_to_a_capitalized_name(self):
         text = ("They keep three circles. Circle 1: Lamp Wick. Then Circle Two, the Lantern Bearer.\n"
-                "If Circle 3 opens, Maren Holt, Circle 3, will know. This circle 4 is closed.\n")
+                "If Circle 3 opens, Maren Holt, Circle 3, will know. This circle 4 is closed. Circle 2, Circles of the Deep.\n"
+                "Circle 5, I've heard, is worse.\n")
         with tempfile.TemporaryDirectory() as tmp:
             (Path(tmp) / "chapters").mkdir()
             (Path(tmp) / "chapters" / "0001.txt").write_text(text, encoding="utf-8")
@@ -211,6 +215,21 @@ class RankMentionTest(unittest.TestCase):
                                                                   ("Lantern Bearer", "Circle Two, the Lantern Bearer"),
                                                                   ("Maren Holt", "Maren Holt, Circle 3")])
         self.assertEqual(found[0]["quote"], "They keep three circles. Circle 1: Lamp Wick. Then Circle Two, the Lantern Bearer.")
+
+
+class RanksOffLadderTest(unittest.TestCase):
+    def test_people_and_organizations_holding_a_rank_are_not_listed_as_ranks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "chapters").mkdir()
+            (Path(tmp) / "chapters" / "0001.txt").write_text(
+                "The Lamp Guild, Circle 2, kept watch. Maren Holt, Circle 3, slept. Circle 4: Ember Abbot.\n", encoding="utf-8")
+            kb = Knowledge(SPEC)
+            kb.upsert_entity({"name": "Lamp Guild", "type": "organization"}, 1)
+            kb.upsert_entity({"name": "Maren Holt", "type": "character"}, 1)
+            kb.synopses[1] = "The watch is kept."
+            run = SimpleNamespace(workdir=Path(tmp), kb=kb, until=1, book={"rank_word": "circle", "power_types": {}, "ladder": SPEC})
+            found = ranks_off_ladder(run)
+        self.assertEqual([(f["name"], f["form"]) for f in found], [("Ember Abbot", "Circle 4: Ember Abbot")])
 
 
 class RankLadderSpecTest(unittest.TestCase):

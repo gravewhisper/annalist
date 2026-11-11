@@ -205,6 +205,9 @@ def uncategorized(run):
             for e in run.kb.entities.values() if e["type"] == UNCATEGORIZED]
 
 
+HOLDERS = INDIVIDUALS + ("organization",)
+
+
 def ranks_off_ladder(run):
     word = run.book["rank_word"]
     if not word:
@@ -217,7 +220,7 @@ def ranks_off_ladder(run):
     out, seen = [], set()
     for m in rank_mentions(run.workdir, sorted(run.kb.synopses), word):
         key = run.kb.resolve(m["name"])
-        if name_key(m["name"]) in placed | seen | set(run.book["power_types"]) or (key and run.kb.entities[key]["type"] in INDIVIDUALS):
+        if name_key(m["name"]) in placed | seen | set(run.book["power_types"]) or (key and run.kb.types.kind(run.kb.entities[key]["type"]) in HOLDERS):
             continue
         seen.add(name_key(m["name"]))
         status = f"filed as {run.kb.entities[key]['type']}" if key else "no entry"
