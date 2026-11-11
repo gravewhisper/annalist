@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from annalist.families import read_families, relation_family
+from annalist.relation_precision import sample
 from annalist.scorecard import score, states_the_tie, Wiki
 from annalist.state import load_states
 from tests.test_build import MiniBuild, build_script
@@ -276,6 +277,79 @@ class EvalMiniTest(unittest.TestCase):
         partial = outcomes(score(self.book.workdir, {**gold, "partial": True}, self.wiki))
         self.assertNotIn("chapter:extra", partial)
         self.assertEqual({k: v for k, v in partial.items() if k.startswith("chapter:")}, {"chapter:1": "pass", "chapter:2": "pass", "chapter:3": "pass"})
+
+
+class RelationPrecisionTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        script = statuses_script()
+        cls.book = MiniBuild(script)
+        cls.book.build()
+        cls.calls_after_build = len(cls.book.calls())
+        cls.plain = cls.eval_run("plain")
+        cls.calls_after_plain = len(cls.book.calls())
+        judge = [{"purpose": "judge", "contains": '"Bram Ostrow" enemy of',
+                  "reply": {"verdict": "wrong", "reasoning": "The passage shows a quarrel, not enmity."}},
+                 {"purpose": "judge", "reply": {"verdict": "correct", "reasoning": "The passage states it."}}]
+        cls.book.script({**script, "replies": judge + script["replies"]})
+        cls.wiki = cls.book.json("site/data/wiki.json")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.book.close()
+
+    @classmethod
+    def eval_run(cls, name, *flags):
+        out = cls.book.root / name
+        out.mkdir()
+        cls.book.run_annalist("eval", str(cls.book.workdir), str(GOLD), "--out", str(out), *flags)
+        return json.loads((out / "eval.json").read_text(encoding="utf-8")), (out / "eval.md").read_text(encoding="utf-8")
+
+    def test_eval_without_a_relation_sample_makes_no_llm_call(self):
+        self.assertEqual(self.calls_after_plain, self.calls_after_build)
+        self.assertNotIn("relation_precision", self.plain[0])
+        self.assertNotIn("relation_precision", self.plain[1])
+
+    def test_a_sample_judges_the_requested_number_of_relations_and_a_rerun_is_free_and_identical(self):
+        report, text = self.eval_run("three", "--relation-sample", "3", "--judge-model", "judge-model-x")
+        section = report["relation_precision"]
+        self.assertEqual(len(section["rows"]), 3)
+        self.assertEqual(section["totals"]["sampled"], 3)
+        self.assertEqual(section["judge_model"], "judge-model-x")
+        self.assertEqual({c["model"] for c in self.book.calls("judge")}, {"judge-model-x"})
+        self.assertIn("## relation_precision", text)
+        calls = len(self.book.calls("judge"))
+        again, _ = self.eval_run("three-again", "--relation-sample", "3", "--judge-model", "judge-model-x")
+        self.assertEqual([r["key"] for r in again["relation_precision"]["rows"]], [r["key"] for r in section["rows"]])
+        self.assertEqual(len(self.book.calls("judge")), calls)
+        self.assertEqual(again["relation_precision"]["judge_spend_usd"], 0)
+
+    def test_precision_counts_the_judges_verdicts_and_keeps_the_reason_and_quote_of_each_row(self):
+        report, text = self.eval_run("all", "--relation-sample", "1000")
+        section = report["relation_precision"]
+        total = section["totals"]["relations"]
+        self.assertEqual(section["totals"]["sampled"], total)
+        self.assertEqual((section["totals"]["correct"], section["totals"]["wrong"]), (total - 1, 1))
+        self.assertEqual(section["totals"]["precision"], round((total - 1) / total, 3))
+        wrong = next(r for r in section["rows"] if r["verdict"] == "wrong")
+        self.assertEqual((wrong["source"], wrong["type"]), ("Bram Ostrow", "enemy of"))
+        self.assertEqual(wrong["reason"], "The passage shows a quarrel, not enmity.")
+        self.assertTrue(wrong["quotes"])
+        self.assertIn(f"- **wrong** `{wrong['key']}`: The passage shows a quarrel, not enmity.", text)
+
+    def test_the_sample_keeps_its_rows_when_the_wiki_gains_or_loses_a_relation_outside_it(self):
+        wiki = Wiki(self.wiki)
+        total, picked = sample(wiki, 3)
+        keys = [k for k, _ in picked]
+        self.assertGreater(total, 4)
+        self.assertTrue(set(keys) <= {k for k, _ in sample(wiki, 5)[1]})
+        outside = next(r for r in self.wiki["relations"] if r not in [p for _, p in picked])
+        fewer = copy.deepcopy(self.wiki)
+        fewer["relations"].remove(outside)
+        self.assertEqual([k for k, _ in sample(Wiki(fewer), 3)[1]], keys)
+        more = copy.deepcopy(self.wiki)
+        more["relations"].append({**outside, "type": "rival of"})
+        self.assertGreaterEqual(len(set(keys) & {k for k, _ in sample(Wiki(more), 3)[1]}), 2)
 
 
 class StagedTieTest(unittest.TestCase):

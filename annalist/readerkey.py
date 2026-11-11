@@ -427,11 +427,14 @@ def markdown(items, sums, key_path, workdir, n, spend):
     return "\n".join(lines) + "\n"
 
 
+def judge_settings(workdir, judge_model=None):
+    settings = load_settings(workdir)
+    return replace(settings, models={**settings.models, "judge": judge_model}) if judge_model else settings
+
+
 def run_reader_eval(workdir, key_path, wiki_data, out, judge_model=None):
     key = json.loads(Path(key_path).read_text(encoding="utf-8"))
-    settings = load_settings(workdir)
-    if judge_model:
-        settings = replace(settings, models={**settings.models, "judge": judge_model})
+    settings = judge_settings(workdir, judge_model)
     started = time.strftime("%Y-%m-%dT%H:%M:%S")
     n, items = grade(workdir, key, wiki_data, settings)
     spend = spent_since(workdir, started)

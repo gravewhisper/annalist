@@ -3,11 +3,13 @@
     python3 tests/data/bench.py fetch            download the epubs into tests/data/cache
     python3 tests/data/bench.py build [names]    build each book's scoped chapters into runs/bench-<name> (costs money)
     python3 tests/data/bench.py score [names]    score each built run against its gold and print a table
+        [--relation-sample N]                    also judge N sampled relations per book and add a precision column (costs money)
 
 Books that are not public domain stay out of the repo: runs/bench-private.json maps each name to
 {"epub": path, "to": last chapter, "stresses": text}, and its gold file is runs/bench-private/<name>-gold.json.
 A book whose epub is missing is skipped.
 """
+import argparse
 import json
 import subprocess
 import sys
@@ -65,26 +67,33 @@ def build(name):
                     "--to", str(BOOKS[name]["to"]), "--yes", "--budget", str(BUDGET)], cwd=ROOT, check=True)
 
 
-def score(name):
-    out = subprocess.run([sys.executable, "-m", "annalist", "eval", str(workdir(name)), str(gold(name))],
+def score(name, flags):
+    out = subprocess.run([sys.executable, "-m", "annalist", "eval", str(workdir(name)), str(gold(name)), *flags],
                          cwd=ROOT, capture_output=True, text=True)
     if out.returncode:
         return None
-    return json.loads((workdir(name) / "eval.json").read_text(encoding="utf-8"))["totals"]
+    report = json.loads((workdir(name) / "eval.json").read_text(encoding="utf-8"))
+    sampled = report.get("relation_precision")
+    return {**report["totals"], **({"relation precision": {"score": sampled["totals"]["precision"]}} if sampled else {})}
 
 
-def table(names):
-    rows = {n: score(n) for n in names}
-    sections = next((list(t) for t in rows.values() if t), [])
+def table(names, flags=()):
+    rows = {n: score(n, flags) for n in names}
+    sections = list(dict.fromkeys(s for t in rows.values() if t for s in t))
     print("| book | " + " | ".join(sections) + " |")
     print("|---|" + "---:|" * len(sections))
     for n, totals in rows.items():
-        cells = [f"{totals[s]['score'] * 100:.0f}%" if totals and totals[s]["score"] is not None else "n/a" for s in sections]
+        cells = [f"{totals[s]['score'] * 100:.0f}%" if totals and totals.get(s, {}).get("score") is not None else "n/a" for s in sections]
         print(f"| {n} | " + " | ".join(cells) + " |" if totals else f"| {n} | not built |")
 
 
 def main():
-    command, names = (sys.argv[1] if len(sys.argv) > 1 else "score"), sys.argv[2:] or list(BOOKS)
+    parser = argparse.ArgumentParser(usage=__doc__)
+    parser.add_argument("command", nargs="?", default="score")
+    parser.add_argument("names", nargs="*")
+    parser.add_argument("--relation-sample", type=int)
+    args = parser.parse_args()
+    command, names = args.command, args.names or list(BOOKS)
     if command == "fetch":
         for n in names:
             if not BOOKS[n].get("private"):
@@ -96,7 +105,7 @@ def main():
             else:
                 print(f"skip {n}: {epub(n)} is missing")
     elif command == "score":
-        table(names)
+        table(names, ["--relation-sample", str(args.relation_sample)] if args.relation_sample else [])
     else:
         sys.exit(__doc__)
 

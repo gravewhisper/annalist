@@ -182,7 +182,10 @@ def main():
     p.add_argument("workdir")
     p.add_argument("gold", nargs="?")
     p.add_argument("--reader-key", help="JSON file of a reader's questions, answers, merges, relations and structure to grade")
-    p.add_argument("--judge-model", help="model that judges the wiki's answers against the reader's; default: book.json's model for judge")
+    p.add_argument("--judge-model", help="model that judges the reader key and the relation sample; default: book.json's model for judge")
+    p.add_argument("--relation-sample", type=int, metavar="N",
+                   help="ask the judge whether N relations, picked by a fixed seed, are correct as worded given their quotes; "
+                        "costs money and adds a relation_precision section to eval.md and eval.json")
     p.add_argument("--out", help="directory for the reports; default: the workdir")
     p.set_defaults(func=cmd_eval)
 

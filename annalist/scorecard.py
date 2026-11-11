@@ -483,6 +483,8 @@ def markdown(items, sums, gold_path, workdir):
 def cmd_eval(args):
     if not args.gold and not args.reader_key:
         sys.exit("annalist eval: give a gold file, --reader-key, or both")
+    if args.relation_sample is not None and (not args.gold or args.relation_sample < 1):
+        sys.exit("annalist eval: --relation-sample needs a gold file and a count of 1 or more")
     workdir = Path(args.workdir).resolve()
     site = workdir / "site" / "data" / "wiki.json"
     if not site.exists():
@@ -494,12 +496,21 @@ def cmd_eval(args):
         gold_data = json.loads(Path(args.gold).read_text(encoding="utf-8"))
         items = score(workdir, gold_data, wiki_data)
         sums = totals(items)
-        write_json(out / "eval.json", {"gold": str(Path(args.gold).resolve()), "workdir": str(workdir), "totals": sums,
-                                       "items": [asdict(i) for i in items]})
-        (out / "eval.md").write_text(markdown(items, sums, args.gold, workdir), encoding="utf-8")
+        report = {"gold": str(Path(args.gold).resolve()), "workdir": str(workdir), "totals": sums, "items": [asdict(i) for i in items]}
+        text = markdown(items, sums, args.gold, workdir)
+        if args.relation_sample and not sums["chapters"]["fail"]:
+            from . import relation_precision
+            report["relation_precision"] = relation_precision.relation_precision(workdir, wiki_data, args.relation_sample, args.judge_model)
+            text += relation_precision.markdown(report["relation_precision"])
+        write_json(out / "eval.json", report)
+        (out / "eval.md").write_text(text, encoding="utf-8")
         for section in SECTIONS + ("all",):
             t = sums[section]
             print(f"  {section:<17} {t['pass']:>4} pass {t['fail']:>4} fail {t['not_scored']:>4} not scored  {percent(t['score']):>6}")
+        if "relation_precision" in report:
+            t = report["relation_precision"]["totals"]
+            print(f"  relation precision {percent(t['precision'])} of {t['sampled']} sampled: {t['correct']} correct, "
+                  f"{t['wrong']} wrong, {t['unsupported']} unsupported; judge spend ${report['relation_precision']['judge_spend_usd']:.4f}")
         print(f"wrote {out / 'eval.md'} and {out / 'eval.json'}")
     if args.reader_key:
         from .readerkey import run_reader_eval
