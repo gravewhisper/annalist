@@ -5,6 +5,7 @@ from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import name_key, name_pattern, names_of
 from .state import load_states, write_derived
+from .template import book_types
 from .text import check_quote, verified_quotes
 
 
@@ -95,11 +96,12 @@ def ladder_needed(book):
 def generate_ladder(workdir):
     path = Path(workdir) / "book.json"
     book = read_json(path, {})
-    types = book.get("power_types") or {}
+    types = book_types(book.get("power_types"))
     spec = None
     if len(types) >= 2:
         prompt = LADDER_SPEC_PROMPT.format(power_system=book.get("power_system") or "(none described)",
-                                           types="\n".join(f"- {t}: {d}" for t, d in types.items()))
+                                           types="\n".join(f"- {t}: {d['description']}" for t, d in types.items()))
+
         raw = cached_llm(workdir, "ladder-spec", prompt, check=lambda r: ladder_problems(r, types))["ladder"]
         spec = ladder_spec(raw) if raw else None
     write_json(path, {**book, "ladder": spec})

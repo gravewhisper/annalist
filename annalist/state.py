@@ -5,13 +5,13 @@ from pathlib import Path
 
 from .book import ladder_types
 from .files import read_json, read_jsonl, write_json, write_jsonl
-from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, same_kind, UNTYPED, written_summary
+from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
+from .template import book_types, INDIVIDUALS, Types
 from .text import distinctive_words, QUOTE_CHARS
 from .wordings import read_wordings, worded
 
 
 UNRESOLVED = ("open", "partial")
-INDIVIDUALS = ("character", "deity")
 
 
 def add_lead(q, lead):
@@ -109,9 +109,10 @@ def name_within(a, b):
 
 
 class Knowledge:
-    def __init__(self, ladder=None, wordings=None, power_types=()):
+    def __init__(self, ladder=None, wordings=None, power_types=None):
         self.wordings = wordings or {}
-        self.power_types = set(power_types)
+        self.types = Types(book_types(power_types))
+        self.power_types = set(self.types.parents)
         self.ladder = set(ladder_types(ladder))
         self.rank_name = re.compile(rf"{re.escape(ladder['step_type'])}\s*\d+") if ladder and ladder.get("rank") == "number" else None
         self.laddered = False
@@ -137,6 +138,9 @@ class Knowledge:
     def splits(self, a, b):
         return a != b and {a, b} == self.ladder
 
+    def same_kind(self, a, b):
+        return a in UNTYPED or b in UNTYPED or self.types.kin(a, b)
+
     def upsert_entity(self, entity, chapter, timeline="main"):
         name = str(entity.get("name") or "").strip()
         if function_word_name(name) or self.bare_rank(name):
@@ -148,14 +152,14 @@ class Knowledge:
         split = canonical is not None and self.splits(self.entities[canonical]["type"], etype)
         if split:
             canonical = self.index.get(name_key(qualified(name, etype)))
-        elif holder and canonical is None and not same_kind(self.entities[holder]["type"], etype):
+        elif holder and canonical is None and not self.same_kind(self.entities[holder]["type"], etype):
             self.drop_alias(holder, name)
         keys = [name_key(k) for k in [name] + aliases]
         matches = [m for m in dict.fromkeys([canonical] + [self.index[k] for k in keys if k in self.index])
-                   if m and same_kind(self.entities[m]["type"], etype)]
+                   if m and self.same_kind(self.entities[m]["type"], etype)]
         canonical = canonical or (matches[0] if matches else None)
         for other in matches:
-            if other != canonical and same_kind(self.entities[other]["type"], self.entities[canonical]["type"]):
+            if other != canonical and self.same_kind(self.entities[other]["type"], self.entities[canonical]["type"]):
                 self.merge(other, canonical, None if name_within(other, canonical) else chapter)
         if canonical is None:
             canonical = qualified(name, etype) if split else name
@@ -163,7 +167,7 @@ class Knowledge:
                                         "first_chapter": chapter, "last_chapter": chapter, **({"written": name} if split else {})}
             self.index[name_key(canonical)] = canonical
         record = self.entities[canonical]
-        if etype and record["type"] in UNTYPED:
+        if etype and (record["type"] in UNTYPED or self.types.refines(etype, record["type"])):
             record["type"] = etype
         if not record["type"]:
             record["type"] = "uncategorized"
@@ -171,7 +175,7 @@ class Knowledge:
             holder = self.index.get(name_key(alias))
             if holder in (None, canonical):
                 self.index[name_key(alias)] = canonical
-            elif same_kind(self.entities[holder]["type"], record["type"]):
+            elif self.same_kind(self.entities[holder]["type"], record["type"]):
                 continue
             if name_key(alias) != name_key(canonical) and name_key(alias) not in map(name_key, record["aliases"]):
                 record["aliases"].append(alias)
@@ -196,6 +200,8 @@ class Knowledge:
                              "chapter": chapter})
         if absorbed:
             record["absorbed"] = record.get("absorbed", []) + absorbed
+        if self.types.refines(gone["type"], record["type"]):
+            record["type"] = gone["type"]
         for alias in [gone["name"]] + gone["aliases"]:
             if name_key(alias) != name_key(canonical) and name_key(alias) not in map(name_key, record["aliases"]):
                 record["aliases"].append(alias)

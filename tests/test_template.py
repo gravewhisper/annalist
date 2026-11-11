@@ -22,14 +22,14 @@ class TemplateTest(unittest.TestCase):
                 "extra_fields": {"gender": "male or female", "Status": "alive or not", "nicknames": "other names",
                                  "power_class": {"description": "class, e.g. 'Psycho (cryokinesis)'", "values": ["Genome", "Psycho"]},
                                  "elixir_color": "the colors"}})
-        self.assertEqual(book["power_types"], {"elixir": "a serum that grants powers"})
+        self.assertEqual(book["power_types"], {"elixir": {"parent": "concept", "description": "a serum that grants powers"}})
         self.assertEqual(book["extra_fields"], {"power_class": "class, e.g. 'Psycho (cryokinesis)'", "elixir_color": "the colors"})
         self.assertEqual(book["field_values"], {"power_class": ["Genome", "Psycho"], "elixir_color": []})
 
     def test_defaults_without_a_book(self):
         with tempfile.TemporaryDirectory() as tmp:
             book = load_book(tmp)
-        self.assertEqual(book["power_types"], {"ability": "a specific power or technique"})
+        self.assertEqual(book["power_types"], {"ability": {"parent": "concept", "description": "a specific power or technique"}})
         self.assertIs(book["complete"], False)
 
     def test_base_field_matches_names_labels_and_aliases(self):

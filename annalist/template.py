@@ -26,7 +26,48 @@ UNCATEGORIZED = "uncategorized"
 BASE_TYPES = set(ENTITY_TYPES) | {UNCATEGORIZED}
 
 
-DEFAULT_POWER_TYPES = {"ability": "a specific power or technique"}
+INDIVIDUALS = ("character", "deity")
+
+
+PARENT_TYPES = tuple(t for t in ENTITY_TYPES if t not in INDIVIDUALS)
+
+
+DEFAULT_PARENT = "concept"
+
+
+DEFAULT_POWER_TYPES = {"ability": {"parent": "concept", "description": "a specific power or technique"}}
+
+
+def inferred_parent(name):
+    head = (name.split() or [""])[-1]
+    return next((t.name for t in ENTITY_TYPES.values() if t.name in PARENT_TYPES and head in (t.name, t.label.lower())), DEFAULT_PARENT)
+
+
+def book_type(name, raw):
+    spec = raw if isinstance(raw, dict) else {"description": raw}
+    parent = str(spec.get("parent") or "").strip().lower()
+    return {"parent": parent if parent in PARENT_TYPES else inferred_parent(name), "description": str(spec.get("description") or "").strip()}
+
+
+def book_types(raw):
+    return {k: book_type(k, v) for k, v in (raw or {}).items() if k not in BASE_TYPES}
+
+
+class Types:
+    def __init__(self, book_types):
+        self.parents = {name: spec["parent"] for name, spec in book_types.items()}
+
+    def kind(self, etype):
+        return self.parents.get(etype, etype)
+
+    def refines(self, etype, parent):
+        return self.parents.get(etype) == parent
+
+    def kin(self, a, b):
+        return a == b or self.refines(a, b) or self.refines(b, a)
+
+    def is_a(self, etype, kinds):
+        return self.kind(etype) in kinds or etype in kinds
 
 
 STATUS_VALUES = ("alive", "dead", "missing", "revived", "unknown")
@@ -147,7 +188,7 @@ def overlapping_pairs(specs):
 
 
 def book_additions(raw):
-    power_types = {k: str(v) for k, v in (raw.get("power_types") or {}).items() if k not in BASE_TYPES}
+    power_types = book_types(raw.get("power_types"))
     extra, values = {}, {}
     for key, spec in distinct_fields(raw.get("extra_fields") or {}).items():
         if base_field(key) is None:

@@ -6,7 +6,8 @@ LADDER = {"group_type": "school", "step_type": "rank", "rank": "number"}
 
 
 def knowledge():
-    kb = Knowledge(LADDER, power_types={"school", "rank", "draught"})
+    kb = Knowledge(LADDER, power_types={"school": "", "rank": "", "draught": ""})
+
     kb.upsert_entity({"name": "Ashwright", "type": "rank", "aliases": []}, 1)
     kb.upsert_entity({"name": "Stout man at the fair", "type": "character", "aliases": []}, 2)
     kb.upsert_entity({"name": "Sparkwater", "type": "draught", "aliases": []}, 1)

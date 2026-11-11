@@ -68,7 +68,7 @@ class BookGenerationTest(unittest.TestCase):
         self.assertIn("timeline_kind must be one of loop, flashback, linear", calls[0]["error"])
         self.assertIsNone(calls[1]["error"])
         book = load_book(self.workdir)
-        self.assertEqual(book["power_types"], {"relic": "an object holding old harbour magic"})
+        self.assertEqual(book["power_types"], {"relic": {"parent": "concept", "description": "an object holding old harbour magic"}})
         self.assertEqual(book["field_values"], {"guild_rank": ["Apprentice", "Keeper", "Master"]})
         self.assertEqual((book["timeline_kind"], book["complete"]), ("flashback", True))
         self.assertEqual(load_settings(self.workdir).backend, "fake")

@@ -114,7 +114,7 @@ def extract_chapter(workdir, kb, chapter, pending):
     prompt = EXTRACT_PROMPT.format(knowledge=view.compact_view(text, book["view"], notes), n=n, title=chapter["title"], text=text,
                                    power_names=", ".join(book["power_types"]), power_relation=book["relation_example"],
                                    base_types=", ".join(ENTITY_TYPES), relation_types=", ".join(f'"{r}"' for r in RELATION_TYPES),
-                                   power_types=", ".join(f"{t} ({d})" for t, d in book["power_types"].items()))
+                                   power_types=", ".join(f"{t} ({spec['description']})" for t, spec in book["power_types"].items()))
     return llm(workdir, "extract", prompt, chapter=n), began, len(prompt)
 
 

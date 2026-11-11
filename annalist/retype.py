@@ -6,8 +6,8 @@ from .book import load_book
 from .files import write_json
 from .llm import cached_llm
 from .names import name_key
-from .state import INDIVIDUALS, load_states, write_derived
-from .template import BASE_TYPES, ENTITY_TYPES, UNCATEGORIZED
+from .state import load_states, write_derived
+from .template import BASE_TYPES, ENTITY_TYPES, INDIVIDUALS, UNCATEGORIZED
 from .text import chapter_text, text_window
 
 
@@ -57,7 +57,7 @@ def cmd_retype(args):
     workdir = Path(args.workdir).resolve()
     kb = load_states(workdir, merges=False, retypes=False, discovered=False)
     book = load_book(workdir)
-    allowed = {**{t: "" for t in sorted(ENTITY_TYPES)}, **book["power_types"]}
+    allowed = {**{t: "" for t in sorted(ENTITY_TYPES)}, **{t: spec["description"] for t, spec in book["power_types"].items()}}
     by_entity = {}
     for f in kb.facts:
         by_entity.setdefault(f["entity"], []).append(f)

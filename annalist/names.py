@@ -53,10 +53,6 @@ def display_names(entities):
     return {k: f"{w} ({entities[k]['type']})" if shared[name_key(w)] > 1 else w for k, w in written.items()}
 
 
-def same_kind(a, b):
-    return a == b or a in UNTYPED or b in UNTYPED
-
-
 def slug(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") or "x"
 
