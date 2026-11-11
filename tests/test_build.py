@@ -23,7 +23,7 @@ MINI_WORDS = 3896
 STAGE_ORDER = ["extract", "book", "read", "timelines", "wordings", "retype", "discover", "resolve", "relate", "link", "leads", "sweep", "tiers", "profile", "ladders", "families", "answers", "ending", "volumes",
                "render", "export", "review"]
 
-BOOK_REPLY = {"power_system": "", "power_types": [{"type": "ward", "description": "a protective charm a keeper sets"}],
+BOOK_REPLY = {"power_system": "", "power_types": [{"type": "ward", "parent": "artifact", "description": "a protective charm a keeper sets"}],
               "relation_example": "guards", "extra_fields": [], "power_keywords": ["ward", "charm", "lamp", "oath", "guild"],
               "timeline_kind": "flashback", "timeline_note": "Chapter two goes back to the night the Gannet was wrecked."}
 
@@ -171,7 +171,8 @@ class BuildMiniTest(unittest.TestCase):
     def test_book_json_is_generated_validated_and_keeps_the_backend(self):
         book = self.book.json("book.json")
         self.assertEqual(book["timeline_kind"], "flashback")
-        self.assertEqual(book["power_types"], {"ward": "a protective charm a keeper sets"})
+        self.assertEqual(book["power_types"], {"ward": {"parent": "artifact", "description": "a protective charm a keeper sets"}})
+
         self.assertEqual(book["backend"], {"name": "fake", "script": "script.json"})
 
     def test_a_book_without_a_power_ladder_builds_no_ladders_and_keeps_every_name_and_id(self):

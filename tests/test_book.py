@@ -18,7 +18,7 @@ BAD = {"power_system": "Lamplighters keep the harbour lamps.",
        "power_keywords": ["lamp"]}
 
 GOOD = {"power_system": "Lamplighters keep the harbour lamps.",
-        "power_types": [{"type": "relic", "description": "an object holding old harbour magic"}],
+        "power_types": [{"type": "relic", "parent": "artifact", "description": "an object holding old harbour magic"}],
         "extra_fields": [{"name": "guild rank", "description": "the character's rank in the Lamplighters' Guild",
                           "values": ["Apprentice", "Keeper", "Master"]}],
         "power_keywords": ["lamp"], "timeline_kind": "flashback", "timeline_note": "Chapter two is set nine winters ago."}
@@ -68,7 +68,7 @@ class BookGenerationTest(unittest.TestCase):
         self.assertIn("timeline_kind must be one of loop, flashback, linear", calls[0]["error"])
         self.assertIsNone(calls[1]["error"])
         book = load_book(self.workdir)
-        self.assertEqual(book["power_types"], {"relic": {"parent": "concept", "description": "an object holding old harbour magic"}})
+        self.assertEqual(book["power_types"], {"relic": {"parent": "artifact", "description": "an object holding old harbour magic"}})
         self.assertEqual(book["field_values"], {"guild_rank": ["Apprentice", "Keeper", "Master"]})
         self.assertEqual((book["timeline_kind"], book["complete"]), ("flashback", True))
         self.assertEqual(load_settings(self.workdir).backend, "fake")
@@ -124,6 +124,21 @@ class BookGenerationTest(unittest.TestCase):
         stored = json.loads((self.workdir / "book.json").read_text(encoding="utf-8"))["extra_fields"]
         self.assertEqual(stored, {"guild_rank": {"description": "the character's rank and lamp, written as 'Rank, Lamp'",
                                                  "values": ["Apprentice", "Keeper"]}})
+
+    def test_a_type_without_a_general_type_as_parent_is_asked_again_and_the_parent_is_kept(self):
+        orphan = {**GOOD, "power_types": [{"type": "relic", "description": "an object holding old harbour magic"},
+                                          {"type": "tide", "parent": "weather", "description": "a tide the lamps are lit for"},
+                                          {"type": "keeper", "parent": "character", "description": "a lamp keeper of the quay"}]}
+        self.script(orphan, GOOD)
+        kb = harbour_kb()
+        generate_book(self.workdir, kb, kb)
+        error = self.calls()[0]["error"]
+        self.assertIn('power type "relic" needs a parent, the general type it is a kind of: one of place, organization, artifact', error)
+        self.assertIn('power type "tide" needs a parent', error)
+        self.assertIn('power type "keeper" has the parent "character", so its entries would be people', error)
+        self.assertNotIn('"relic"', self.calls()[1]["error"] or "")
+        stored = json.loads((self.workdir / "book.json").read_text(encoding="utf-8"))["power_types"]
+        self.assertEqual(stored, {"relic": {"parent": "artifact", "description": "an object holding old harbour magic"}})
 
     def test_a_type_described_as_a_kind_of_person_is_rejected_before_any_entries_exist(self):
         reply = {**GOOD, "power_types": [{"type": "mutant", "description": "A person whose body was warped by an elixir"}]}
