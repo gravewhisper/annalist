@@ -59,6 +59,11 @@ class RuleFamilyTest(unittest.TestCase):
             self.assertEqual(relation_family(wording), "investigation", wording)
         self.assertEqual(relation_family("enemy of"), "hostility")
 
+    def test_holding_someone_prisoner_is_hostility_not_ownership(self):
+        for wording in ("holds prisoner", "keeps as a prisoner in", "held prisoner by"):
+            self.assertEqual(relation_family(wording), "hostility", wording)
+        self.assertEqual(relation_family("holds"), "ownership")
+
     def test_helping_in_any_tense_is_alliance(self):
         for wording in ("assists", "assist", "assisted", "helps", "helped"):
             self.assertEqual(relation_family(wording), "alliance", wording)

@@ -17,7 +17,7 @@ FAMILIES = (
     ("teaching", r"mentor\w*|teach\w*|taught|learn\w*|tutor\w*|instruct\w*|train\w*|coach\w*|apprentice|disciple|student"
                  r"|pupil|graduate of|studied under|stud(?:ies|ied|ying)|examiner|educat\w*|guide of|lectur\w*|recommended"),
     ("hostility", r"enem\w*|kill\w*|murder\w*|plot\w*|threat\w*|rival\w*|attack\w*|hunt\w*|target\w*|victim|arrest\w*|pursu\w*"
-                  r"|schem\w*|wreck\w*|defeat\w*|captive|captor|abused|imprison\w*|deceived|manipulated"
+                  r"|schem\w*|wreck\w*|defeat\w*|captive|captor|prisoners?|abused|imprison\w*|deceived|manipulated"
                   r"|hijacks?|destroy\w*|breach\w*|haunts?|estranged|betray\w*|fights?|fought|escaped|frighten\w*"
                   r"|hostile|odds|oppos\w*|against|feud\w*|resent\w*|distrust\w*|hates?|hated|fears?|feared"
                   r"|impersonat\w*|stole|steals?|robbed|blackmail\w*|curse[ds]?|duel\w*|competes?|competitor|quarrel\w*"
