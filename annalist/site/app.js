@@ -75,6 +75,47 @@ function displayName(e) {
   return D.namesakes[e.name].some(id => id !== e.id && vis(D.byId[id])) ? `${e.name} (${e.type})` : e.name;
 }
 const visNames = e => [...new Set([e.name_chapter <= S.n ? e.name : null, ...visAliases(e)].filter(Boolean))];
+const searchKey = s => s.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/['’ʼ`]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const inOrder = (q, t) => { let i = 0; for (const ch of t) if (ch === q[i]) i++; return i === q.length; };
+function typosToPrefix(q, t) {
+  let before = [], prev = Array.from({length: t.length + 1}, (_, j) => j);
+  for (let i = 1; i <= q.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= t.length; j++) {
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (q[i - 1] !== t[j - 1]));
+      if (i > 1 && j > 1 && q[i - 1] === t[j - 2] && q[i - 2] === t[j - 1]) row[j] = Math.min(row[j], before[j - 2] + 1);
+    }
+    [before, prev] = [prev, row];
+  }
+  return Math.min(...prev);
+}
+function nameRank(q, name) {
+  const n = searchKey(name), flat = q.replace(/ /g, ''), nflat = n.replace(/ /g, '');
+  const starts = [0, ...[...n.matchAll(/ /g)].map(m => m.index + 1)], words = n.split(' '), asked = q.split(' ');
+  if (n === q || nflat === flat) return 0;
+  if (n.startsWith(q)) return 1;
+  if (starts.some(i => n.startsWith(q, i))) return 2;
+  if (asked.length > 1 && asked.every(w => words.some(x => x.startsWith(w)))) return 3;
+  if (nflat.includes(flat)) return 4;
+  if (inOrder(flat, nflat)) return 5;
+  const slack = flat.length >= 8 ? 2 : flat.length >= 4 ? 1 : 0;
+  return slack && starts.some(i => typosToPrefix(q, n.slice(i)) <= slack) ? 6 : -1;
+}
+function findEntries(query, entities, tie = () => 0) {
+  const q = searchKey(query);
+  if (!q) return [];
+  const hits = [];
+  for (const e of entities) {
+    let best = null;
+    for (const via of visNames(e)) {
+      const rank = nameRank(q, via);
+      if (rank >= 0 && (!best || rank < best.rank)) best = {e, via, rank};
+    }
+    if (best) hits.push(best);
+  }
+  return hits.sort((a, b) => a.rank - b.rank || tie(a.e, b.e));
+}
+const hitName = ({e, via}) => esc(displayName(e)) + (via !== displayName(e) && via !== e.name ? ` <small>(${esc(via)})</small>` : '');
 const visFacts = id => until(pageIds(id).flatMap(p => D.factsBy[p] || [])).sort((a, b) => a.chapter - b.chapter);
 const visFactsAll = () => D.facts.reduce((a, f) => a + (f.chapter <= S.n), 0);
 const visRels = id => until([...new Set(pageIds(id).flatMap(p => D.relsBy[p] || []))]).map(r => ({...r, source: live(r.source), target: live(r.target)}))
@@ -1806,12 +1847,10 @@ function graphKey(ev) {
 }
 
 function graphSearch(input, box, to) {
-  const s = input.value.trim().toLowerCase();
-  if (!s) return box.classList.remove('open');
+  if (!searchKey(input.value)) return box.classList.remove('open');
   const linked = new Set(edgesAt().flatMap(r => [r.source, r.target]));
-  const hits = D.entities.filter(e => vis(e) && linked.has(e.id) && visNames(e).some(x => x.toLowerCase().includes(s)));
-  hits.sort((a, b) => !displayName(a).toLowerCase().startsWith(s) - !displayName(b).toLowerCase().startsWith(s) || displayName(a).localeCompare(displayName(b)));
-  box.innerHTML = hits.slice(0, 12).map((e, i) => `<div data-go="${to(e.id)}" class="${i ? '' : 'sel'}" role="option"><span>${esc(displayName(e))}</span><small>${esc(e.type)}</small></div>`).join('') || '<div class="muted">No connected entry matches up to this chapter</div>';
+  const hits = findEntries(input.value, D.entities.filter(e => vis(e) && linked.has(e.id)), (a, b) => displayName(a).localeCompare(displayName(b)));
+  box.innerHTML = hits.slice(0, 12).map((h, i) => `<div data-go="${to(h.e.id)}" class="${i ? '' : 'sel'}" role="option"><span>${hitName(h)}</span><small>${esc(h.e.type)}</small></div>`).join('') || '<div class="muted">No connected entry matches up to this chapter</div>';
   box.classList.add('open');
 }
 
@@ -2124,16 +2163,17 @@ function storyClick(ev, act) {
   return false;
 }
 
+function storySearch(input, box, m) {
+  if (!searchKey(input.value)) return box.classList.remove('open');
+  const hits = findEntries(input.value, m.candidates.map(id => D.byId[id])).slice(0, 12);
+  box.innerHTML = hits.map((h, i) => `<div data-sadd="${h.e.id}" class="${i ? '' : 'sel'}" role="option"><span>${hitName(h)}</span></div>`).join('') || '<div class="muted">No other character matches up to this chapter</div>';
+  box.classList.add('open');
+}
+
 function mountStory() {
   const m = G.model, st = G.story, wrap = $('sscroll'), svg = $('story'), tip = $('stip');
   const input = $('sq'), box = $('sqres');
-  input.addEventListener('input', () => {
-    const s = input.value.trim().toLowerCase();
-    if (!s) return box.classList.remove('open');
-    const hits = m.candidates.map(id => D.byId[id]).filter(e => visNames(e).some(x => x.toLowerCase().includes(s))).slice(0, 12);
-    box.innerHTML = hits.map((e, i) => `<div data-sadd="${e.id}" class="${i ? '' : 'sel'}" role="option"><span>${esc(displayName(e))}</span></div>`).join('') || '<div class="muted">No other character matches up to this chapter</div>';
-    box.classList.add('open');
-  });
+  input.addEventListener('input', () => storySearch(input, box, m));
   input.addEventListener('keydown', ev => {
     if (ev.key === 'Enter') box.querySelector('[data-sadd]')?.click();
     if (ev.key === 'Escape') { input.value = ''; box.classList.remove('open'); }
@@ -2842,19 +2882,12 @@ function setN(n) {
 
 const SEARCH = {perType: 5};
 function search() {
-  const s = $('q').value.trim().toLowerCase();
   const box = $('results');
-  if (!s) return box.classList.remove('open');
-  const hits = [];
-  for (const e of D.entities) if (full(e)) {
-    const via = visNames(e).find(x => x.toLowerCase().includes(s));
-    if (via) hits.push([e, via]);
-  }
-  const starts = x => x[1].toLowerCase().startsWith(s) ? 0 : 1;
-  hits.sort((a, b) => starts(a) - starts(b) || visFacts(b[0].id).length - visFacts(a[0].id).length);
+  if (!searchKey($('q').value)) return box.classList.remove('open');
+  const hits = findEntries($('q').value, D.entities.filter(full), (a, b) => visFacts(b.id).length - visFacts(a.id).length);
   const byType = new Map();
-  for (const hit of hits) (byType.get(hit[0].type) || byType.set(hit[0].type, []).get(hit[0].type)).push(hit);
-  const row = ([e, via]) => `<div data-res="${e.id}"${e === hits[0][0] ? ' class="sel"' : ''} role="option"><span>${esc(displayName(e))}${via !== displayName(e) && via !== e.name ? ` <small>(${esc(via)})</small>` : ''}</span><small>ch ${e.first}</small></div>`;
+  for (const hit of hits) (byType.get(hit.e.type) || byType.set(hit.e.type, []).get(hit.e.type)).push(hit);
+  const row = h => `<div data-res="${h.e.id}"${h === hits[0] ? ' class="sel"' : ''} role="option"><span>${hitName(h)}</span><small>ch ${h.e.first}</small></div>`;
   box.innerHTML = [...byType].map(([type, rows]) => `<div class="rgroup" role="group" aria-label="${esc(cap(plural(type)))}"><div class="rhead" aria-hidden="true">${esc(cap(plural(type)))}<span>${rows.length}</span></div>${rows.slice(0, SEARCH.perType).map(row).join('')}</div>`).join('')
     || '<div class="muted">No matches up to this chapter</div>';
   box.classList.add('open');

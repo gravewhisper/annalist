@@ -4,7 +4,16 @@ The slider in the site header sets the chapter you are on. The site has a home p
 
 A category page shows its entries as a table. Select a column heading to sort by it and select it again to reverse the order. The sort stays in the address while the slider moves. Each type gets the columns its entries have data for: characters show status, affiliation, occupation, first and last seen, and the chapters they are present in; organizations show their members; places show the place they lie in and the people there; ladder steps show their group and rank. The List switch shows each entry's summary instead, and minor mentions stay listed under the table.
 
-The search box matches the names and aliases known by the slider's chapter. It groups the matches by type, puts the group with the best match first, and shows each entry's first chapter. Enter opens the best match.
+The search box matches the names and aliases known by the slider's chapter. It groups the matches by type, puts the group with the best match first, and shows each entry's first chapter. Enter opens the best match. Every search box on the site, including the graph's, uses the same fuzzy matcher. It ignores case, accents, and punctuation, so "dantes" finds "Dantès" and "oneil" finds "O'Neil". It ranks matches in this order:
+
+1. The whole name or alias.
+2. The start of the name.
+3. The start of a word in the name.
+4. Every query word starts a word in the name, in any order ("moretti klein").
+5. The query's letters appear in order, first without gaps, then with gaps ("kln mrt").
+6. A small typo: one edit for a query of 4 to 7 letters, two edits for 8 or more. A query under 4 letters must match without typos.
+
+A match through an alias shows the alias next to the entry's name. An alias the book has not used yet by the slider's chapter never matches.
 
 A long entry page, one with five or more sections, lists them under its title: the summary, connections, the profile sections, and the Facts, Relations, and Mysteries tabs. A link to a section on another tab opens that tab first.
 

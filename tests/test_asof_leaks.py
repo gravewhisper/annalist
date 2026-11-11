@@ -157,7 +157,8 @@ class AsOfLeakTest(unittest.TestCase):
                                                capture_output=True, text=True, timeout=120)
         sorts = json.loads(render("tables@1").stdout)["tables@1"]["sorts"]
         types = sorted({e["type"] for e in self.wiki["entities"]})
-        queries = sorted({x for e in self.wiki["entities"] for x in [e["name"], *(a["name"] for a in e["aliases"])] if not re.search(r"[@?]", x)} | set("aeiou"))
+        names = {x for e in self.wiki["entities"] for x in [e["name"], *(a["name"] for a in e["aliases"])] if not re.search(r"[@?]", x)}
+        queries = sorted(names | {x[0] + x[2:] for x in names if len(x) >= 5} | {" ".join(reversed(x.split())) for x in names if " " in x} | set("aeiou"))
         shown = {}
         for n in self.later:
             routes = [f"route:cat:{t}@{n}?tab=list" for t in types] + [f"route:cat:{t}@{n}?tab=&sort={d}{k}" for t in types for k in sorts for d in ("", "-")]
