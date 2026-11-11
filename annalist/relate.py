@@ -82,7 +82,8 @@ def chapter_request(workdir, n, title, radius, max_pairs):
                                   pairs="\n".join(f"- {a} / {b}" for (a, b), _ in pairs),
                                   known="\n".join(f"- {k}" for k in known) or "(none)", timelines=timelines,
                                   timeline_key=', "timeline": "main"' if timelines else "")
-    return {"kb": kb, "text": text, "patterns": patterns, "prompt": prompt, "pairs": [pair for pair, _ in pairs],
+    present = {f["entity"] for f in kb.facts if f["chapter"] == n} | {k for r in kb.relations if r["chapter"] == n for k in (r["source"], r["target"])}
+    return {"kb": kb, "text": text, "patterns": patterns, "prompt": prompt, "pairs": [pair for pair, _ in pairs], "present": present,
             "basis": hashlib.sha1("\n\n".join((RELATE_PROMPT, timelines, title, text)).encode()).hexdigest()[:16],
             "known": {(r["source"], wording_key(r["type"]), r["target"]) for r in shown}}
 
@@ -114,7 +115,8 @@ def check_relation(req, raw, n, window):
         return None, "quote not found in the chapter"
     start, end = found["span"]
     around = req["text"][max(0, start - window):end + window]
-    if not (req["patterns"][source].search(around) and req["patterns"][target].search(around)):
+    named = {k for k in (source, target) if req["patterns"][k].search(around)}
+    if not named or any(k not in named and k not in req.get("present", ()) for k in (source, target)):
         return None, "the quote and the text around it do not name both entries"
     tid = str(raw.get("timeline") or "main")
     status = raw.get("status") if raw.get("status") in ("stated", "implied", "belief") else "stated"

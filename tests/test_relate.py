@@ -108,3 +108,33 @@ class RewordedSummaryTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class _Registry:
+    timelines = {"main": {}}
+
+    def __init__(self, names):
+        self.names = set(names)
+
+    def resolve(self, name):
+        return name if name in self.names else None
+
+
+class PresentEndTest(unittest.TestCase):
+    TEXT = "I sat with her mother until dawn, and told her everything. Wren Hollis wept at the window."
+
+    def check(self, present):
+        from annalist.names import name_pattern
+        from annalist.relate import check_relation
+        req = {"kb": _Registry({"Ada Quill", "Wren Hollis", "Mara Hollis"}), "text": self.TEXT, "known": set(), "present": present,
+               "patterns": {n: name_pattern([n]) for n in ("Ada Quill", "Wren Hollis", "Mara Hollis")}}
+        raw = {"source": "Mara Hollis", "target": "Wren Hollis", "type": "mother of", "quote": "I sat with her mother until dawn, and told her everything."}
+        return check_relation(req, raw, 3, 120)
+
+    def test_an_end_the_chapter_shows_only_as_her_mother_counts_when_the_read_found_it_present(self):
+        row, reason = self.check({"Mara Hollis", "Wren Hollis"})
+        self.assertIsNotNone(row, reason)
+
+    def test_an_end_neither_named_nor_present_is_still_rejected(self):
+        row, reason = self.check({"Wren Hollis"})
+        self.assertIsNone(row)
