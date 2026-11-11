@@ -57,7 +57,7 @@ BOOK_TYPES_RULE = " Entries of this book's own types matter too. Each always tak
 def cmd_read(args):
     workdir = Path(args.workdir).resolve()
     chapters = {c["index"]: c for c in json.loads((workdir / "chapters.json").read_text(encoding="utf-8"))}
-    kb = load_states(workdir)
+    kb = load_states(workdir, added=False)
     write_derived(workdir, kb)
     if not (workdir / "book.json").exists():
         generate_book(workdir, kb, load_states(workdir, retypes=False), args.end)

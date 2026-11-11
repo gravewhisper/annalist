@@ -18,6 +18,7 @@ from .relate import cmd_relate
 from .resolve import cmd_resolve
 from .scorecard import cmd_eval
 from .retype import cmd_retype
+from .newtypes import cmd_newtypes
 from .review import cmd_review
 from .survey import cmd_book
 from .answers import cmd_answers
@@ -81,6 +82,11 @@ def main():
     p.add_argument("workdir")
     p.add_argument("--jobs", type=int, default=4)
     p.set_defaults(func=cmd_retype)
+
+    p = sub.add_parser("newtypes", description="Add a type at each finished volume end for a new kind of entry the book has brought in.")
+    p.add_argument("workdir")
+    p.add_argument("--to", type=int, help="last chapter to consider; default: every chapter read")
+    p.set_defaults(func=cmd_newtypes)
 
     p = sub.add_parser("leads")
     p.add_argument("workdir")

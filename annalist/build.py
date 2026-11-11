@@ -29,6 +29,7 @@ from .discover import cmd_discover
 from .ending import cmd_ending, ending_status
 from .read import cmd_read
 from .link import cmd_link
+from .newtypes import cmd_newtypes
 from .relate import cmd_relate
 from .render import ARCS_FILE, cmd_render
 from .resolve import cmd_resolve
@@ -185,6 +186,7 @@ def failed_answers(run):
 
 
 STATE = ("state", "book.json", "wordings.json")
+TYPED = ("types.json", "newtypes.json")
 
 
 STAGES = (
@@ -204,57 +206,60 @@ STAGES = (
           lambda run: ["discover.json"], ("discover",), code=("discover",)),
     Stage("resolve", lambda run: cmd_resolve(namespace(run)), STATE + ("types.json", "discover.json"), lambda run: ["merges.json"],
           ("resolve", "reveal", "identify"), code=("resolve",)),
-    Stage("relate", lambda run: cmd_relate(namespace(run)), STATE + ("types.json", "merges.json", "discover.json"),
+    Stage("newtypes", lambda run: cmd_newtypes(namespace(run, to=run.last)), STATE + ("types.json", "discover.json", "merges.json", "volumes.json"),
+          lambda run: ["newtypes.json"], ("newtypes",), skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}",
+          code=("newtypes",)),
+    Stage("relate", lambda run: cmd_relate(namespace(run)), STATE + (*TYPED, "merges.json", "discover.json"),
           lambda run: ["relate.json"], ("relate",), code=("relate",)),
-    Stage("link", lambda run: cmd_link(namespace(run)), STATE + ("types.json", "merges.json", "discover.json", "relate.json"),
+    Stage("link", lambda run: cmd_link(namespace(run)), STATE + (*TYPED, "merges.json", "discover.json", "relate.json"),
           lambda run: ["link.json"], ("link",), code=("link",)),
-    Stage("leads", lambda run: cmd_leads(namespace(run)), ("state", "types.json", "merges.json"),
+    Stage("leads", lambda run: cmd_leads(namespace(run)), ("state", *TYPED, "merges.json"),
           lambda run: ["leads.json"], ("repeats", "leads"), code=("leads",)),
     Stage("sweep", lambda run: cmd_sweep(namespace(run, batch=6, limit=None, only=None, budget=None)),
-          ("state", "types.json", "merges.json", "leads.json", "corrections.json#questions"), lambda run: ["sweep.json"], ("sweep",), code=("sweep",),
+          ("state", *TYPED, "merges.json", "leads.json", "corrections.json#questions"), lambda run: ["sweep.json"], ("sweep",), code=("sweep",),
           failed=failed_items("sweep.json")),
     Stage("tiers", lambda run: cmd_tiers(namespace(run)),
-          STATE + ("types.json", "merges.json", "leads.json", "sweep.json"), lambda run: ["tiers.json"], ("tiers",), code=("tiers",)),
+          STATE + (*TYPED, "merges.json", "leads.json", "sweep.json"), lambda run: ["tiers.json"], ("tiers",), code=("tiers",)),
     Stage("profile", lambda run: cmd_profile(namespace(run, character=None)),
-          STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "volumes.json"), lambda run: ["profiles.json"],
+          STATE + (*TYPED, "merges.json", "discover.json", "relate.json", "link.json", "volumes.json"), lambda run: ["profiles.json"],
           ("profile", "profile-support", "profile-field", "death", "revival"), code=("profile",)),
     Stage("ladders", lambda run: cmd_ladders(Namespace(workdir=str(run.workdir))),
-          STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "profiles.json"), lambda run: ["ladders.json"],
+          STATE + (*TYPED, "merges.json", "discover.json", "relate.json", "link.json", "profiles.json"), lambda run: ["ladders.json"],
           ("ladders", "resolve", "reveal"), skip=lambda run: "the book has no power ladder" if run.book().get("ladder", {}) is None else None,
           code=("ladders", "resolve")),
     Stage("families", lambda run: cmd_families(namespace(run)),
-          STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "ladders.json"), lambda run: ["families.json"],
+          STATE + (*TYPED, "merges.json", "discover.json", "relate.json", "link.json", "ladders.json"), lambda run: ["families.json"],
           ("families",), code=("families",)),
     Stage("answers", lambda run: cmd_answers(namespace(run, batch=3, to=run.last)),
-          STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "profiles.json", "volumes.json",
+          STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "profiles.json", "volumes.json",
                    "answers.json", "corrections.json#questions"),
           lambda run: ["answers.json"], ("answers", "reread", "premise"),
           skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}", code=("answers",), failed=failed_answers),
     Stage("ending", lambda run: cmd_ending(namespace(run, batch=5)),
-          STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json",
+          STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json",
                    "answers.json", "ending.json", "corrections.json#questions"),
           lambda run: ["ending.json"], ("ending", "reread"), skip=lambda run: ending_status(run.workdir, run.last, len(run.chapters)), code=("ending",),
           failed=failed_items("ending.json")),
     Stage("volumes", run_volumes,
-          STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "volumes.json"),
+          STATE + (*TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "volumes.json"),
           lambda run: [ARCS_FILE] + [f"volumes/{slug(v['name'])}.json" for v in run.eligible_volumes()], ("arcs", "arc", "volume", "events"),
           skip=lambda run: None if started_volumes(run) else "no chapter read", code=("volume",)),
     Stage("proofread", lambda run: cmd_proofread(namespace(run, to=run.last, budget=run.args.budget,
                                                            started=read_json(run.workdir / STAMPS, {}).get("started"))),
-          STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "profiles.json",
+          STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "profiles.json",
                    "ladders.json", "answers.json", "ending.json", "volumes.json"),
           lambda run: ["proofread.json"], ("proofread",),
           skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}", code=("proofread",)),
     Stage("render", lambda run: cmd_render(namespace(run, until=None, html=True)),
-          STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
+          STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
                    "ending.json", "volumes", ARCS_FILE, "ladders.json", "corrections.json", "proofread.json"),
           lambda run: ["wiki/index.md"], ("summary", "personality", "appearance", "history"), code=("render",)),
     Stage("export", lambda run: cmd_export(Namespace(workdir=str(run.workdir), outdir=str(run.workdir / "site"), public=False, theme=None)),
-          STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
+          STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
                    "ending.json", "volumes", ARCS_FILE, "ladders.json", "families.json", "corrections.json", "proofread.json"),
           lambda run: ["site/data/wiki.json"], code=("export", "site", "themes")),
     Stage("review", lambda run: cmd_review(Namespace(workdir=str(run.workdir))),
-          STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "profiles.json", "ladders.json"),
+          STATE + (*TYPED, "merges.json", "discover.json", "relate.json", "link.json", "profiles.json", "ladders.json"),
           lambda run: ["review.json", "review.md"], code=("review",)),
 )
 

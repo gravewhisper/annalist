@@ -35,6 +35,7 @@ async function load() {
   D.storeKey = 'wiki-chapter:' + D.book.title;
   const typeCount = {};
   for (const e of D.entities) typeCount[e.type] = (typeCount[e.type] || 0) + 1;
+  for (const e of D.entities) if (e.retyped) { const now = e.type; Object.defineProperty(e, 'type', {get: () => S.n >= e.retyped.chapter ? now : e.retyped.from}); }
   D.typeOrder = Object.keys(typeCount).sort((a, b) => typeCount[b] - typeCount[a] || a.localeCompare(b));
   applyTheme(D.book.theme || {});
   document.title = D.book.title;
@@ -2846,7 +2847,7 @@ function render() {
   renderSide(c);
   const [kind, arg] = S.p.split(/:(.*)/s);
   const pages = {
-    e: () => renderEntity(arg), cat: () => renderCat(arg), mysteries: renderMysteries, chapters: renderChapters,
+    e: () => renderEntity(arg), cat: () => renderCat(D.book.added?.[arg] > S.n ? D.parents[arg] : arg), mysteries: renderMysteries, chapters: renderChapters,
     ch: () => renderChapter(arg), v: () => renderVolume(arg), graph: () => renderGraph(arg),
   };
   const old = $('graph-view');

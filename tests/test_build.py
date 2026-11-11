@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "tests" / "data" / "cache"
 MINI = ROOT / "tests" / "data" / "mini.epub"
 MINI_WORDS = 3896
-STAGE_ORDER = ["extract", "book", "read", "timelines", "wordings", "retype", "discover", "resolve", "relate", "link", "leads", "sweep", "tiers", "profile", "ladders", "families", "answers", "ending", "volumes",
+STAGE_ORDER = ["extract", "book", "read", "timelines", "wordings", "retype", "discover", "resolve", "newtypes", "relate", "link", "leads", "sweep", "tiers", "profile", "ladders", "families", "answers", "ending", "volumes",
                "proofread", "render", "export", "review"]
 
 BOOK_REPLY = {"power_system": "", "power_types": [{"type": "ward", "parent": "artifact", "description": "a protective charm a keeper sets"}],
@@ -32,6 +32,7 @@ PROFILE_QUOTE = "Ines was nineteen and had been Tomas's apprentice for six years
 LATER_REPLIES = {
     "book": BOOK_REPLY,
     "retype": {"items": []},
+    "newtypes": {"new_types": [], "moves": []},
     "wordings": {"wordings": []},
     "resolve": {"same": False, "reason": "Different people."},
     "discover": {"entries": []},
@@ -249,7 +250,7 @@ class CodeChangeTest(unittest.TestCase):
         rebuilt = self.book.build()
         self.assertEqual(plan_rows(rebuilt.stdout)["resolve"], "run: code changed")
         self.assertEqual(plan_rows(rebuilt.stdout)["retype"], "done")
-        self.assertEqual(ran(rebuilt.stdout), ["resolve", "relate", "link", "leads", "sweep", "tiers", "profile", "families", "answers", "volumes", "proofread", "render",
+        self.assertEqual(ran(rebuilt.stdout), ["resolve", "newtypes", "relate", "link", "leads", "sweep", "tiers", "profile", "families", "answers", "volumes", "proofread", "render",
                                                 "export", "review"])
         self.assertEqual(self.book.json("merges.json")["rules"], 2)
         self.assertEqual(len(self.book.calls()), self.calls)

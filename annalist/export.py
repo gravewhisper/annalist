@@ -5,6 +5,7 @@ import shutil
 import sys
 from pathlib import Path
 
+from .book import added_types
 from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .families import read_families, relation_family
 from .files import read_json
@@ -216,7 +217,8 @@ def build(workdir, theme):
     for r in relations:
         for end in ("source", "target"):
             ties.setdefault(r[end], []).append(r)
-    categories = book_types(book.get("power_types"))
+    added = added_types(workdir)
+    categories = {**book_types(book.get("power_types")), **added}
     kinds = Types({t: spec["parent"] for t, spec in categories.items()})
     types = {e["name"]: kinds.kind(e["type"]) for e in entities}
 
@@ -224,7 +226,8 @@ def build(workdir, theme):
     for e in entities:
         page = names[e["name"]]
         record = {"id": ids[e["name"]], "name": page.name, "name_chapter": page.chapter, "type": e["type"],
-                  "first": page.first, "aliases": page.aliases, "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e)}
+                  "first": page.first, "aliases": page.aliases, "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e),
+                  **({"retyped": e["retyped"]} if e.get("retyped") else {})}
         record["mention"] = first_mention(texts, record)
         if e["type"] == "character":
             record["present"] = sorted(present.get(e["name"], ()))
@@ -275,6 +278,7 @@ def build(workdir, theme):
         "book": {"title": title, "max": last,
                  "public_domain": book.get("public_domain") is True, "theme": book.get("theme") or stored_theme(title),
                  "power_types": sorted(categories), "parents": kinds.parents, "labels": category_labels(categories, texts),
+                 "added": {t: spec["chapter"] for t, spec in added.items()},
                  "ladder": book.get("ladder")},
         "chapters": chapters,
         "timelines": list(timelines.values()),

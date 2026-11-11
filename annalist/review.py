@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .book import load_book
+from .book import added_types, load_book
 from .files import read_json, write_atomic, write_json
 from .evidence import class_pattern, stems
 from .names import name_key, names_of
@@ -165,7 +165,7 @@ def power_type_people(run):
 
 
 def category_clashes(run):
-    types = run.book["power_types"]
+    types = {**run.book["power_types"], **added_types(run.workdir)}
     names = {n: e["type"] for e in run.kb.entities.values() for n in names_of(e)}
     return [{"text": p} for p in category_problems(types, names)]
 

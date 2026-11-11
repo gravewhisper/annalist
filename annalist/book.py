@@ -25,6 +25,22 @@ def rank_type(book):
     return type_named(book.get("rank_word"), book.get("power_types") or {})
 
 
+NEWTYPES_FILE = "newtypes.json"
+
+
+def volume_types(workdir):
+    return read_json(Path(workdir) / NEWTYPES_FILE, {"volumes": []})["volumes"]
+
+
+def added_types(workdir, until=None):
+    """The types added at volume ends by chapter until, each with the chapter it starts from."""
+    return {t: {**spec, "chapter": v["to"]} for v in volume_types(workdir) if until is None or v["to"] <= until for t, spec in v["types"].items()}
+
+
+def type_moves(workdir, until=None):
+    return [{**m, "chapter": v["to"]} for v in volume_types(workdir) if until is None or v["to"] <= until for m in v["moves"]]
+
+
 def load_book(workdir):
     book = dict(DEFAULT_BOOK)
     book.update(read_json(Path(workdir) / "book.json", {}))

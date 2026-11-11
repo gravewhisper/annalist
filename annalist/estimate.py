@@ -45,6 +45,7 @@ RATES = {
     "reveal": Rate(input_tokens=60.0, output_tokens=5.0, wall_s=0.1),
     "resolve": Rate(input_tokens=266.53, output_tokens=24.89, wall_s=0.568),
     "revival": Rate(input_tokens=843.25, output_tokens=75.01, wall_s=1.2935),
+    "newtypes": Rate(input_tokens=60.0, output_tokens=2.0, wall_s=0.03),
     "retype": Rate(input_tokens=30.72, output_tokens=5.14, wall_s=0.0485),
     "summary": Rate(input_tokens=401.95, output_tokens=88.56, wall_s=1.1207),
     "support": Rate(input_tokens=922.46, output_tokens=285.76, wall_s=2.4106),

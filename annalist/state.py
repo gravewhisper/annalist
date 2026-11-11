@@ -3,7 +3,7 @@ import json
 import re
 from pathlib import Path
 
-from .book import ladder_types
+from .book import added_types, ladder_types, type_moves
 from .corrections import correct_pages, known_from, load_corrections, PAGES, PROOFREAD, PROOFREAD_FILE, QUESTIONS, settle_questions, with_proofread
 from .files import read_json, read_jsonl, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
@@ -451,6 +451,15 @@ class Knowledge:
             if canonical and self.entities[canonical]["type"] == d["from"] and not (d["from"] in self.ladder and d["to"] in INDIVIDUALS):
                 self.entities[canonical]["type"] = d["to"]
 
+    def apply_added_types(self, added, moves):
+        """Add the types a volume end introduced, and move entries into them from that volume's last chapter on."""
+        self.types.parents.update({t: spec["parent"] for t, spec in added.items()})
+        self.power_types |= set(added)
+        for m in moves:
+            canonical = self.resolve(m["name"])
+            if canonical and self.entities[canonical]["type"] == m["from"] and m["to"] in added:
+                self.entities[canonical].update(type=m["to"], retyped={"from": m["from"], "chapter": m["chapter"]})
+
     def apply_filled(self, chapters, until, prefix):
         for n, entry in sorted(chapters.items(), key=lambda c: int(c[0])):
             if until is not None and int(n) > until:
@@ -566,7 +575,7 @@ FILLED = {"relate.json": "RF", "link.json": "RL"}
 
 
 def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FILLED), discovered=True, answers_before=None, ladders=False,
-                repeats=True, corrections=()):
+                repeats=True, corrections=(), added=True):
     book = read_json(Path(workdir) / "book.json", {})
     kb = Knowledge(book.get("ladder"), read_wordings(workdir), book.get("power_types") or ())
     kb.corrections = load_corrections(workdir) if corrections else None
@@ -597,6 +606,8 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
     if merges:
         kb.apply_merges(read_json(Path(workdir) / "merges.json", {"pairs": []})["pairs"], until,
                         known_from(kb.corrections) if PAGES in corrections else None)
+    if retypes and added:
+        kb.apply_added_types(added_types(workdir, until), type_moves(workdir, until))
     for name in filled:
         kb.apply_filled(read_json(Path(workdir) / name, {"chapters": {}})["chapters"], until, FILLED[name])
     if merges:
