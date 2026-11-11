@@ -11,7 +11,9 @@
       {
         "name": "Corrow Penhallow",
         "type": "character",
-        "aliases": [],
+        "aliases": [
+          "Corrow"
+        ],
         "summary": "A teacher at the Saltmere School."
       },
       {
@@ -174,6 +176,24 @@
         "type": "character",
         "aliases": [],
         "summary": "A visitor from the Gloam School who stands at its third circle."
+      },
+      {
+        "name": "Lantern School",
+        "type": "school",
+        "aliases": [],
+        "summary": "A school over the marsh with circles of its own."
+      },
+      {
+        "name": "Lampwright",
+        "type": "concept",
+        "aliases": [],
+        "summary": "The first circle of the Lantern School."
+      },
+      {
+        "name": "Lamplighter",
+        "type": "elixir",
+        "aliases": [],
+        "summary": "A bright brew of the Lantern School."
       }
     ],
     "facts": [
@@ -182,6 +202,24 @@
         "claim": "Hennet does not expect to climb higher than the third circle.",
         "quotes": [
           "I stand at the third, and I do not expect to climb any higher."
+        ],
+        "asserted_by": "Hennet Larrow",
+        "status": "stated"
+      },
+      {
+        "entity": "Lampwright",
+        "claim": "Lampwright is the first circle of the Lantern School.",
+        "quotes": [
+          "Lampwright is the first circle of the Lantern School"
+        ],
+        "asserted_by": "Hennet Larrow",
+        "status": "stated"
+      },
+      {
+        "entity": "Lamplighter",
+        "claim": "The Circle 2 elixir of the Lantern School is Lamplighter.",
+        "quotes": [
+          "the Circle 2 elixir of the Lantern School is Lamplighter"
         ],
         "asserted_by": "Hennet Larrow",
         "status": "stated"
@@ -199,6 +237,12 @@
         "type": "character",
         "aliases": [],
         "summary": "A teacher who has reached the last known circle of Saltmere."
+      },
+      {
+        "name": "Drowned Choir",
+        "type": "concept",
+        "aliases": [],
+        "summary": "A circle of Saltmere told of in stories."
       }
     ],
     "facts": [
@@ -209,6 +253,15 @@
           "heard him shout the name of the circle into the gale"
         ],
         "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Drowned Choir",
+        "claim": "Drowned Choir is Circle 4 of the Saltmere School.",
+        "quotes": [
+          "Drowned Choir is Circle 4 of the Saltmere School"
+        ],
+        "asserted_by": "Corrow Penhallow",
         "status": "stated"
       }
     ],

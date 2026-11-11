@@ -9,7 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from annalist.ladders import ladder_needed
-from annalist.ranks import rank_mentions, stated_steps
+from annalist.ranks import rank_mentions, stated_items, stated_steps
 from annalist.review import ranks_off_ladder
 from annalist.state import Knowledge
 from annalist.survey import book_problems
@@ -52,6 +52,15 @@ SCANNED = {"ladders": [LADDERS["ladders"][0],
                        {"group": "Gloam", "steps": LADDERS["ladders"][1]["steps"] + [
                            step("Wickbearer", 2, 4, "Circle 2: Wickbearer."), step("Night Cantor", 3, 4, "Circle 3: Night Cantor."),
                            step("Ember Abbot", 4, 4, "Circle 4: Ember Abbot.")]}]}
+NEXT_SENTENCE = "Circle 3 came back to her"
+SCANNED_WIDER = {"ladders": SCANNED["ladders"] + [
+    {"group": "Lantern School", "steps": [step("Ashen Bell", 3, 4, f'the Lantern School\'s {NEXT_SENTENCE}. "Ashen Bell.'),
+                                          step("Marsh Lantern", 4, 4, "The Lantern School's Circle 4 is called Marsh Lantern"),
+                                          step("Corrow", 4, 4, 'reached a Circle 4, and Hennet only shrugged. "Corrow.')]}]}
+PROOFREAD = {"entries": [{"name": "Lampwright", "type": "circle", "chapter": 4, "quotes": ["Lampwright is the first circle of the Lantern School"],
+                          "why": "Lampwright is a circle of the Lantern School."}],
+             "relations": [], "drop_relations": [], "questions": []}
+CORRECTIONS = {"entries": [{"name": "Drowned Choir", "type": "circle"}]}
 
 
 def circles_script():
@@ -64,7 +73,9 @@ def circles_script():
     replies += [{"purpose": "book", "reply": NO_RANK_TYPE}, {"purpose": "book", "reply": SURVEY},
                 {"purpose": "ladder-spec", "reply": {"ladder": {**SPEC, "step_type": "elixir"}}},
                 {"purpose": "ladder-spec", "reply": {"ladder": SPEC}},
+                {"purpose": "ladders", "contains": NEXT_SENTENCE, "reply": SCANNED_WIDER},
                 {"purpose": "ladders", "contains": LISTED_CIRCLES, "reply": SCANNED},
+                {"purpose": "proofread", "contains": "Lampwright", "reply": PROOFREAD},
                 {"purpose": "ladders", "reply": LADDERS}]
     replies += [{"purpose": p, "reply": r} for p, r in LATER_REPLIES.items() if p != "book"]
     return {"replies": replies}
@@ -83,6 +94,7 @@ class NamedRanksBuildTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.book = CirclesBuild(circles_script())
+        (cls.book.workdir / "corrections.json").write_text(json.dumps(CORRECTIONS), encoding="utf-8")
         cls.book.build()
         cls.wiki = cls.book.json("site/data/wiki.json")
         cls.entries = {(e["name"], e["type"]): e for e in cls.wiki["entities"]}
@@ -155,6 +167,37 @@ class NamedRanksBuildTest(unittest.TestCase):
         self.assertEqual(check["findings"], [{"name": "Gale Reader", "chapter": 5, "form": "Circle 3: Gale Reader", "entry": None,
                                               "text": "**Gale Reader** (Circle 3: Gale Reader, ch 5): no entry"}])
 
+    def test_an_elixir_named_exactly_after_a_rank_moves_to_the_rank_type_and_joins_its_ladder(self):
+        self.assertIn({"name": "Lamplighter", "from": "elixir", "to": "circle", "source": "rank",
+                       "reason": 'The wiki records "The Circle 2 elixir of the Lantern School is Lamplighter."'}, self.book.json("types.json")["entities"])
+        self.assertNotIn(("Lamplighter", "elixir"), self.entries)
+        self.assertEqual(self.ladder("Lantern School")[1], ("Lamplighter", 2, 4))
+        self.assertIn(("Tidewatcher elixir", "elixir"), self.entries)
+
+    def ladder(self, group):
+        name = {e["id"]: e["name"] for e in self.wiki["entities"]}
+        ladder = next(l for l in self.wiki["ladders"] if l["group"] and name[l["group"]] == group)
+        return [(name[s["id"]], s["rank"], s["chapter"]) for s in ladder["steps"]]
+
+    def test_a_rank_that_corrections_or_proofread_file_under_the_rank_type_joins_its_ladder_at_its_chapter(self):
+        self.assertEqual([e["name"] for e in self.book.json("proofread.json")["entries"]], ["Lampwright"])
+        self.assertEqual(self.ladder("Lantern School")[0], ("Lampwright", 1, 4))
+        self.assertEqual(self.ladder("Saltmere School")[-1], ("Drowned Choir", 4, 5))
+
+    @unittest.skipIf(NODE is None, "node is not installed")
+    def test_a_corrected_rank_is_not_on_its_ladder_before_its_chapter(self):
+        saltmere = next(e["id"] for e in self.wiki["entities"] if e["name"] == "Saltmere School")
+        pages = {k: re.sub(r"<[^>]+>", " ", v) for k, v in site_views(self.book.workdir / "site" / "data" / "wiki.json",
+                                                                         f"{saltmere}@4", f"{saltmere}@5").items()}
+        self.assertNotIn("Drowned Choir", pages[f"{saltmere}@4"])
+        self.assertIn("Drowned Choir", pages[f"{saltmere}@5"])
+
+    def test_a_rank_named_in_the_next_sentence_or_after_a_linking_verb_reaches_the_ladder(self):
+        lantern = next(l for l in self.book.json("ladders.json") if l["group"] == "Lantern School")
+        self.assertEqual([(s["entry"], s["rank"], s["chapter"]) for s in lantern["steps"]], [("Ashen Bell", 3, 4), ("Marsh Lantern", 4, 4)])
+        self.assertEqual(self.ladder("Lantern School"), [("Lampwright", 1, 4), ("Lamplighter", 2, 4), ("Ashen Bell", 3, 4), ("Marsh Lantern", 4, 4)])
+        self.assertNotIn("Corrow", {e["name"] for e in self.wiki["entities"]})
+
     def test_an_item_named_after_a_rank_links_to_the_rank(self):
         name = {e["id"]: (e["name"], e["type"]) for e in self.wiki["entities"]}
         links = {(name[r["source"]], r["type"], name[r["target"]]) for r in self.wiki["relations"]}
@@ -200,6 +243,18 @@ class StatedStepsTest(unittest.TestCase):
                       ("Wick", "Corrow asked for the circle 3 Wick school formula.")],
                      [("Gloam", "is the first circle of", "Saltmere School"), ("Night Cantor", "is Circle 3 of", "Gloam")])
         self.assertEqual(stated_steps(kb, SPEC, "circle"), {"Night Cantor": "Night Cantor is Circle 3 of Gloam"})
+
+
+class StatedItemsTest(unittest.TestCase):
+    def test_an_item_stated_to_be_a_groups_rank_moves_unless_its_name_carries_the_item_word(self):
+        kb = Knowledge(SPEC, power_types=RankLadderSpecTest.TYPES)
+        for name, etype in (("Lantern School", "school"), ("Tidewatcher", "circle"), ("Tidewatcher elixir", "elixir"),
+                            ("Lamplighter", "elixir"), ("Wick elixir", "elixir"), ("Ember Draught", "elixir")):
+            kb.upsert_entity({"name": name, "type": etype}, 1)
+        kb.facts += [{"entity": "Lamplighter", "claim": "The Circle 2 elixir of the Lantern School is Lamplighter.", "quotes": ["q"], "chapter": 1},
+                     {"entity": "Ember Draught", "claim": "Ember Draught is drunk before Circle 3.", "quotes": ["q"], "chapter": 1}]
+        kb.relations += [{"id": "R1", "source": "Wick elixir", "type": "is the Circle 3 elixir of", "target": "Lantern School", "quotes": ["q"], "chapter": 1}]
+        self.assertEqual(stated_items(kb, "circle"), {"Lamplighter": "The Circle 2 elixir of the Lantern School is Lamplighter."})
 
 
 class RankMentionTest(unittest.TestCase):

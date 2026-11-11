@@ -6,7 +6,7 @@ from .book import load_book, rank_type
 from .files import write_json
 from .llm import cached_llm
 from .names import name_key
-from .ranks import stated_steps
+from .ranks import stated_items, stated_steps
 from .state import load_states, write_derived
 from .survey import speakers
 from .template import BASE_TYPES, ENTITY_TYPES, INDIVIDUALS, UNCATEGORIZED
@@ -114,10 +114,11 @@ def cmd_retype(args):
         return out
 
     spec = book.get("ladder") or {}
-    steps = stated_steps(kb, spec, book["rank_word"]) if spec.get("group_type") and spec["step_type"] == rank_type(book) else {}
+    ranked = spec.get("group_type") and spec["step_type"] == rank_type(book)
+    steps = {**stated_steps(kb, spec, book["rank_word"]), **stated_items(kb, book["rank_word"])} if ranked else {}
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         decisions = counted + [d for batch in pool.map(decide, batches) for d in batch if d["name"] not in steps]
-    decisions += [{"name": n, "from": spec["group_type"], "to": spec["step_type"], "source": "rank", "reason": f'The wiki records "{text}"'}
+    decisions += [{"name": n, "from": kb.entities[n]["type"], "to": spec["step_type"], "source": "rank", "reason": f'The wiki records "{text}"'}
                   for n, text in steps.items()]
     write_json(path, {"entities": decisions})
     for d in decisions:

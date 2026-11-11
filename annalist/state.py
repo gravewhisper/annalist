@@ -7,6 +7,7 @@ from .book import ladder_types
 from .corrections import correct_pages, known_from, load_corrections, PAGES, PROOFREAD, PROOFREAD_FILE, QUESTIONS, settle_questions, with_proofread
 from .files import read_json, read_jsonl, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
+from .ranks import joined_ladders, stated_ladders
 from .template import INDIVIDUALS, type_parents, Types
 from .text import distinctive_words, QUOTE_CHARS
 from .wordings import read_wordings, worded
@@ -114,8 +115,11 @@ class Knowledge:
         self.wordings = wordings or {}
         self.types = Types(type_parents(power_types))
         self.power_types = set(self.types.parents)
+        self.spec = ladder or {}
         self.ladder = set(ladder_types(ladder))
-        self.step_type = ladder["step_type"] if ladder else None
+        self.step_type = self.spec.get("step_type")
+        self.group_type = self.spec.get("group_type")
+        self.ladder_rows = []
         self.rank_name = re.compile(rf"{re.escape(ladder['step_type'])}\s*\d+") if ladder and ladder.get("rank") == "number" else None
         self.laddered = False
         self.entities = {}
@@ -597,13 +601,18 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
     if merges:
         kb.apply_disguises()
     if ladders:
-        kb.apply_ladders(read_json(Path(workdir) / "ladders.json", []), until)
+        kb.ladder_rows = read_json(Path(workdir) / "ladders.json", [])
+        kb.apply_ladders(kb.ladder_rows, until)
     if kb.corrections:
         if PROOFREAD in corrections:
             kb.corrections = with_proofread(kb, kb.corrections, load_corrections(workdir, PROOFREAD_FILE))
         reach = until if until is not None else max(kb.synopses, default=0)
         kb.problems = (kb.corrections.problems + (correct_pages(kb, kb.corrections, reach) if PAGES in corrections else [])
                        + (settle_questions(kb, kb.corrections, reach) if QUESTIONS in corrections else []))
+    if ladders:
+        stated = stated_ladders(kb, book.get("rank_word"), kb.ladder_rows)
+        kb.apply_ladders(stated, until)
+        kb.ladder_rows = joined_ladders(kb, kb.ladder_rows, stated)
     return kb
 
 

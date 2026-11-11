@@ -7,7 +7,7 @@
 3. `read` reads each chapter in order and writes `state/NNNN.json` with that chapter's entries, facts, relations, and open questions.
 4. `timelines` labels which timeline each chapter happens in. It is skipped when `book.json` says the story is linear.
 5. `wordings` splits relation wordings from older runs into a predicate and a detail.
-6. `retype` checks the type each entry is filed under. An entry filed under the ladder's group type that a fact or relation states is a numbered or ordered rank, such as "X is Circle 2 of Y", moves to the rank type, unless the wiki also gives it ranks of its own.
+6. `retype` checks the type each entry is filed under. An entry filed under the ladder's group type that a fact or relation states is a numbered or ordered rank, such as "X is Circle 2 of Y", moves to the rank type, unless the wiki also gives it ranks of its own. So does an entry of an item type named after ranks (the type of "X elixir" when X is a rank or group) that a fact or relation states is a group's numbered or ordered rank, such as "The Circle 2 elixir of Y is X", unless its own name ends in the item word.
 7. `discover` adds entries for names that recur in the text but that `read` never listed.
 8. `resolve` merges entries that are one person, place, or thing under different names, including identities the book reveals later.
 9. `relate` adds relations that each chapter shows between entries it names close together.
@@ -25,6 +25,8 @@
 21. `render` writes page summaries, a History paragraph for each story arc in which a character has at least 5 quoted facts, and a Markdown and HTML wiki under `wiki/`.
 22. `export` writes the static site to `site/`.
 23. `review` writes `review.md` and `review.json`, a list of problems that code can find, such as merges across types, characters who die and then come back, and ranks the text names with the book's rank word that no ladder holds.
+
+The ladder that `render` and `export` show is `ladders.json` plus every entry of the rank type, after `types.json`, `corrections.json` and `proofread.json` set its type, that a fact or relation places at a numbered or ordered rank of a group ("X is Circle 4 of Y", "X | is the first circle of | Y") and that no ladder holds yet. Such a step dates from the chapter that states it. An entry whose name ends in an item word stays off the ladder.
 
 A build is resumable. If a stage fails, the build exits with status 2, and running the same command again continues from where it stopped. Six layers keep finished work:
 

@@ -220,9 +220,9 @@ def step_record(s, eid):
     return {"id": eid, "rank": s["rank"], "chapter": s["chapter"], **stages}
 
 
-def ladder_records(workdir, registry, ids, step_type):
+def ladder_records(ladders, registry, ids, step_type):
     records = []
-    for ladder in read_json(workdir / "ladders.json", []):
+    for ladder in ladders:
         group = ladder["group"] and registry.resolve(ladder["group"], ladder["group_type"])
         if group or ladder["group"] is None:
             records.append({"group": group and ids[group], "chapter": ladder["chapter"],
@@ -418,7 +418,7 @@ def build(workdir, theme):
                        **({} if r["quote_ok"] else {"unverified": True})}
                       for r, ends in zip(relations, rel_ends) if r["source"] in ids and r["target"] in ids],
         "questions": [question_record(q, tiers.get(q["id"], {})) for q in kb.questions.values()],
-        "ladders": ladder_records(workdir, registry, ids, (book.get("ladder") or {}).get("step_type")),
+        "ladders": ladder_records(kb.ladder_rows, registry, ids, (book.get("ladder") or {}).get("step_type")),
         "volumes": sorted((volume_record(read_json(p, {}), kb) for p in (workdir / "volumes").glob("*.json")),
                           key=lambda v: v["from"]),
     }

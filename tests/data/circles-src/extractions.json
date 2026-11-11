@@ -3,7 +3,7 @@
     "synopsis": "Iselde Varn arrives at the Saltmere School, where Corrow Penhallow gives her the Tidewatcher elixir and she enters the first circle.",
     "entities": [
       {"name": "Iselde Varn", "type": "character", "aliases": [], "summary": "A new student at the Saltmere School."},
-      {"name": "Corrow Penhallow", "type": "character", "aliases": [], "summary": "A teacher at the Saltmere School."},
+      {"name": "Corrow Penhallow", "type": "character", "aliases": ["Corrow"], "summary": "A teacher at the Saltmere School."},
       {"name": "Saltmere School", "type": "school", "aliases": ["Saltmere"], "summary": "A school on a spit of black rock where the tide runs through the cellars."},
       {"name": "Tidewatcher", "type": "circle", "aliases": [], "summary": "The first circle of the Saltmere School."},
       {"name": "Tidewatcher elixir", "type": "elixir", "aliases": [], "summary": "A grey drink that smells of kelp and iron."}
@@ -60,11 +60,18 @@
   "4": {
     "synopsis": "Hennet names the four circles of the Gloam School and says she stands at the third.",
     "entities": [
-      {"name": "Hennet Larrow", "type": "character", "aliases": [], "summary": "A visitor from the Gloam School who stands at its third circle."}
+      {"name": "Hennet Larrow", "type": "character", "aliases": [], "summary": "A visitor from the Gloam School who stands at its third circle."},
+      {"name": "Lantern School", "type": "school", "aliases": [], "summary": "A school over the marsh with circles of its own."},
+      {"name": "Lampwright", "type": "concept", "aliases": [], "summary": "The first circle of the Lantern School."},
+      {"name": "Lamplighter", "type": "elixir", "aliases": [], "summary": "A bright brew of the Lantern School."}
     ],
     "facts": [
       {"entity": "Hennet Larrow", "claim": "Hennet does not expect to climb higher than the third circle.",
-       "quotes": ["I stand at the third, and I do not expect to climb any higher."], "asserted_by": "Hennet Larrow", "status": "stated"}
+       "quotes": ["I stand at the third, and I do not expect to climb any higher."], "asserted_by": "Hennet Larrow", "status": "stated"},
+      {"entity": "Lampwright", "claim": "Lampwright is the first circle of the Lantern School.",
+       "quotes": ["Lampwright is the first circle of the Lantern School"], "asserted_by": "Hennet Larrow", "status": "stated"},
+      {"entity": "Lamplighter", "claim": "The Circle 2 elixir of the Lantern School is Lamplighter.",
+       "quotes": ["the Circle 2 elixir of the Lantern School is Lamplighter"], "asserted_by": "Hennet Larrow", "status": "stated"}
     ],
     "relations": [],
     "questions_raised": [],
@@ -73,11 +80,14 @@
   "5": {
     "synopsis": "Corrow reveals the third circle of Saltmere during the spring storms.",
     "entities": [
-      {"name": "Corrow Penhallow", "type": "character", "aliases": [], "summary": "A teacher who has reached the last known circle of Saltmere."}
+      {"name": "Corrow Penhallow", "type": "character", "aliases": [], "summary": "A teacher who has reached the last known circle of Saltmere."},
+      {"name": "Drowned Choir", "type": "concept", "aliases": [], "summary": "A circle of Saltmere told of in stories."}
     ],
     "facts": [
       {"entity": "Corrow Penhallow", "claim": "Corrow shouted the name of the circle into the gale.",
-       "quotes": ["heard him shout the name of the circle into the gale"], "asserted_by": "narrator", "status": "stated"}
+       "quotes": ["heard him shout the name of the circle into the gale"], "asserted_by": "narrator", "status": "stated"},
+      {"entity": "Drowned Choir", "claim": "Drowned Choir is Circle 4 of the Saltmere School.",
+       "quotes": ["Drowned Choir is Circle 4 of the Saltmere School"], "asserted_by": "Corrow Penhallow", "status": "stated"}
     ],
     "relations": [],
     "questions_raised": [],
