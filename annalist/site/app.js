@@ -2822,6 +2822,7 @@ function setN(n) {
   setN.raf = requestAnimationFrame(() => { writeHash(); render(); });
 }
 
+const SEARCH = {perType: 5};
 function search() {
   const s = $('q').value.trim().toLowerCase();
   const box = $('results');
@@ -2833,7 +2834,11 @@ function search() {
   }
   const starts = x => x[1].toLowerCase().startsWith(s) ? 0 : 1;
   hits.sort((a, b) => starts(a) - starts(b) || visFacts(b[0].id).length - visFacts(a[0].id).length);
-  box.innerHTML = hits.slice(0, 12).map(([e, via], i) => `<div data-res="${e.id}" class="${i ? '' : 'sel'}" role="option"><span>${esc(displayName(e))}${via !== displayName(e) && via !== e.name ? ` <small>(${esc(via)})</small>` : ''}</span><small>${esc(e.type)}</small></div>`).join('') || '<div class="muted">No matches up to this chapter</div>';
+  const byType = new Map();
+  for (const hit of hits) (byType.get(hit[0].type) || byType.set(hit[0].type, []).get(hit[0].type)).push(hit);
+  const row = ([e, via]) => `<div data-res="${e.id}"${e === hits[0][0] ? ' class="sel"' : ''} role="option"><span>${esc(displayName(e))}${via !== displayName(e) && via !== e.name ? ` <small>(${esc(via)})</small>` : ''}</span><small>ch ${e.first}</small></div>`;
+  box.innerHTML = [...byType].map(([type, rows]) => `<div class="rgroup" role="group" aria-label="${esc(cap(plural(type)))}"><div class="rhead" aria-hidden="true">${esc(cap(plural(type)))}<span>${rows.length}</span></div>${rows.slice(0, SEARCH.perType).map(row).join('')}</div>`).join('')
+    || '<div class="muted">No matches up to this chapter</div>';
   box.classList.add('open');
 }
 

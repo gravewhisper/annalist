@@ -4,6 +4,8 @@ The slider in the site header sets the chapter you are on. The site has a home p
 
 A category page shows its entries as a table. Select a column heading to sort by it and select it again to reverse the order. The sort stays in the address while the slider moves. Each type gets the columns its entries have data for: characters show status, affiliation, occupation, first and last seen, and the chapters they are present in; organizations show their members; places show the place they lie in and the people there; ladder steps show their group and rank. The List switch shows each entry's summary instead, and minor mentions stay listed under the table.
 
+The search box matches the names and aliases known by the slider's chapter. It groups the matches by type, puts the group with the best match first, and shows each entry's first chapter. Enter opens the best match.
+
 The Graph page has these tabs:
 
 
