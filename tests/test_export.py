@@ -49,6 +49,13 @@ class ExportTest(unittest.TestCase):
         self.assertTrue(wiki["relations"][0]["unverified"])
         self.assertNotIn(INVENTED, json.dumps(wiki, ensure_ascii=False))
 
+    def test_the_exported_page_asks_for_versioned_scripts_and_data_so_a_rebuild_is_not_served_from_cache(self):
+        site = self.book.workdir / "site"
+        html = (site / "index.html").read_text(encoding="utf-8")
+        self.assertRegex(html, r'href="app\.css\?v=[0-9a-f]{10}"')
+        self.assertRegex(html, r'src="app\.js\?v=[0-9a-f]{10}"')
+        self.assertRegex(html, r'data-wiki="data/wiki\.json\?v=[0-9a-f]{10}"')
+
     def test_each_relation_carries_one_family_for_the_graph_filter(self):
         wiki = self.book.json("site/data/wiki.json")
         names = {e["id"]: e["name"] for e in wiki["entities"]}

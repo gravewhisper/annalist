@@ -250,6 +250,19 @@ def titled(record, title):
             "aliases": sorted(aliases, key=lambda a: a["chapter"])}
 
 
+def version(path):
+    return hashlib.sha1(path.read_bytes()).hexdigest()[:10]
+
+
+def stamp_assets(outdir):
+    page = outdir / "index.html"
+    html = page.read_text(encoding="utf-8")
+    html = html.replace('href="app.css"', f'href="app.css?v={version(outdir / "app.css")}"')
+    html = html.replace('<script src="app.js">', f'<script src="app.js?v={version(outdir / "app.js")}" '
+                                                  f'data-wiki="data/wiki.json?v={version(outdir / "data" / "wiki.json")}">')
+    page.write_text(html, encoding="utf-8")
+
+
 def build(workdir, theme):
     book = {**read_json(workdir / "book.json", {}), **theme}
     title = book.get("title") or workdir.name
@@ -429,6 +442,7 @@ def cmd_export(args):
     shutil.copytree(SITE, outdir)
     (outdir / "data").mkdir()
     (outdir / "data" / "wiki.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    stamp_assets(outdir)
     if not args.public:
         (outdir / "text").mkdir()
         for c in data["chapters"]:

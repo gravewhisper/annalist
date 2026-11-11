@@ -1,4 +1,5 @@
 const D = {};
+const WIKI = document.currentScript?.dataset.wiki || 'data/wiki.json';
 const S = {n: 1, p: 'home', tab: '', m: '', sort: ''};
 const HASH_KEYS = ['n', 'p', 'tab', 'm', 'sort'];
 const $ = id => document.getElementById(id);
@@ -15,7 +16,7 @@ const latest = (rows, key = 'chapter') => until(rows, key).at(-1);
 let more = 60;
 
 async function load() {
-  const data = await fetch('data/wiki.json').then(r => r.json());
+  const data = await fetch(WIKI).then(r => r.json());
   Object.assign(D, data);
   D.byId = Object.fromEntries(D.entities.map(e => [e.id, e]));
   D.ch = Object.fromEntries(D.chapters.map(c => [c.n, c]));
