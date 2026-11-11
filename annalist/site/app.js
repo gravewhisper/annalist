@@ -141,6 +141,7 @@ function linker() {
   linkCache = {n: S.n, map, plain, re: keys.length ? new RegExp('(?<![\\p{L}\\p{N}])(' + keys.join('|') + ')(?![\\p{L}\\p{N}])', 'gu') : null};
   return linkCache;
 }
+function unnamedAt(e) { return !!e.nameless && !(e.named_from <= S.n); }
 function linkify(text, self, chapter) {
   const {map, plain, re} = linker();
   text = String(text ?? '');
@@ -415,21 +416,21 @@ function renderCat(type) {
   const asList = S.tab === 'list';
   const views = `<nav class="pills" aria-label="Show as">${[['', 'Table'], ['list', 'List']].map(([k, t]) => `<a data-tab="${k}" href="#${esc(hashFor({tab: k}))}"${(k === 'list') === asList ? ' class="on" aria-current="true"' : ''}>${t}</a>`).join('')}</nav>`;
   let tools = views, named, unnamed;
-  if (asList) [named, unnamed] = [list(es.filter(e => !e.nameless)), list(es.filter(e => e.nameless))];
+  if (asList) [named, unnamed] = [list(es.filter(e => !unnamedAt(e))), list(es.filter(unnamedAt))];
   else {
     const m = catModel();
     const rows = es.map(e => ({e, cells: Object.fromEntries(CAT_COLS.map(col => [col.key, col.of(e, m) || null]))}));
     const cols = CAT_COLS.filter(col => col.key === 'name' || rows.some(r => r.cells[col.key]));
     const sort = catSort(cols);
     sortRows(rows, sort);
-    const [mine, rest] = [rows.filter(r => !r.e.nameless), rows.filter(r => r.e.nameless)];
+    const [mine, rest] = [rows.filter(r => !unnamedAt(r.e)), rows.filter(r => unnamedAt(r.e))];
     if (mine.length > CAT.az) tools += azBar(mine);
     named = mine.length ? catTable(mine, cols, sort, sort.col.key === 'name' && new Set()) : '';
     unnamed = rest.length ? catTable(rest, cols, sort) : '';
   }
   return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(cap(plural(type)))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
   ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
-  ${es.length ? `<div class="ctools">${tools}</div>` : ''}${named}${es.some(e => e.nameless) ? `<h2>Unnamed figures</h2>${unnamed}` : ''}
+  ${es.length ? `<div class="ctools">${tools}</div>` : ''}${named}${es.some(unnamedAt) ? `<h2>Unnamed figures</h2>${unnamed}` : ''}
   ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
   ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
 }

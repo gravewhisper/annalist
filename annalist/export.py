@@ -384,6 +384,9 @@ def build(workdir, theme):
                 part.update(kept_prose(workdir, kept[a["name"]], a, part, last))
             out_entities.append(part)
 
+    for record in out_entities:
+        if record.get("nameless") and not is_stub({"name": record["name"]}):
+            record["named_from"] = record["name_chapter"]
     return kb.problems + missed, {
         "book": {"title": title, "max": last,
                  "public_domain": book.get("public_domain") is True, "theme": book.get("theme") or stored_theme(title),

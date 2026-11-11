@@ -53,6 +53,12 @@ class RevealedTitles(unittest.TestCase):
         self.assertEqual(page["aliases"][0]["name"], "Lantern bearer in the crypt")
         self.assertEqual(page["aliases"][0]["chapter"], 1)
 
+    def test_a_described_page_is_unnamed_only_until_its_real_name_is_known(self):
+        pages = self.pages()
+        self.assertEqual(pages[("Corvin Hale", "character")].get("named_from"), 3)
+        self.assertTrue(pages[("Corvin Hale", "character")].get("nameless"))
+        self.assertNotIn("named_from", pages[("Keeper in the cellar", "character")] if ("Keeper in the cellar", "character") in pages else {})
+
     def test_page_with_absorbed_descriptor_takes_the_real_name(self):
         page = self.pages()[("Sarenne", "character")]
         self.assertEqual(page["name_chapter"], 3)
