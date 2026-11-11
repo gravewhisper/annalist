@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .book import load_book
-from .corrections import correct_profiles, EVERY_CORRECTION
+from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .files import read_json, write_atomic
 from .families import wording_key
 from .llm import cached_llm
@@ -197,12 +197,13 @@ def volume_markdown(spec, kb, paths, chapter_link, power_types):
     if not spec.get("key_events"):
         lines += ["None.", ""]
     lines += ["## Deaths", ""]
-    for d in spec.get("deaths") or []:
+    deaths = kept_deaths(kb, spec.get("deaths") or [])
+    for d in deaths:
         flag = "" if d["quote_ok"] else " **[quote not found in chapter]**"
         revived = f" Revived in ch {link(d['revived'])}." if d.get("revived") else ""
         lines.append(f"- **{entity(d['name'])}** (ch {link(d['chapter'])}): {d['circumstances']}{revived}{flag}")
         lines += [blockquote(d["quotes"][0]), ""] if d["quotes"] else []
-    if not spec.get("deaths"):
+    if not deaths:
         lines += ["None.", ""]
     lines += ["## Character development", ""]
     lines += item_list([f"**{entity(c.get('character', ''))}**: {c.get('development', '')} (ch {chapter_refs(c.get('chapters'), lo, hi, link)})"
@@ -430,8 +431,8 @@ def cmd_render(args):
     until = until if until is not None else max(kb.synopses, default=0)
     out_dir = workdir / (f"wiki-ch{args.until:04d}" if args.until is not None else "wiki")
     titles = {c["index"]: c["title"] for c in json.loads((workdir / "chapters.json").read_text(encoding="utf-8"))}
-    profiles = correct_profiles(whole, page_profiles(workdir, whole.entities.values(),
-                                                     read_json(workdir / "profiles.json", {"characters": {}})["characters"]), whole.corrections)
+    profiles, _ = correct_profiles(whole, page_profiles(workdir, whole.entities.values(),
+                                                        read_json(workdir / "profiles.json", {"characters": {}})["characters"]), whole.corrections)
     for f in kb.facts:
         f.update(verified_quotes(workdir, f["chapter"], f["quotes"]))
     by_entity = {}

@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from annalist.corrections import correct_profiles, Corrections, EVERY_CORRECTION, load_corrections, QUESTIONS, reader_notes
+from annalist.corrections import correct_profiles, Corrections, EVERY_CORRECTION, kept_deaths, load_corrections, QUESTIONS, reader_notes
 from annalist.export import build
 from annalist.state import Knowledge, load_states
 
@@ -247,7 +247,7 @@ STATUS = {"chapter": 6, "value": "revived", "quotes": ["She rose from the grave 
 
 def profiles(story, entries, pages):
     kb = Story(story, {"entries": entries}).kb()
-    return correct_profiles(kb, pages, kb.corrections)
+    return correct_profiles(kb, pages, kb.corrections)[0]
 
 
 class Fields(unittest.TestCase):
@@ -273,6 +273,49 @@ class Fields(unittest.TestCase):
         pages = profiles(self, [{"name": "The Veil", "fields": {"appearance": [row]}}], {})
         self.assertEqual([o.get("shown") for o in pages["The Veil"]["lists"]["appearance"]], [None])
         self.assertEqual([o["shown"] for o in pages["Mira Vale"]["lists"]["appearance"]], [5])
+
+
+def observed(chapter, value, **extra):
+    return {"chapter": chapter, "value": value, "quotes": ["q"], "quote_ok": True, **extra}
+
+
+class Drops(unittest.TestCase):
+    def pages(self):
+        return {"Mira Vale": {"fields": {"status": [observed(4, "dead"), observed(6, "revived")]}, "extra": {},
+                              "lists": {"trivia": [observed(1, "Hums when nervous"), observed(2, "Keeps a grey coin", shown=4)]}},
+                "Grey Stranger": {"fields": {}, "extra": {}, "lists": {"trivia": [observed(2, "Keeps a grey coin")]}}}
+
+    def drop(self, rows, entries=()):
+        kb = Story(self, {"entries": [SAME, *entries, {"name": "Mira Vale", "drop": rows}]}).kb()
+        return correct_profiles(kb, self.pages(), kb.corrections)
+
+    def test_a_list_value_is_removed_by_its_chapter_and_text(self):
+        pages, problems = self.drop({"trivia": [{"chapter": 1, "value": "hums  when nervous"}]})
+        self.assertEqual([o["value"] for o in pages["Mira Vale"]["lists"]["trivia"]], ["Keeps a grey coin"])
+        self.assertEqual(problems, [])
+
+    def test_a_value_is_removed_from_every_page_of_a_joined_entry(self):
+        pages, _ = self.drop({"trivia": [{"chapter": 2, "value": "Keeps a grey coin"}]})
+        self.assertEqual((pages["Mira Vale"]["lists"]["trivia"][0]["chapter"], pages["Grey Stranger"]["lists"]["trivia"]), (1, []))
+
+    def test_a_dated_infobox_value_is_removed(self):
+        pages, _ = self.drop({"status": [{"chapter": 4, "value": "Dead"}]})
+        self.assertEqual([o["value"] for o in pages["Mira Vale"]["fields"]["status"]], ["revived"])
+
+    def test_a_drop_that_matches_nothing_is_reported(self):
+        pages, problems = self.drop({"trivia": [{"chapter": 3, "value": "Hums when nervous"}]})
+        self.assertEqual(len(pages["Mira Vale"]["lists"]["trivia"]), 2)
+        self.assertEqual(problems, ["correction Mira Vale.drop trivia ch3 'Hums when nervous' matches no value, skipped"])
+
+    def test_a_dropped_death_leaves_the_volume_s_deaths(self):
+        kb = Story(self, {"entries": [{"name": "Old Grey", "drop": {"status": [{"chapter": 6, "value": "dead"}]}}]}).kb()
+        deaths = [{"name": "Mira Vale", "chapter": 4}, {"name": "Grey Stranger", "chapter": 6}]
+        self.assertEqual(kept_deaths(kb, deaths), [{"name": "Mira Vale", "chapter": 4}])
+
+    def test_a_dropped_value_needs_a_chapter_and_a_value(self):
+        story = Story(self, {"entries": [{"name": "Mira Vale", "drop": {"trivia": [{"value": "Hums when nervous"}]}}]})
+        with self.assertRaises(SystemExit):
+            load_corrections(story.workdir)
 
 
 class LoadCorrections(unittest.TestCase):

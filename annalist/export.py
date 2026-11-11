@@ -6,7 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from .corrections import correct_profiles, EVERY_CORRECTION
+from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .families import read_families, relation_family
 from .files import read_json
 from .llm import cached_reply
@@ -204,13 +204,13 @@ def question_record(q, tier):
     return record
 
 
-def volume_record(v):
+def volume_record(v, kb):
     page = v.get("page") or {}
     return {"name": v["name"], "id": re.sub(r"[^a-z0-9]+", "-", v["name"].lower()).strip("-"),
             "from": v["from"], "to": v["to"],
             "arcs": [{k: a[k] for k in ("name", "start", "end", "summary")} for a in v.get("arcs", [])],
             "key_events": [{k: e[k] for k in ("event", "chapters", "shown")} for e in v.get("key_events", [])],
-            "deaths": [{k: d.get(k, []) for k in ("name", "chapter", "shown", "circumstances", "quotes", "later")} for d in v.get("deaths", [])
+            "deaths": [{k: d.get(k, []) for k in ("name", "chapter", "shown", "circumstances", "quotes", "later")} for d in kept_deaths(kb, v.get("deaths", []))
                        if d.get("quote_ok", True)],
             "overview": page.get("overview", ""),
             "development": page.get("character_development", [])}
@@ -278,8 +278,8 @@ def build(workdir, theme):
     by_entity = {}
     for f in facts:
         by_entity.setdefault(f["entity"], []).append(f)
-    profiles = correct_profiles(kb, page_profiles(workdir, entities, read_json(workdir / "profiles.json", {"characters": {}})["characters"]),
-                                kb.corrections)
+    profiles, missed = correct_profiles(kb, page_profiles(workdir, entities, read_json(workdir / "profiles.json", {"characters": {}})["characters"]),
+                                        kb.corrections)
     ids = {name: entity_id(name) for name in [e["name"] for e in entities] + list(absorbed.entries)}
     fact_page = {f["id"]: absorbed.page(f["entity"], f.get("filed"), f["chapter"]) for f in facts}
     rel_ends = [{end: absorbed.page(r[end], (r.get("filed") or {}).get(end), r["chapter"]) for end in ("source", "target")}
@@ -384,7 +384,7 @@ def build(workdir, theme):
                 part.update(kept_prose(workdir, kept[a["name"]], a, part, last))
             out_entities.append(part)
 
-    return kb.problems, {
+    return kb.problems + missed, {
         "book": {"title": title, "max": last,
                  "public_domain": book.get("public_domain") is True, "theme": book.get("theme") or stored_theme(title),
                  "power_types": sorted((book.get("power_types") or {}).keys()), "parents": type_parents(book.get("power_types")),
@@ -404,7 +404,7 @@ def build(workdir, theme):
                       for r, ends in zip(relations, rel_ends) if r["source"] in ids and r["target"] in ids],
         "questions": [question_record(q, tiers.get(q["id"], {})) for q in kb.questions.values()],
         "ladders": ladder_records(workdir, registry, ids, (book.get("ladder") or {}).get("step_type")),
-        "volumes": sorted((volume_record(read_json(p, {})) for p in (workdir / "volumes").glob("*.json")),
+        "volumes": sorted((volume_record(read_json(p, {}), kb) for p in (workdir / "volumes").glob("*.json")),
                           key=lambda v: v["from"]),
     }
 

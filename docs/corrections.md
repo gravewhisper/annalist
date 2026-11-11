@@ -6,7 +6,7 @@ An LLM wrote the wiki, so some of it will be wrong. Build the wiki, read it, the
 - If the mistake belongs to this one book, add it to `corrections.json` in the run directory. It costs no LLM calls.
 - If the mistake is small and misleads nobody, leave it.
 
-A correction names an entry by its title or any of its aliases, and can change its type, its page title, and its dated infobox values:
+A correction names an entry by its title or any of its aliases, and can change its type, its page title, and its dated infobox values, or remove a wrong value:
 
 ```json
 {
@@ -21,6 +21,14 @@ A correction names an entry by its title or any of its aliases, and can change i
 ```
 
 `title_chapter` is the chapter that reveals the title, and the page keeps its old name before it. Each infobox value needs a quote from its chapter, and the site hides the value until the slider reaches that chapter. A value with no matching quote is skipped with a warning. A value for a chapter that already has one replaces it, and any other value is added to the history. The field names are the ones in a character's infobox, plus the `extra_fields` keys in `book.json`.
+
+An entry's `drop` removes a wrong value: one from a character's `trivia`, `appearance`, or `personality_evidence` list, or a dated infobox value. Each row gives the value's `chapter` and its text as the wiki shows it. Case and spacing do not matter:
+
+```json
+{"name": "Mira Vale", "drop": {"trivia": [{"chapter": 12, "value": "Hums when nervous"}], "status": [{"chapter": 40, "value": "dead"}]}}
+```
+
+The value leaves every page of the entry, including a page joined into it. A dropped `dead` status also leaves the volume page's deaths. `export` warns about a row that matches no value.
 
 An entry merged into another page can take `"known_from": {"chapter": 40, "quotes": ["..."]}`, for when the reader knows the two are one person earlier than the wiki joined them. Two separate pages can be one person, as when a page for "the bespectacled man" is a named character the book never names in that scene. `same_as` joins them:
 
@@ -77,6 +85,7 @@ A correction changes only the prompts of the pages it affects, so every other pa
 | `relations`, `drop_relations` | The History of both ends for the arc that holds the tie's chapter. |
 | `title`, `fields` | None. The title renames the page from `title_chapter`, and field values go into the infobox. |
 | `questions` | None. `sweep`, `answers`, and `ending` ask about fewer questions. |
+| `drop` | The Personality written from evidence you dropped. |
 
 So a run with N corrections asks the model at most a few prompts per corrected page, never for a page no correction names. The `profile` stage does not read corrections: a joined page takes the other page's infobox values from the chapter of the link, and a `type` correction does not build an infobox for an entry the pipeline did not profile.
 

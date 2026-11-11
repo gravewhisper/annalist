@@ -69,6 +69,8 @@ def checked_entry(entry, quoted):
             f"{name} needs the chapter from which it is the same as {entry.get('same_as')}")
     if "same_as" in entry and not quoted(f"{name}.same_as", entry):
         del entry["same_as"]
+    require(all(isinstance(r, dict) and isinstance(r.get("chapter"), int) and str(r.get("value") or "").strip()
+                for rows in entry.get("drop", {}).values() for r in rows), f"{name}: every dropped value needs a chapter and a value")
     return entry
 
 
@@ -195,13 +197,22 @@ def empty_profile():
     return {"fields": {}, "extra": {}, "lists": {}}
 
 
+def drop_value(rows_by_field, field, row):
+    rows = rows_by_field.get(field, [])
+    kept = [o for o in rows if not (o["chapter"] == row["chapter"] and name_key(o["value"]) == name_key(row["value"]))]
+    if len(kept) < len(rows):
+        rows_by_field[field] = kept
+    return len(rows) - len(kept)
+
+
 def correct_profiles(kb, pages, corrections):
+    problems = []
     for entry in corrections.entries:
         key = kb.resolve(entry["name"])
-        if key is None or not entry.get("fields"):
+        if key is None:
             continue
         part = absorbed_part(kb.entities[key], entry["name"]) if name_key(entry["name"]) != name_key(key) else None
-        for field, rows in entry["fields"].items():
+        for field, rows in entry.get("fields", {}).items():
             group = profile_group(field)
             earlier = [r for r in rows if part and r["chapter"] < part["chapter"]]
             if earlier:
@@ -209,7 +220,18 @@ def correct_profiles(kb, pages, corrections):
                 own[field] = merged_rows(own.get(field, []), earlier)
             page = pages.setdefault(key, empty_profile())[group]
             page[field] = merged_rows(page.get(field, []), [{**r, "shown": part["chapter"]} if r in earlier else r for r in rows])
-    return pages
+        names = [key] + [a["name"] for a in kb.entities[key].get("absorbed", [])]
+        for field, rows in entry.get("drop", {}).items():
+            for row in rows:
+                if not sum(drop_value(pages[n][profile_group(field)], field, row) for n in names if n in pages):
+                    problems.append(f"correction {entry['name']}.drop {field} ch{row['chapter']} {row['value']!r} matches no value, skipped")
+    return pages, problems
+
+
+def kept_deaths(kb, deaths):
+    dropped = {(kb.resolve(e["name"]), r["chapter"]) for e in kb.corrections.entries for r in e.get("drop", {}).get("status", [])
+               if name_key(r["value"]) == "dead"}
+    return [d for d in deaths if (kb.resolve(d["name"]), d["chapter"]) not in dropped]
 
 
 def reader_notes(kb, corrections, chapter):
