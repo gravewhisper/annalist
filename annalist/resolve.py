@@ -354,7 +354,7 @@ def co_mentions(workdir, a, b, max_chapter, radius, limit=3):
     return found
 
 
-RESOLVE_PROMPT = """Two entries in a wiki built from a novel may describe the same {type}. Decide from the material below alone whether they are the same {type} (one person, place, or thing, possibly under different names, a description used before the name was known, a persona, or a spelling variant) or two different ones that merely share words or appear together. The novel is a translation, so the same name or serial number can be spelled inconsistently between chapters.{listing}
+RESOLVE_PROMPT = """Two entries in a wiki built from a novel may describe the same {type}. Decide from the material below alone whether they are the same {type} (one person, place, or thing, possibly under different names, a description used before the name was known, a persona, or a spelling variant) or two different ones that merely share words or appear together. The same name or serial number can be spelled inconsistently between chapters, especially in a translation.{listing}
 
 ENTRY A
 {a}
