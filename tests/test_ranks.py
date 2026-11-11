@@ -1,16 +1,21 @@
 import json
+import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 
 from annalist.ladders import ladder_needed
-from annalist.ranks import stated_steps
+from annalist.ranks import rank_mentions, stated_steps
 from annalist.state import Knowledge
 from annalist.survey import book_problems
-from tests.test_build import LATER_REPLIES, MiniBuild, ROOT
+from tests.test_build import LATER_REPLIES, MiniBuild, ROOT, site_views
 
 DATA = ROOT / "tests" / "data"
 EPUB = DATA / "circles.epub"
+NODE = shutil.which("node")
 
 SURVEY = {"power_system": "Students of each school climb its own named circles, one at a time, by drinking the elixir of the next circle.",
           "power_types": [{"type": "school", "parent": "organization", "description": "a school that trains students through its own circles"},
@@ -40,6 +45,12 @@ LADDERS = {"ladders": [
                                  step("Storm Abbot", 4, 4, "Circle 4: Ember Abbot.")]},
 ]}
 
+LISTED_CIRCLES = "names Circle 1: Gloam; Circle 2: Wickbearer; Circle 3: Night Cantor; Circle 4: Ember Abbot"
+SCANNED = {"ladders": [LADDERS["ladders"][0],
+                       {"group": "Gloam", "steps": LADDERS["ladders"][1]["steps"] + [
+                           step("Wickbearer", 2, 4, "Circle 2: Wickbearer."), step("Night Cantor", 3, 4, "Circle 3: Night Cantor."),
+                           step("Ember Abbot", 4, 4, "Circle 4: Ember Abbot.")]}]}
+
 
 def circles_script():
     extractions = json.loads((DATA / "circles-extractions.json").read_text(encoding="utf-8"))
@@ -51,6 +62,7 @@ def circles_script():
     replies += [{"purpose": "book", "reply": NO_RANK_TYPE}, {"purpose": "book", "reply": SURVEY},
                 {"purpose": "ladder-spec", "reply": {"ladder": {**SPEC, "step_type": "elixir"}}},
                 {"purpose": "ladder-spec", "reply": {"ladder": SPEC}},
+                {"purpose": "ladders", "contains": LISTED_CIRCLES, "reply": SCANNED},
                 {"purpose": "ladders", "reply": LADDERS}]
     replies += [{"purpose": p, "reply": r} for p, r in LATER_REPLIES.items() if p != "book"]
     return {"replies": replies}
@@ -120,6 +132,21 @@ class NamedRanksBuildTest(unittest.TestCase):
         self.assertNotIn(("Storm Abbot", "circle"), self.entries)
         self.assertEqual(self.entries[("Iselde Varn", "character")]["type"], "character")
 
+    def test_ranks_a_passage_lists_at_once_reach_the_ladder_as_entries_dated_to_that_chapter(self):
+        gloam = next(l for l in self.book.json("ladders.json") if l["group"] == "Gloam")
+        self.assertEqual([(s["entry"], s["rank"], s["chapter"]) for s in gloam["steps"]],
+                         [("Gloam", 1, 3), ("Wickbearer", 2, 4), ("Night Cantor", 3, 4), ("Ember Abbot", 4, 4)])
+        made = {e["name"]: e["first_chapter"] for e in self.book.json("entities.json") if e["type"] == "circle"}
+        self.assertEqual([made[n] for n in ("Wickbearer", "Night Cantor", "Ember Abbot")], [4, 4, 4])
+
+    @unittest.skipIf(NODE is None, "node is not installed")
+    def test_a_rank_the_ladder_adds_is_not_ranked_before_its_chapter(self):
+        wick, cantor = (self.entries[(n, "circle")]["id"] for n in ("Wickbearer", "Night Cantor"))
+        pages = site_views(self.book.workdir / "site" / "data" / "wiki.json", f"{wick}@3", f"{wick}@4", f"{cantor}@3")
+        self.assertNotRegex(re.sub(r"<[^>]+>", " ", pages[f"{wick}@3"]), r"circle 2 of")
+        self.assertRegex(re.sub(r"<[^>]+>", " ", pages[f"{wick}@4"]), r"circle 2 of")
+        self.assertIn("Not yet introduced", pages[f"{cantor}@3"])
+
     def test_an_item_named_after_a_rank_links_to_the_rank(self):
         name = {e["id"]: (e["name"], e["type"]) for e in self.wiki["entities"]}
         links = {(name[r["source"]], r["type"], name[r["target"]]) for r in self.wiki["relations"]}
@@ -164,6 +191,20 @@ class StatedStepsTest(unittest.TestCase):
         kb = self.kb([("Lantern", "Circle 1: Lantern is where every student begins."), ("Lantern", "Circle 2 of Lantern is Wick.")],
                      [("Gloam", "is the first circle of", "Saltmere School"), ("Night Cantor", "is Circle 3 of", "Gloam")])
         self.assertEqual(stated_steps(kb, SPEC, "circle"), {"Night Cantor": "Night Cantor is Circle 3 of Gloam"})
+
+
+class RankMentionTest(unittest.TestCase):
+    def test_the_scan_finds_the_rank_word_and_a_number_next_to_a_capitalized_name(self):
+        text = ("They keep three circles. Circle 1: Lamp Wick. Then Circle Two, the Lantern Bearer.\n"
+                "If Circle 3 opens, Maren Holt, Circle 3, will know. This circle 4 is closed.\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "chapters").mkdir()
+            (Path(tmp) / "chapters" / "0001.txt").write_text(text, encoding="utf-8")
+            found = rank_mentions(tmp, [1], "circle")
+        self.assertEqual([(m["name"], m["form"]) for m in found], [("Lamp Wick", "Circle 1: Lamp Wick"),
+                                                                  ("Lantern Bearer", "Circle Two, the Lantern Bearer"),
+                                                                  ("Maren Holt", "Maren Holt, Circle 3")])
+        self.assertEqual(found[0]["quote"], "They keep three circles. Circle 1: Lamp Wick. Then Circle Two, the Lantern Bearer.")
 
 
 class RankLadderSpecTest(unittest.TestCase):

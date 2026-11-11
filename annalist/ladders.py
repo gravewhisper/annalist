@@ -5,6 +5,7 @@ from .book import ladder_types, load_book, rank_type
 from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import function_word_name, name_key, name_pattern, names_of
+from .ranks import rank_mentions
 from .state import load_states, write_derived
 from .survey import unseen_names
 from .template import book_types
@@ -184,7 +185,7 @@ def first_verified(workdir, row):
     return verified_quotes(workdir, row["chapter"], row["quotes"])["quotes"][:1]
 
 
-def evidence_lines(workdir, kb, spec):
+def evidence_lines(workdir, kb, spec, word):
     types = ladder_types(spec)
     members = {k for k, e in kb.entities.items() if e["type"] in types}
     named = name_pattern([n for k in members for n in names_of(kb.entities[k])] + list(types))
@@ -199,6 +200,10 @@ def evidence_lines(workdir, kb, spec):
         for field, observations in profile.get("extra", {}).items():
             rows += [(o["chapter"], f"{name} {field}: {o['value']}", o["quotes"][0]) for o in observations
                      if o.get("quote_ok") and o["quotes"] and named.search(o["value"])]
+    listed = {}
+    for m in rank_mentions(workdir, sorted(kb.synopses), word) if word else []:
+        listed.setdefault((m["chapter"], m["quote"]), []).append(m["form"])
+    rows += [(c, f"names {'; '.join(dict.fromkeys(forms))}", quote) for (c, quote), forms in listed.items()]
     return [f'- ch{c} | {text} | "{quote}"' for c, text, quote in sorted(set(rows))]
 
 
@@ -210,14 +215,14 @@ def grouped_prompt(workdir, kb, spec, word):
     words = {"group": spec["group_type"], "step": spec["step_type"]}
     return LADDERS_PROMPT.format(**words, note=spec["note"], group_heading=spec["group_type"].upper(), step_heading=spec["step_type"].upper(),
                                  groups=entry_lines(kb, spec["group_type"]), steps=entry_lines(kb, spec["step_type"]),
-                                 evidence="\n".join(evidence_lines(workdir, kb, spec)) or "(none)",
+                                 evidence="\n".join(evidence_lines(workdir, kb, spec, word)) or "(none)",
                                  unlisted_rule=unlisted_rule(spec, word), rank_rule=RANK_RULES[spec["rank"]].format(**words))
 
 
 def shared_prompt(workdir, kb, spec, word):
     return SHARED_LADDER_PROMPT.format(step=spec["step_type"], note=spec["note"], step_heading=spec["step_type"].upper(),
                                        steps=entry_lines(kb, spec["step_type"]),
-                                       evidence="\n".join(evidence_lines(workdir, kb, spec)) or "(none)",
+                                       evidence="\n".join(evidence_lines(workdir, kb, spec, word)) or "(none)",
                                        unlisted_rule=unlisted_rule(spec, word),
                                        rank_rule=SHARED_RANK_RULES[spec["rank"]].format(step=spec["step_type"]))
 
