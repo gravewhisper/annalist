@@ -7,8 +7,8 @@ from .files import read_json, write_json
 from .llm import cached_llm
 from .names import name_key, names_of, slug
 from .state import load_states
-from .template import (base_field, BASE_TYPES, distinct_fields, ENTITY_TYPES, INDIVIDUALS, overlapping_pairs, PARENT_TYPES, PROFILE_FIELDS,
-                       STORY_TIMELINE_KINDS)
+from .template import (base_field, BASE_TYPES, category_problems, distinct_fields, ENTITY_TYPES, INDIVIDUALS, overlapping_pairs,
+                       PARENT_TYPES, PROFILE_FIELDS, STORY_TIMELINE_KINDS, written)
 from .text import chapter_text
 
 
@@ -22,7 +22,7 @@ CHAPTER TITLES:
 Reply with one JSON object:
 {{
   "power_system": "one sentence naming the order the fields and types below belong to: a power or magic system and how characters gain or rank up in it, or else the social, military, or other order the novel ranks its characters by; empty if the novel has none",
-  "power_types": [{{"type": "lowercase singular noun", "parent": "the general type below that this type is a kind of: {parents}", "description": "what entities of this type are"}}],
+  "power_types": [{{"type": "lowercase singular noun", "parent": "the general type below that this type is a kind of: {parents}", "label": "the plural name the novel itself writes for these entries, as the material writes it (Bound Relics); empty if the novel has no word for them", "description": "what entities of this type are"}}],
   "rank_word": "the word the novel uses for one rank of the order above when it gives each rank a name of its own, as the material writes it (Tier in Tier 2: Warden); empty otherwise",
   "relation_example": "one short lowercase relation label between two entries of the types above, read as 'source <label> target'",
   "extra_fields": [{{"name": "snake_case field name", "description": "what the character infobox should record and the exact format to write it in", "values": ["the class, rank, or title names this field starts with, when it takes one of a few named values; else empty"]}}],
@@ -33,7 +33,7 @@ Reply with one JSON object:
 GENERAL TYPES (type: what it covers):
 {base}
 
-Rules: power_types lists the kinds of world entries a fan wiki of this novel keeps a category of their own for beyond the general types above, such as the powers, techniques, ranks, schools, spells, or creatures of a power system. Each power type is a kind of one general type, its parent: a technique or spell is a concept, a relic is an artifact, a sect is an organization, a breed of spirit beast is a creature. When the novel has a power or magic system, list two to six and include a type for specific powers or techniques. Otherwise list a type only when the novel names many entries of that kind and no general type covers them (a club or society is an organization, a book or letter is an item, a trial is an event), and list none when the general types cover the novel. power_types are kinds of things, never kinds of people: a person is always a character, however the novel classes people, and a class, rank, species, or title of people (a mutant, a hero class, a vampire, a baronet) is an extra field of the character, not a power type. The one exception is a named rank of the order (Tier 2: Warden): when the novel gives its ranks names of their own, set rank_word and list a power type named by it whose entries are the ranks themselves, and keep an extra field for the rank a character holds. Reuse an existing entity type name below when it is such a kind of thing; never keep one whose entries are people, even if the wiki so far used it. extra_fields lists the book-specific fact a fan-wiki infobox for this novel tracks per character as it changes over the story, such as their power, cultivation stage, class, title, rank, regiment, species, or house: usually one field, two only when the book tracks two independent things, none when the novel's characters differ only in the general fields. A field tracks one thing, so never join two in one field (a title or an occupation); never a list of abilities, a personality trait, or another name or code name for the character, and never one of the general fields {fields}. A field stays empty when the text does not state it, so never prescribe a placeholder value. power_keywords has five to twelve entries whenever extra_fields or power_types is not empty, is empty otherwise, and leaves out character names. timeline_kind is loop when a character relives time and restarts undo events, flashback when the story often leaves its present for scenes set in the past, and linear otherwise; timeline_note says which (who loops and from what point, or which past periods recur), or that the story runs in order.
+Rules: power_types lists the kinds of world entries a fan wiki of this novel keeps a category of their own for beyond the general types above, such as the powers, techniques, ranks, schools, spells, or creatures of a power system. Each power type is a kind of one general type, its parent: a technique or spell is a concept, a relic is an artifact, a sect is an organization, a breed of spirit beast is a creature. When the novel has a power or magic system, list two to six and include a type for specific powers or techniques. Otherwise list a type only when the novel names many entries of that kind and no general type covers them (a club or society is an organization, a book or letter is an item, a trial is an event), and list none when the general types cover the novel. power_types are kinds of things, never kinds of people: a person is always a character, however the novel classes people, and a class, rank, species, or title of people (a mutant, a hero class, a vampire, a baronet) is an extra field of the character, not a power type. The one exception is a named rank of the order (Tier 2: Warden): when the novel gives its ranks names of their own, set rank_word and list a power type named by it whose entries are the ranks themselves, and keep an extra field for the rank a character holds. Reuse an existing entity type name below when it is such a kind of thing; never keep one whose entries are people, even if the wiki so far used it. Power types that are kinds of one general type never overlap: no entry fits two of them, and none is described as a kind of another. A power type is never named like one entry of the novel: when a single group, place, or thing bears the name (the Silver Order), name the category by another word the novel uses for such entries. extra_fields lists the book-specific fact a fan-wiki infobox for this novel tracks per character as it changes over the story, such as their power, cultivation stage, class, title, rank, regiment, species, or house: usually one field, two only when the book tracks two independent things, none when the novel's characters differ only in the general fields. A field tracks one thing, so never join two in one field (a title or an occupation); never a list of abilities, a personality trait, or another name or code name for the character, and never one of the general fields {fields}. A field stays empty when the text does not state it, so never prescribe a placeholder value. power_keywords has five to twelve entries whenever extra_fields or power_types is not empty, is empty otherwise, and leaves out character names. timeline_kind is loop when a character relives time and restarts undo events, flashback when the story often leaves its present for scenes set in the past, and linear otherwise; timeline_note says which (who loops and from what point, or which past periods recur), or that the story runs in order.
 """
 
 
@@ -137,10 +137,26 @@ def book_problems(reply, kb, material=None, novel=None):
         problems.append(f'extra fields "{a}" and "{b}" track the same thing; keep one field for it.')
     if specs and not [w for w in reply.get("power_keywords") or [] if str(w or "").strip()]:
         problems.append("power_keywords is empty, so no passage about the extra fields can be found; list the words that mark one.")
+    problems += label_problems(reply, novel)
+    problems += category_problems(reply_types(reply), {n: e["type"] for e in kb.entities.values() for n in names_of(e)})
     problems += rank_problems(reply, novel)
     if reply.get("timeline_kind") not in STORY_TIMELINE_KINDS:
         problems.append(f"timeline_kind must be one of {', '.join(STORY_TIMELINE_KINDS)}, not {reply.get('timeline_kind')!r}.")
     return " ".join(problems) or None
+
+
+def reply_types(reply):
+    return {name_key(t["type"]): {"parent": name_key(t.get("parent") or ""), "description": str(t.get("description") or "").strip(),
+                                  **({"label": str(t["label"]).strip()} if str(t.get("label") or "").strip() else {})}
+            for t in reply.get("power_types") or [] if isinstance(t, dict) and str(t.get("type") or "").strip() and name_key(t["type"]) not in BASE_TYPES}
+
+
+def label_problems(reply, text):
+    if text is None:
+        return []
+    return [f'power type "{t}" has the label "{spec["label"]}", which the material never writes; give the plural name the novel itself '
+            f"writes for these entries, or leave the label empty." for t, spec in reply_types(reply).items()
+            if spec.get("label") and not written(spec["label"], text)]
 
 
 def rank_problems(reply, novel):
@@ -192,9 +208,7 @@ def generate_book(workdir, kb, extracted, last=None):
     source = read_json(workdir / "source.json", {})
     previous = read_json(workdir / "book.json", {})
     book = {"power_system": str(reply.get("power_system") or "").strip(),
-            "power_types": {name_key(t["type"]): {"parent": name_key(t.get("parent") or ""), "description": str(t.get("description") or "").strip()}
-                            for t in reply.get("power_types") or []
-                            if isinstance(t, dict) and str(t.get("type") or "").strip() and name_key(t["type"]) not in BASE_TYPES},
+            "power_types": reply_types(reply),
             "rank_word": name_key(reply.get("rank_word") or ""),
 
             "relation_example": str(reply.get("relation_example") or DEFAULT_BOOK["relation_example"]).strip(),

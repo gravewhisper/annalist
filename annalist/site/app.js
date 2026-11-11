@@ -6,6 +6,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const label = key => cap(key.replace(/_/g, ' '));
+const catName = t => { const l = D.book.labels?.[t]; return l && l.chapter <= S.n ? l.text : cap(plural(t)); };
 const plural = t => t === 'uncategorized' ? t : /[^aeiou]y$/.test(t) ? t.slice(0, -1) + 'ies' : /(s|x|ch|sh)$/.test(t) ? t + 'es' : t + 's';
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -323,7 +324,7 @@ function renderSide(c) {
   const item = (go, text, n) => `<a ${goTo(go)} class="${S.p === go ? 'on' : ''}">${esc(text)}${n != null ? ` <span>${n}</span>` : ''}</a>`;
   $('side').innerHTML = `<h4>Navigate</h4>${item('home', 'Home')}${item('chapters', 'Chapters', S.n)}${item('mysteries', 'Mysteries', qs.filter(x => x === 'open' || x === 'partial').length)}${item('graph', 'Graph')}`
     + (vols.length ? `<h4>Volumes</h4>${vols.map(v => item('v:' + v.id, v.name)).join('')}` : '')
-    + `<h4>Categories</h4>${types.map(t => item('cat:' + t, cap(plural(t)), c[t])).join('')}`;
+    + `<h4>Categories</h4>${types.map(t => item('cat:' + t, catName(t), c[t])).join('')}`;
 }
 
 function chapterCard(c, full) {
@@ -347,7 +348,7 @@ function renderHome(c) {
   <div class="stats"><div class="stat"><b>${D.entities.filter(full).length}</b>entries</div><div class="stat"><b>${visFactsAll()}</b>facts</div><div class="stat"><b>${qs.filter(x => x === 'open').length}</b>open mysteries</div><div class="stat"><b>${qs.filter(x => x === 'partial').length}</b>with leads</div><div class="stat"><b>${qs.filter(settled).length}</b>solved</div></div>
   <h2>Latest chapters</h2><div class="cards">${chs.map(ch => chapterCard(ch)).join('')}</div>
   ${vols.length ? `<h2>Volumes</h2><div class="cards">${vols.map(v => `<a class="ccard" ${goTo(`v:${v.id}`)}><div><span class="chip">Ch ${v.from} to ${v.to}</span></div><h3>${esc(v.name)}</h3><p>${S.n >= v.to ? 'Complete' : 'In progress'}</p></a>`).join('')}</div>` : ''}
-  <h2>Categories</h2><div class="cats">${types.map(t => `<a class="cat" ${goTo(`cat:${t}`)}>${cap(plural(t))}<span>${c[t]}</span></a>`).join('')}</div>
+  <h2>Categories</h2><div class="cats">${types.map(t => `<a class="cat" ${goTo(`cat:${t}`)}>${esc(catName(t))}<span>${c[t]}</span></a>`).join('')}</div>
   <h2>Recently introduced</h2><ul class="list">${recent.map(e => entRow(e)).join('')}</ul></div>`;
 }
 const mentionQuote = e => e.mention.quote ? `<blockquote>${esc(e.mention.quote)}</blockquote>` : '';
@@ -355,7 +356,7 @@ const ladderSteps = l => until(l.steps).filter(s => vis(D.byId[live(s.id)]));
 const visLadders = () => D.ladders.filter(l => (l.group === null || vis(D.byId[live(l.group)])) && ladderSteps(l).length);
 const ladderList = l => `<ul class="list">${ladderSteps(l).map(s => `<li><span class="ch">${esc(cap(D.book.ladder.step_type))} ${s.rank}</span>${entLink(s.id)}${chLink(s.chapter)}</li>`).join('')}</ul>`;
 
-const catLink = t => `<a ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}</a>`;
+const catLink = t => `<a ${goTo(`cat:${esc(t)}`)}>${esc(catName(t))}</a>`;
 const typeCrumbs = t => `<a ${goTo('home')}>Home</a>${D.parents[t] ? ` &rsaquo; ${catLink(D.parents[t])}` : ''}`;
 
 const CAT = {az: 20, aliases: 2};
@@ -470,8 +471,8 @@ function renderCat(type) {
     named = mine.length ? catTable(mine, cols, sort, sort.col.key === 'name' && new Set()) : '';
     unnamed = rest.length ? catTable(rest, cols, sort) : '';
   }
-  return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(cap(plural(type)))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
-  ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
+  return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(catName(type))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
+  ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(catName(t))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
   ${es.length ? `<div class="ctools">${tools}</div>` : ''}${named}${es.some(unnamedAt) ? `<h2>Unnamed figures</h2>${unnamed}` : ''}
   ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
   ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
@@ -1345,7 +1346,7 @@ function renderGraph(arg) {
   const famCount = {};
   for (const r of edgesAt()) if (G.erased || r.role !== 'erased') famCount[r.family] = (famCount[r.family] || 0) + 1;
   const erasedN = edgesAt().filter(r => r.role === 'erased').length;
-  const typeChips = visTypes.map(([t, c]) => `<a data-gt="${esc(t)}" class="${types.has(t) ? 'on' : ''}" role="switch" aria-checked="${types.has(t)}"><i class="dot" style="background:${typeColor(t)}"></i>${esc(cap(plural(t)))} ${c}</a>`).join('');
+  const typeChips = visTypes.map(([t, c]) => `<a data-gt="${esc(t)}" class="${types.has(t) ? 'on' : ''}" role="switch" aria-checked="${types.has(t)}"><i class="dot" style="background:${typeColor(t)}"></i>${esc(catName(t))} ${c}</a>`).join('');
   const famChips = Object.keys(FAMILIES).filter(f => famCount[f]).map(f => `<a data-gfam="${f}" class="${G.hideFams.has(f) ? '' : 'on'}" role="switch" aria-checked="${!G.hideFams.has(f)}">${swatch(groupOf(f))}${FAMILIES[f]} ${famCount[f]}</a>`).join('');
   const whole = m.view === 'all', path = m.view === 'path';
   const bar = graphTabs(m.view) + freshNote({entry: m.nodes.filter(nd => nd.fresh).length, tie: m.links.filter(l => l.fresh).length});
@@ -2505,7 +2506,7 @@ function stepBlock(s) {
     const other = r.source === s.id ? r.target : r.source, t = D.byId[other].type;
     if (D.power.has(t) && t !== D.book.ladder.step_type && t !== D.book.ladder.group_type) (kin.get(t) || kin.set(t, new Set()).get(t)).add(other);
   }
-  const powers = [...kin].map(([t, ids]) => `<div class="lpow">${esc(cap(plural(t)))}: ${[...ids].sort(byName).map(entLink).join(', ')}</div>`).join('');
+  const powers = [...kin].map(([t, ids]) => `<div class="lpow">${esc(catName(t))}: ${[...ids].sort(byName).map(entLink).join(', ')}</div>`).join('');
   const was = x => `${esc(displayName(D.byId[x.step]))} (ch ${x.chapter})`;
   const history = h => [h.passed.length ? `advanced from ${was(h.passed.at(-1))}` : '', h.earlier.length ? `earlier ${h.earlier.map(was).join(', ')}` : '',
     ...h.rose.map(x => `rose from ${esc(x.stage.name)} (ch ${x.chapter})`)].filter(Boolean).map(t => ` <span class="lprev">${t}</span>`).join('');
@@ -2888,7 +2889,7 @@ function search() {
   const byType = new Map();
   for (const hit of hits) (byType.get(hit.e.type) || byType.set(hit.e.type, []).get(hit.e.type)).push(hit);
   const row = h => `<div data-res="${h.e.id}"${h === hits[0] ? ' class="sel"' : ''} role="option"><span>${hitName(h)}</span><small>ch ${h.e.first}</small></div>`;
-  box.innerHTML = [...byType].map(([type, rows]) => `<div class="rgroup" role="group" aria-label="${esc(cap(plural(type)))}"><div class="rhead" aria-hidden="true">${esc(cap(plural(type)))}<span>${rows.length}</span></div>${rows.slice(0, SEARCH.perType).map(row).join('')}</div>`).join('')
+  box.innerHTML = [...byType].map(([type, rows]) => `<div class="rgroup" role="group" aria-label="${esc(catName(type))}"><div class="rhead" aria-hidden="true">${esc(catName(type))}<span>${rows.length}</span></div>${rows.slice(0, SEARCH.perType).map(row).join('')}</div>`).join('')
     || '<div class="muted">No matches up to this chapter</div>';
   box.classList.add('open');
 }
