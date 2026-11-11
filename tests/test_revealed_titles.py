@@ -182,6 +182,20 @@ class RevealedProse(unittest.TestCase):
                 "summaries": [(1, "Summary of Tide Reader expert."), (4, "Summary of Mirela Danescu.")],
                 "history": [("Gate", 2, "History of Tide Reader expert."), ("Tide", 4, "History of Mirela Danescu.")]})
 
+    def test_a_described_page_s_markdown_heading_uses_the_name_its_prose_uses_at_each_chapter(self):
+        with prose_run() as root:
+            for until in (2, None):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    cmd_render(Namespace(workdir=str(root), until=until, html=False, jobs=1))
+            early = (root / "wiki-ch0002" / "character" / "tide-reader-expert.md").read_text(encoding="utf-8")
+            late = (root / "wiki" / "character" / "tide-reader-expert.md").read_text(encoding="utf-8")
+            index = (root / "wiki" / "index.md").read_text(encoding="utf-8")
+        self.assertEqual(early.splitlines()[0], "# Tide Reader expert")
+        self.assertNotIn("Mirela Danescu", early)
+        self.assertEqual(late.splitlines()[0], "# Mirela Danescu")
+        self.assertIn("Tide Reader expert", late.splitlines()[2])
+        self.assertIn("[Mirela Danescu](character/tide-reader-expert.md)", index)
+
     def test_a_title_row_rewrites_its_page_s_prose_from_its_chapter_and_asks_nothing_about_other_paragraphs(self):
         with prose_run() as root:
             render(root)

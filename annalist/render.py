@@ -457,6 +457,14 @@ def md_to_html(markdown, title):
             f"<style>{style}</style></head><body>\n" + "\n".join(body) + "\n</body></html>\n")
 
 
+def known_names(entities, names, until):
+    known = {}
+    for k, e in entities.items():
+        title = e.get("title") if e.get("title") and e["title"].get("chapter", e["first_chapter"]) <= until else None
+        known[k] = names[k].at(until) if k in names else (title or {}).get("name", e.get("written", e["name"]))
+    return known
+
+
 def cmd_render(args):
     workdir = Path(args.workdir).resolve()
     until = args.until
@@ -488,10 +496,8 @@ def cmd_render(args):
     prompts = [(n, key, prompt) for n, p in profiles.items() if n in kept or (n in kb.entities and kb.entities[n]["type"] == "character")
                for key in WRITTEN if (prompt := written_prompt(key, page(n), visible(p["lists"].get(key, []), until)))]
     profiles = {k: v for k, v in profiles.items() if k in kb.entities}
-    shown = display_names(kb.entities)
-    for name, e in kb.entities.items():
-        if e.get("title") and e["title"].get("chapter", e["first_chapter"]) <= until:
-            shown[name] = e["title"]["name"]
+    known = known_names(kb.entities, names, until)
+    shown = display_names({k: {**e, "written": known[k]} for k, e in kb.entities.items()})
     spoken = spoken_appearances(kb.facts + kb.relations, lambda name, _: kb.resolve(name))
     bare = set(kb.bare_entities())
     paths, used = {}, set()
@@ -556,7 +562,7 @@ def cmd_render(args):
         if name in bare:
             continue
         facts = sorted(by_entity.get(name, []), key=lambda f: (f["chapter"], f["id"]))
-        aka = e["aliases"] + ([e["name"]] if shown[name] == (e.get("title") or {}).get("name") else [])
+        aka = [a for a in dict.fromkeys([e.get("written", e["name"])] + e["aliases"]) if name_key(a) != name_key(known[name])]
         lines = [f"# {shown[name]}", "",
                  f"*Type: {e['type']}. First seen: chapter {e['first_chapter']}."
                  + (f" Also known as: {', '.join(aka)}.*" if aka else "*"), "",
