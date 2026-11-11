@@ -33,7 +33,7 @@ def harbour_kb():
                                            ("Ines Varro", "Bram Ostrow")), 1):
         kb.facts.append({"id": f"F{i}", "entity": entity, "chapter": 1, "claim": "a claim", "quotes": [],
                          "asserted_by": speaker, "status": "stated", "timeline": "main"})
-    kb.synopses[1] = "The harbour lamp goes dark."
+    kb.synopses[1] = "The harbour lamp goes dark, and the Lamplighters' Guild meets."
     return kb
 
 
@@ -43,7 +43,8 @@ class BookGenerationTest(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         self.workdir = Path(tmp.name)
         (self.workdir / "chapters").mkdir()
-        (self.workdir / "chapters" / "0001.txt").write_text("The harbour lamp went dark.\n", encoding="utf-8")
+        (self.workdir / "chapters" / "0001.txt").write_text("The harbour lamp went dark. The Lamplighters' Guild had an Apprentice, a Keeper "
+                                                            "and a Master, and the Harbourmaster kept the Lady of the Quay waiting.\n", encoding="utf-8")
         write_json(self.workdir / "chapters.json", [{"index": 1, "title": "The Missing Page"}])
         write_json(self.workdir / "source.json", {"complete": True, "complete_evidence": "THE END"})
         write_json(self.workdir / "book.json", {"backend": {"name": "fake", "script": "script.json"}})
@@ -173,6 +174,12 @@ class BookGenerationTest(unittest.TestCase):
         self.assertIn('extra field "social title" lists forms of address', book_problems(address, Knowledge()))
         ranks = {**GOOD, "extra_fields": [{"name": "title", "description": "the noble title", "values": ["Sir", "Baron", "Count"]}]}
         self.assertIsNone(book_problems(ranks, Knowledge()))
+
+    def test_a_name_the_material_never_mentions_is_rejected_as_outside_knowledge(self):
+        material = "The Lamplighters' Guild names an Apprentice, a Keeper and a Master. The lamp burns."
+        outside = {**GOOD, "power_types": [{"type": "relic", "parent": "artifact", "description": "an object such as the Crown of Zorvath"}]}
+        self.assertIn("Zorvath", book_problems(outside, Knowledge(), material))
+        self.assertIsNone(book_problems(GOOD, Knowledge(), material))
 
 
 if __name__ == "__main__":

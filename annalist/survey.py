@@ -5,7 +5,7 @@ from pathlib import Path
 from .book import DEFAULT_BOOK, load_book
 from .files import read_json, write_json
 from .llm import cached_llm
-from .names import name_key, slug
+from .names import name_key, names_of, slug
 from .state import load_states
 from .template import (base_field, BASE_TYPES, distinct_fields, ENTITY_TYPES, INDIVIDUALS, overlapping_pairs, PARENT_TYPES, PROFILE_FIELDS,
                        STORY_TIMELINE_KINDS)
@@ -61,8 +61,29 @@ def field_name(raw):
     return slug(raw).replace("-", "_")
 
 
-def book_problems(reply, kb):
+CAPITALIZED = re.compile(r"(?<![\w'’-])[A-Z][\w'’-]*[a-z][\w'’-]*")
+
+
+def unseen_names(reply, material):
+    seen = material.lower()
+    texts = [str(reply.get("power_system") or ""), str(reply.get("timeline_note") or "")]
+    texts += [f"{t.get('type', '')} {t.get('description', '')}" for t in reply.get("power_types") or [] if isinstance(t, dict)]
+    for f in reply.get("extra_fields") or []:
+        if isinstance(f, dict):
+            texts += [str(f.get("description") or "")] + [str(v) for v in f.get("values") or []]
+    names = {m.group(0).rstrip("'’-") for text in texts for m in CAPITALIZED.finditer(text)
+             if text[:m.start()].rstrip()[-1:] not in ("", ".", "!", "?", ":", ";", '"', "“", "(")}
+    def found(word):
+        return any(re.search(rf"(?<!\w){re.escape(form)}(?!\w)", seen) for form in {word.lower(), word.lower().removesuffix("s")})
+    return sorted(w for w in names if not found(w))
+
+
+def book_problems(reply, kb, material=None):
     problems = []
+    if material is not None:
+        unseen = unseen_names(reply, material)
+        if unseen:
+            problems.append(f"the reply names {', '.join(unseen)}, which the material never mentions; describe the novel only from the material.")
     spoke = speakers(kb)
     for t in reply.get("power_types") or []:
         if not isinstance(t, dict) or not str(t.get("type") or "").strip():
@@ -133,9 +154,10 @@ def generate_book(workdir, kb, extracted, last=None):
                     + "\n\nCHAPTER SYNOPSES:\n" + "\n".join(f"Ch {n}: {kb.synopses[n]}" for n in sorted(kb.synopses)[:30]))
     else:
         material = "OPENING CHAPTERS:\n" + "\n\n".join(chapter_text(str(workdir), c["index"])[:3000] for c in chapters[:10])
-    reply = cached_llm(workdir, "book", BOOK_PROMPT.format(titles=titles, material=material, base="\n".join(f"- {t.name}: {t.description}" for t in ENTITY_TYPES.values()), fields=", ".join(PROFILE_FIELDS),
-                                                           parents=", ".join(PARENT_TYPES)),
-                       check=lambda r: book_problems(r, extracted))
+    prompt = BOOK_PROMPT.format(titles=titles, material=material, base="\n".join(f"- {t.name}: {t.description}" for t in ENTITY_TYPES.values()),
+                                fields=", ".join(PROFILE_FIELDS), parents=", ".join(PARENT_TYPES))
+    known = "\n".join([str(read_json(workdir / "book.json", {}).get("title") or "")] + [n for e in kb.entities.values() for n in names_of(e)])
+    reply = cached_llm(workdir, "book", prompt, check=lambda r: book_problems(r, extracted, prompt + "\n" + known))
     source = read_json(workdir / "source.json", {})
     previous = read_json(workdir / "book.json", {})
     book = {"power_system": str(reply.get("power_system") or "").strip(),
