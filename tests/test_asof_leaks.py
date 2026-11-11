@@ -145,19 +145,25 @@ class AsOfLeakTest(unittest.TestCase):
     @unittest.skipIf(NODE is None, "node is not installed")
     def test_no_site_view_as_of_chapter_n_shows_a_word_the_book_first_uses_after_n(self):
         path = self.book.workdir / "site" / "data" / "wiki.json"
+        render = lambda *views: subprocess.run([NODE, str(ROOT / "tests" / "site_render.mjs"), str(ROOT / "annalist" / "site" / "app.js"), str(path), *views],
+                                               capture_output=True, text=True, timeout=120)
+        sorts = json.loads(render("tables@1").stdout)["tables@1"]["sorts"]
+        types = sorted({e["type"] for e in self.wiki["entities"]})
+        queries = sorted({x for e in self.wiki["entities"] for x in [e["name"], *(a["name"] for a in e["aliases"])] if not re.search(r"[@?]", x)} | set("aeiou"))
         shown = {}
         for n in self.later:
+            routes = [f"route:cat:{t}@{n}?tab=list" for t in types] + [f"route:cat:{t}@{n}?tab=&sort={d}{k}" for t in types for k in sorts for d in ("", "-")]
             views = [f"{e['id']}@{n}" for e in self.wiki["entities"]] + [f"mysteries@{n}", f"home@{n}", f"graph@{n}"]
+            views += routes + [f"search:{q}@{n}" for q in queries]
             views += [f"chapter:{c}@{n}" for c in range(1, n + 1)] + [f"volume:{v['id']}@{n}" for v in self.wiki["volumes"]]
             ids = [e["id"] for e in self.wiki["entities"]]
             pairs = [f"graph:path:{a}~{b}@{n}" for a in ids[:3] for b in ids if a != b] + [f"graph:factions@{n}", f"graph:ladder@{n}", f"graph:all@{n}"]
             pairs += [f"graph:family@{n}", f"graph:places@{n}"]
             pairs += [f"graph:{e['id']}@{n}" for e in self.wiki["entities"] if e["type"] == "character"] + [f"graph:matrix@{n}"]
-            proc = subprocess.run([NODE, str(ROOT / "tests" / "site_render.mjs"), str(ROOT / "annalist" / "site" / "app.js"), str(path), *views, *pairs],
-                                  capture_output=True, text=True, timeout=120)
+            proc = render(*views, *pairs)
             self.assertEqual(proc.returncode, 0, proc.stderr)
             out = json.loads(proc.stdout)
-            out.update({view: out[view]["html"] for view in pairs})
+            out.update({view: out[view]["html"] for view in pairs + routes})
             for tab in ("matrix", "family"):
                 out[f"{tab}-labels@{n}"] = " ".join(re.findall(r'aria-label="([^"]*)"', out[f"graph:{tab}@{n}"]))
             graph = out.pop(f"graph@{n}")["model"]

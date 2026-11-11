@@ -11,12 +11,13 @@ const nodes = {};
 const listeners = {};
 const document = {getElementById: id => (nodes[id] ||= node()), createElement: node, head: node(), body: node(),
   documentElement: node(), addEventListener: (type, fn) => (listeners[type] ||= []).push(fn), querySelector: () => null, querySelectorAll: () => []};
-const context = {document, window: {addEventListener: noop, scrollTo: noop}, location: {hash: ''}, history: {replaceState: noop},
+let url = '';
+const context = {document, window: {addEventListener: noop, scrollTo: noop}, location: {hash: ''}, history: {replaceState: (state, title, to) => { url = to; }},
   localStorage: (() => { const kept = new Map(); return {getItem: k => kept.get(k) ?? null, setItem: (k, v) => kept.set(k, String(v))}; })(), matchMedia: () => ({matches: false, addEventListener: noop}),
   fetch: async () => ({json: async () => JSON.parse(readFileSync(wikiPath, 'utf8'))}), console, URLSearchParams,
   requestAnimationFrame: () => 0, cancelAnimationFrame: noop, performance, scrollX: 0, scrollY: 0, innerWidth: 1200};
 vm.createContext(context);
-vm.runInContext(readFileSync(app, 'utf8') + '\nglobalThis.__app = {S, G, D, renderEntity, renderMysteries, renderGraph, mainCharacter, shownNames, renderHome, renderChapter, renderVolume, counts, graphAt, qState, load, go, search, readHash, REL_GROUPS, TYPE_GROUPS, predicate, questions: () => D.questions, ORBIT, fitView, labelSpots, outward, revealTiming};', context);
+vm.runInContext(readFileSync(app, 'utf8') + '\nglobalThis.__app = {S, G, D, renderEntity, renderMysteries, renderGraph, mainCharacter, shownNames, renderHome, renderChapter, renderVolume, counts, graphAt, qState, load, go, search, readHash, REL_GROUPS, TYPE_GROUPS, predicate, questions: () => D.questions, ORBIT, fitView, labelSpots, outward, revealTiming, CAT_COLS};', context);
 await context.__app.load();
 await new Promise(r => setTimeout(r));
 
@@ -61,7 +62,7 @@ const graphView = (focus, query) => {
   setGraph(focus === 'all' ? 'all' : /^path(:|$)/.test(focus) ? 'path' : 'characters', query);
   return {model: a.graphAt(focus), html: a.renderGraph(focus)};
 };
-const routed = () => ({p: a.S.p, full: !!a.G.full, html: nodes.main?.innerHTML ?? ''});
+const routed = () => ({p: a.S.p, full: !!a.G.full, html: nodes.main?.innerHTML ?? '', url});
 const links = route => {
   a.go({p: route});
   const html = nodes.main.innerHTML + nodes.side.innerHTML;
@@ -117,12 +118,12 @@ for (const view of views) {
     : id === 'home' ? a.renderHome(a.counts())
     : id === 'chapter' ? a.renderChapter(+focus)
     : id === 'volume' ? a.renderVolume(focus)
-    : id === 'route' ? (a.go({p: focus}), routed())
+    : id === 'route' ? (a.go({p: focus, ...Object.fromEntries(new URLSearchParams(query))}), routed())
     : id === 'toggle' ? toggled(focus, query)
     : id === 'links' ? links(focus)
     : id === 'navclick' ? navClick(focus, new URLSearchParams(query).get('to'))
     : id === 'phrases' ? Object.fromEntries(readFileSync(focus, 'utf8').split('\n').filter(Boolean).map(w => [w, a.predicate(w)]))
-    : id === 'tables' ? {rel: a.REL_GROUPS, types: a.TYPE_GROUPS}
+    : id === 'tables' ? {rel: a.REL_GROUPS, types: a.TYPE_GROUPS, sorts: a.CAT_COLS.map(c => c.key)}
     : id === 'header' ? {brand: nodes.brand.textContent, title: document.title}
     : id === 'search' ? (document.getElementById('q').value = focus, a.search(), nodes.results.innerHTML)
     : id === 'click' ? (dispatch('click', {target: target(focus)}), routed())

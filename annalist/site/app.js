@@ -1,6 +1,6 @@
 const D = {};
-const S = {n: 1, p: 'home', tab: '', m: ''};
-const HASH_KEYS = ['n', 'p', 'tab', 'm'];
+const S = {n: 1, p: 'home', tab: '', m: '', sort: ''};
+const HASH_KEYS = ['n', 'p', 'tab', 'm', 'sort'];
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -243,8 +243,9 @@ function expandHeading(title, body) {
 }
 
 const goTo = p => `data-go="${p}" href="#${esc(hashFor({p, tab: '', m: ''}))}"`;
+const onPage = patch => patch.p && patch.p !== S.p ? {sort: '', ...patch} : patch;
 function hashFor(patch) {
-  const st = {...S, ...patch};
+  const st = {...S, ...onPage(patch)};
   return new URLSearchParams(HASH_KEYS.filter(k => st[k] !== '' && st[k] != null).map(k => [k, st[k]])).toString();
 }
 function readHash() {
@@ -259,7 +260,7 @@ function writeHash() {
 }
 function go(patch) {
   const page = patch.p && patch.p !== S.p;
-  Object.assign(S, patch);
+  Object.assign(S, onPage(patch));
   if (page) { more = 60; Object.assign(G, {view: null, limit: STEP, open: new Set()}); }
   writeHash();
   render();
@@ -314,17 +315,121 @@ const ladderList = l => `<ul class="list">${ladderSteps(l).map(s => `<li><span c
 const catLink = t => `<a ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}</a>`;
 const typeCrumbs = t => `<a ${goTo('home')}>Home</a>${D.parents[t] ? ` &rsaquo; ${catLink(D.parents[t])}` : ''}`;
 
+const CAT = {az: 20, aliases: 2};
+let catCache = {n: -1};
+function catModel() {
+  if (catCache.n === S.n) return catCache;
+  const members = new Map(factionsAt('').groups.map(g => [g.id, g.members.length]));
+  const within = new Map(), people = new Map();
+  const walk = (p, up) => {
+    if (up) within.set(p.id, up);
+    people.set(p.id, p.people.length);
+    p.children.forEach(k => walk(k, p.id));
+  };
+  placesAt().roots.forEach(p => walk(p, null));
+  const rungs = new Map(), steps = new Map();
+  for (const l of visLadders()) {
+    const known = ladderSteps(l);
+    if (l.group) steps.set(live(l.group), known.length);
+    for (const st of known) if (!rungs.has(live(st.id))) rungs.set(live(st.id), {group: l.group && live(l.group), rank: st.rank});
+  }
+  catCache = {n: S.n, members, within, people, rungs, steps, seen: storyData().seen};
+  return catCache;
+}
+
+const fieldCell = (e, key) => {
+  const o = fieldSeen(key, e.profile?.fields[key] || []).at(-1);
+  return o && {sort: o.value.toLowerCase(), html: linkify(cap(o.value), null, o.chapter)};
+};
+const countCell = (n, html = n) => n ? {sort: n, html} : null;
+const linkCell = id => id && {sort: displayName(D.byId[id]), html: entLink(id)};
+function nameCell(e) {
+  const name = displayName(e), aka = visAliases(e).filter(a => a !== name);
+  const more = aka.length > CAT.aliases ? ` +${aka.length - CAT.aliases}` : '';
+  return {sort: name, html: entLink(e.id) + (aka.length ? `<span class="al">${aka.slice(0, CAT.aliases).map(esc).join(', ')}${more}</span>` : '')};
+}
+const CAT_COLS = [
+  {key: 'name', label: () => 'Name', of: nameCell},
+  {key: 'status', label: () => 'Status', of: e => { const st = e.profile && currentStatus(e.profile); return st && {sort: st.value, html: esc(cap(st.value))}; }},
+  {key: 'affiliation', label: () => 'Affiliation', of: e => fieldCell(e, 'affiliation')},
+  {key: 'occupation', label: () => 'Occupation', of: e => fieldCell(e, 'occupation')},
+  {key: 'group', label: () => cap(D.book.ladder.group_type), of: (e, m) => linkCell(m.rungs.get(e.id)?.group)},
+  {key: 'rank', label: () => 'Rank', num: true, of: (e, m) => { const r = m.rungs.get(e.id); return r && {sort: r.rank, html: esc(r.rank)}; }},
+  {key: 'steps', label: () => cap(plural(D.book.ladder.step_type)), num: true, down: true, of: (e, m) => countCell(m.steps.get(e.id))},
+  {key: 'members', label: () => 'Members', num: true, down: true, of: (e, m) => countCell(m.members.get(e.id), `<a ${goTo(factionRoute(e.id))}>${m.members.get(e.id)}</a>`)},
+  {key: 'within', label: () => 'Located in', of: (e, m) => linkCell(m.within.get(e.id))},
+  {key: 'people', label: () => 'People', num: true, down: true, of: (e, m) => countCell(m.people.get(e.id))},
+  {key: 'first', label: () => 'First seen', num: true, of: e => ({sort: e.first, html: chLink(e.first)})},
+  {key: 'last', label: () => 'Last seen', num: true, down: true, of: e => { const c = lastSeen(e); return {sort: c, html: chLink(c)}; }},
+  {key: 'present', label: () => 'Chapters present', num: true, down: true, of: (e, m) => countCell(m.seen.get(e.id)?.size)},
+  {key: 'facts', label: () => 'Facts', num: true, down: true, of: e => { const n = visFacts(e.id).length; return {sort: n, html: n}; }},
+];
+
+const cmpCell = (a, b) => typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), undefined, {numeric: true, sensitivity: 'base'});
+function catSort(cols) {
+  const col = cols.find(c => c.key === S.sort.replace(/^-/, ''));
+  return col ? {col, down: S.sort.startsWith('-')} : {col: cols[0], down: false};
+}
+function sortRows(rows, {col, down}) {
+  const name = r => r.cells.name.sort;
+  return rows.sort((x, y) => {
+    const a = x.cells[col.key], b = y.cells[col.key];
+    return (a && b ? (down ? -1 : 1) * cmpCell(a.sort, b.sort) : !a - !b) || cmpCell(name(x), name(y));
+  });
+}
+const letterOf = name => {
+  const c = name.normalize('NFD').replace(/[^\p{L}\p{N}]/gu, '').charAt(0).toUpperCase();
+  return /[A-Z]/.test(c) ? c : 'other';
+};
+function sortHead(c, sort) {
+  const on = sort.col === c;
+  const next = (on ? !sort.down : c.down) ? '-' + c.key : c.key;
+  const mark = on ? `<span class="sortmark" aria-hidden="true">${sort.down ? '&darr;' : '&uarr;'}</span>` : '';
+  return `<th scope="col"${c.num ? ' class="num"' : ''}${on ? ` aria-sort="${sort.down ? 'descending' : 'ascending'}"` : ''}><a data-sort="${next}" href="#${esc(hashFor({sort: next}))}">${esc(c.label())}${mark}</a></th>`;
+}
+function catTable(rows, cols, sort, letters) {
+  const cell = (r, c, i) => {
+    const html = r.cells[c.key]?.html ?? '';
+    return i ? `<td${c.num ? ' class="num"' : ''}>${html}</td>` : `<th scope="row">${html}</th>`;
+  };
+  const row = r => {
+    const k = letters && letterOf(r.cells.name.sort), id = k && !letters.has(k) ? (letters.add(k), ` id="az-${k}"`) : '';
+    return `<tr${id}>${cols.map((c, i) => cell(r, c, i)).join('')}</tr>`;
+  };
+  return `<div class="ctable"><table><thead><tr>${cols.map(c => sortHead(c, sort)).join('')}</tr></thead><tbody>${rows.map(row).join('')}</tbody></table></div>`;
+}
+function azBar(rows) {
+  const have = new Set(rows.map(r => letterOf(r.cells.name.sort)));
+  const keys = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', ...(have.has('other') ? ['other'] : [])];
+  const text = k => k === 'other' ? '#' : k;
+  return `<nav class="az" aria-label="Jump to a letter">${keys.map(k => have.has(k) ? `<a data-az="${k}" href="#${esc(hashFor({sort: 'name'}))}">${text(k)}</a>` : `<span aria-hidden="true">${text(k)}</span>`).join('')}</nav>`;
+}
+
 function renderCat(type) {
   const byName = (a, b) => displayName(a).localeCompare(displayName(b));
   const es = D.entities.filter(e => full(e) && e.type === type).sort(byName);
   const minors = D.entities.filter(e => minor(e) && e.type === type).sort((a, b) => a.mention.chapter - b.mention.chapter || byName(a, b));
   const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`)).join('')}</ul>`;
-  const unnamed = es.filter(e => e.nameless);
   const c = counts();
   const subs = D.typeOrder.filter(t => D.parents[t] === type && c[t]);
+  const asList = S.tab === 'list';
+  const views = `<nav class="pills" aria-label="Show as">${[['', 'Table'], ['list', 'List']].map(([k, t]) => `<a data-tab="${k}" href="#${esc(hashFor({tab: k}))}"${(k === 'list') === asList ? ' class="on" aria-current="true"' : ''}>${t}</a>`).join('')}</nav>`;
+  let tools = views, named, unnamed;
+  if (asList) [named, unnamed] = [list(es.filter(e => !e.nameless)), list(es.filter(e => e.nameless))];
+  else {
+    const m = catModel();
+    const rows = es.map(e => ({e, cells: Object.fromEntries(CAT_COLS.map(col => [col.key, col.of(e, m) || null]))}));
+    const cols = CAT_COLS.filter(col => col.key === 'name' || rows.some(r => r.cells[col.key]));
+    const sort = catSort(cols);
+    sortRows(rows, sort);
+    const [mine, rest] = [rows.filter(r => !r.e.nameless), rows.filter(r => r.e.nameless)];
+    if (mine.length > CAT.az) tools += azBar(mine);
+    named = mine.length ? catTable(mine, cols, sort, sort.col.key === 'name' && new Set()) : '';
+    unnamed = rest.length ? catTable(rest, cols, sort) : '';
+  }
   return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(cap(plural(type)))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
   ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
-  ${list(es.filter(e => !e.nameless))}${unnamed.length ? `<h2>Unnamed figures</h2>${list(unnamed)}` : ''}
+  ${es.length ? `<div class="ctools">${tools}</div>` : ''}${named}${es.some(e => e.nameless) ? `<h2>Unnamed figures</h2>${unnamed}` : ''}
   ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
   ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
 }
@@ -355,13 +460,16 @@ function statusRow(profile) {
   if (s.earlier.length) cell += `<div class="prev">previously ${s.earlier.map(o => `${esc(cap(o.value))} (ch ${o.chapter})`).join(', ')}</div>`;
   return `<tr><th>${esc(label('status'))}</th><td>${cell}</td></tr>`;
 }
+function fieldSeen(key, obs) {
+  const current = until(obs).filter(o => role(o.timeline) === 'current');
+  return current.length || PER_TIMELINE.has(key) ? current : until(obs);
+}
 function infoRows(profile) {
   if (!profile) return '';
   const fields = 'status' in profile.fields ? profile.fields : {status: [], ...profile.fields};
   return Object.entries(fields).map(([key, obs]) => {
     if (key === 'status') return statusRow(profile);
-    const current = until(obs).filter(o => role(o.timeline) === 'current');
-    const seen = current.length || PER_TIMELINE.has(key) ? current : until(obs);
+    const seen = fieldSeen(key, obs);
     if (!seen.length) return '';
     const cur = seen.at(-1);
     const prev = [];
@@ -434,6 +542,8 @@ function erasedSection(fs, rels, id, name) {
   return `<h3>In erased timelines</h3>` + ids.map(t => `<div class="chgroup"><h4>${tlName(D.tl[t])} <span class="chip">Ch ${D.tl[t].started} to ${D.tl[t].erased}</span></h4>${by[t].map(x => x.claim ? factRow(x, id) : relRow(x, id, name)).join('')}</div>`).join('');
 }
 
+const lastSeen = e => Math.max(e.first, ...[...visFacts(e.id), ...visRels(e.id)].filter(r => role(r.timeline) !== 'erased').map(r => r.chapter));
+
 function renderEntity(id) {
   id = live(id);
   const e = D.byId[id];
@@ -454,7 +564,6 @@ function renderEntity(id) {
   const groups = {};
   for (const f of fs) (groups[f.chapter] ||= []).push(f);
   const chs = Object.keys(groups).map(Number).sort((a, b) => b - a);
-  const lastSeen = Math.max(e.first, ...fs.map(f => f.chapter), ...allRels.filter(r => role(r.timeline) !== 'erased').map(r => r.chapter));
   const aliases = visAliases(e).filter(a => a !== name);
   const l = lede(e);
   const ladder = visLadders().find(l => live(l.group) === id);
@@ -466,7 +575,7 @@ function renderEntity(id) {
     ${aliases.length ? `<tr><th>Also known as</th><td>${aliases.map(esc).join('<br>')}</td></tr>` : ''}
     ${infoRows(e.profile)}
     <tr><th>First seen</th><td>Ch ${e.first}: ${esc(ctitle(e.first))}</td></tr>
-    <tr><th>Last seen</th><td>Ch ${lastSeen}</td></tr>
+    <tr><th>Last seen</th><td>Ch ${lastSeen(e)}</td></tr>
     <tr><th>Facts</th><td>${fs.length} in ${chs.length} chapters</td></tr>
     </table></aside>`;
   let body;
@@ -2728,6 +2837,13 @@ function search() {
   box.classList.add('open');
 }
 
+function jump(id) {
+  const to = $(id);
+  if (!to) return;
+  to.scrollIntoView({block: 'start'});
+  (to.hasAttribute('tabindex') ? to : to.querySelector('.ent') || to).focus({preventScroll: true});
+}
+
 function toggleIn(set, key) {
   set.has(key) ? set.delete(key) : set.add(key);
   render();
@@ -2754,6 +2870,8 @@ function wire() {
     if ((el = act('[data-go]'))) { ev.preventDefault(); return go({p: el.dataset.go}); }
     if ((el = act('[data-tab]'))) return go({tab: el.dataset.tab});
     if ((el = act('[data-m]'))) { more = 60; return go({m: el.dataset.m}); }
+    if ((el = act('[data-sort]'))) { ev.preventDefault(); return go({sort: el.dataset.sort}); }
+    if ((el = act('[data-az]'))) { ev.preventDefault(); if (!$('az-' + el.dataset.az)) go({sort: 'name'}); return jump('az-' + el.dataset.az); }
     if ((el = act('[data-gt]'))) return toggleIn(shownTypes(G.model.view), el.dataset.gt);
     if ((el = act('[data-gfam]'))) return toggleIn(G.hideFams, el.dataset.gfam);
     if ((el = act('[data-ggt]'))) { const set = shownTypes(G.model.view); return toggleGroup(groupTypes(TYPE_GROUPS.find(g => g.key === el.dataset.ggt)), t => set.has(t), (t, on) => on ? set.add(t) : set.delete(t)); }

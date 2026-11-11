@@ -1,6 +1,10 @@
 # The site and its spoiler guarantee
 
-The slider in the site header sets the chapter you are on. The site has a home page, chapter pages with synopses, volume pages, a Mysteries page, a category page for each type, and a page for each entry with its profile, facts, relations, and mysteries. A book type's category page sits under its parent's page in the breadcrumbs, and the parent's page lists it under Subcategories once it has an entry. The Factions and Places tabs count a book type of organization or place as one. The Graph page has these tabs:
+The slider in the site header sets the chapter you are on. The site has a home page, chapter pages with synopses, volume pages, a Mysteries page, a category page for each type, and a page for each entry with its profile, facts, relations, and mysteries. A book type's category page sits under its parent's page in the breadcrumbs, and the parent's page lists it under Subcategories once it has an entry. The Factions and Places tabs count a book type of organization or place as one.
+
+A category page shows its entries as a table. Select a column heading to sort by it and select it again to reverse the order. The sort stays in the address while the slider moves. Each type gets the columns its entries have data for: characters show status, affiliation, occupation, first and last seen, and the chapters they are present in; organizations show their members; places show the place they lie in and the people there; ladder steps show their group and rank. The List switch shows each entry's summary instead, and minor mentions stay listed under the table.
+
+The Graph page has these tabs:
 
 
 - Characters shows each character's strongest ties.
