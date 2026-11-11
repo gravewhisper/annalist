@@ -97,13 +97,18 @@ Rules:
 - Each field is a list of observations in chapter order. Add a new observation only when the value is first stated or changes, so a reader can see how it changes over the story. Date each observation to the earliest chapter below that shows it, not a later recap.
 - "chapter" is the chapter whose facts or passages hold the quotes. Every quote is one contiguous span copied character for character from a fact quote or passage of THAT chapter, at most 300 characters, no ellipses. The value must be fully shown by its quotes alone, and must not use anything from a later chapter.
 - status is one of {statuses}. Record it only from what the text narrates happening to this character: a death on the page, a body found, a revival, a disappearance. Never record what the character can do, does habitually, or would do ("every time", "whenever", "can", "could"), nor a hypothetical or a plan. What another character is told or believes is not status evidence unless the narration confirms it. Give one observation per change, in order (for example dead in one chapter, revived in a later one), dated to the chapter where it happens on the page.
-- sex, age, height, birthdate, marital_status, full_name, and affiliation only when stated. affiliation is an organization, faction, or employer the character belongs to.
+- {stated}
 - appearance: concrete physical description (hair, eyes, build, face, clothes they are described wearing), one observation per description.
 - personality_evidence: a short trait label as the value ("cautious", "sardonic") with the quote that shows it. Prefer behavior and narration over self-description. Up to 8.
 - trivia: odd but true details a fan would enjoy (a habit, a hobby, a quirk, a possession, a phrase they repeat), each with its quote. Up to 6. Skip anything ordinary.
 - extra fields: write each value in the format its description gives, and add an observation every time it changes (each rank gained, each new power).
 - An empty list is the right answer whenever the material does not state the field.
 """
+
+
+STATED = [f for f in CHARACTER_FIELDS.values() if not f.values]
+STATED_RULE = (", ".join(f.key for f in STATED[:-1]) + f", and {STATED[-1].key} only when stated."
+               + "".join(f" {f.key} is {f.hint}." for f in STATED if f.hint))
 
 
 PROFILE_TIMELINE_RULES = """
@@ -208,7 +213,7 @@ def build_profile(workdir, kb, name, facts, max_chapter, extra_fields, cues, cla
     e = kb.entities[name]
     prompt = PROFILE_PROMPT.format(
         name=name, aliases=", ".join(e["aliases"]) or "none", facts=fact_lines or "(none)",
-        passages=passage_lines or "(none)", fields=fields, extra=extra, statuses=" / ".join(STATUS_VALUES))
+        passages=passage_lines or "(none)", fields=fields, extra=extra, statuses=" / ".join(STATUS_VALUES), stated=STATED_RULE)
     if len(kb.timelines) > 1:
         prompt += PROFILE_TIMELINE_RULES.format(registry="\n".join(f"- {timeline_line(t)}" for t in kb.timelines.values()))
     reply = cached_llm(workdir, "profile", prompt)

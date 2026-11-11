@@ -21,7 +21,7 @@
 - **Every fact has a quote.** Code checks each quote against the chapter text, so the wiki cannot cite a line the book does not contain.
 - **Mysteries.** Open questions are tracked from the chapter that raises them to the chapter that answers them, with partial leads along the way.
 - **Graph.** Strongest ties, paths between two entries, a storyline view, factions, family trees, and places.
-- **Infoboxes over time.** Status, affiliation, and power fields change as the story goes. Time loops and flashbacks are labelled, so a death in an erased timeline does not count.
+- **Infoboxes over time.** Status, affiliation, occupation, residence, and power fields change as the story goes. Time loops and flashbacks are labelled, so a death in an erased timeline does not count.
 - **Resumable and cached.** Read 50 chapters now and the rest later. A rerun reuses every saved reply and costs nothing.
 - **Any model.** Claude Code (the default), the Anthropic API, or any OpenAI-compatible server. Python standard library only.
 

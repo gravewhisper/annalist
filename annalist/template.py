@@ -42,6 +42,7 @@ class Field:
     aliases: tuple = ()
     values: tuple = ()
     kind: str = "text"
+    hint: str = ""
 
 
 CHARACTER_FIELDS = {f.key: f for f in (
@@ -53,7 +54,13 @@ CHARACTER_FIELDS = {f.key: f for f in (
     Field("marital_status", "Marital status", ("spouse", "married", "marriage")),
     Field("status", "Status", ("alive", "life_status", "alive_or_dead", "vital_status", "condition", "living_status"),
           STATUS_VALUES),
-    Field("affiliation", "Affiliation", ("faction", "allegiance", "organization", "group", "employer", "team", "affiliations")),
+    Field("affiliation", "Affiliation", ("faction", "allegiance", "organization", "group", "employer", "team", "affiliations"),
+          hint="an organization, faction, or employer the character belongs to"),
+    Field("occupation", "Occupation", ("job", "profession", "title_of_office", "office", "role", "position", "trade", "vocation",
+                                       "career", "occupations"),
+          hint="their job, profession, office, or trade"),
+    Field("residence", "Residence", ("home", "lives_in", "address", "abode", "dwelling", "lodgings", "domicile", "residences"),
+          hint="where they live, naming the place as the book does"),
 )}
 
 

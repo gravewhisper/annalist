@@ -5,6 +5,7 @@ from pathlib import Path
 
 from annalist.book import load_book
 from annalist.read import EXTRACT_PROMPT
+from annalist.survey import stable_fields
 from annalist.template import base_field, ENTITY_TYPES, RELATION_TYPES
 
 
@@ -38,6 +39,17 @@ class TemplateTest(unittest.TestCase):
         self.assertEqual(base_field("personality").key, "personality_evidence")
         self.assertIsNone(base_field("power_class"))
         self.assertIsNone(base_field("pathway_sequence"))
+        self.assertEqual(base_field("Profession").key, "occupation")
+        self.assertEqual(base_field("title of office").key, "occupation")
+        self.assertEqual(base_field("Lives in").key, "residence")
+        self.assertEqual(base_field("abode").key, "residence")
+        self.assertIsNone(base_field("title"))
+
+    def test_a_book_field_for_occupation_or_residence_folds_into_the_general_field(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            book = book_in(tmp, {"extra_fields": {"occupation": "their job", "home": "where they live", "title": "their sequence title"}})
+        self.assertEqual(book["extra_fields"], {"title": "their sequence title"})
+        self.assertEqual(stable_fields({"job": "their job", "power_class": "class"}, {}), {"power_class": "class"})
 
     def test_extract_prompt_lists_the_registry(self):
         prompt = EXTRACT_PROMPT.format(knowledge="", n=1, title="", text="", power_names="", power_types="",

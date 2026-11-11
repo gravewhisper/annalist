@@ -322,7 +322,7 @@ function renderCat(type) {
   ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
 }
 
-const PER_TIMELINE = new Set(['status', 'affiliation', 'marital_status']);
+const PER_TIMELINE = new Set(['status', 'affiliation', 'marital_status', 'occupation', 'residence']);
 function currentStatus(profile) {
   const visible = until(profile.fields.status || []);
   const shown = visible.filter(o => role(o.timeline) === 'current');
