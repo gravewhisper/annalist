@@ -2,6 +2,8 @@ import json
 import unittest
 
 from annalist.export import entity_id
+from annalist.proofread import Review, finished_volumes, sessions, volume_view
+from annalist.text import chapter_text
 from tests.test_build import MiniBuild, build_script, plan_rows, ran
 
 VOLUMES = ("--volumes", "1-3,4-5")
@@ -124,6 +126,20 @@ class ProofreadBuildTest(unittest.TestCase):
     def test_no_session_sees_a_chapter_past_its_volume(self):
         probed = {r["volume"] for r in self.review["rejected"] if r["row"].get("why") == PROBE}
         self.assertEqual(probed, {"Volume 2"})
+
+    def test_every_session_of_a_volume_starts_with_the_same_volume_text_so_the_model_can_cache_it(self):
+        workdir = self.book.workdir
+        for v in finished_volumes(workdir, None):
+            kb, pages = volume_view(workdir, v)
+            planned = list(sessions(workdir, v, Review(workdir, kb, pages, self.book.json("book.json"))))
+            self.assertGreater(len(planned), 1)
+            self.assertEqual(len({head for _, _, head, _ in planned}), 1)
+            head = planned[0][2]
+            for n in range(v["from"], v["to"] + 1):
+                self.assertIn(chapter_text(str(workdir), n), head)
+            for _, s, _, prompt in planned:
+                self.assertTrue(prompt.startswith(head))
+                self.assertIn(s.text, prompt[len(head):])
 
     def test_the_review_asks_at_high_effort_by_default(self):
         self.assertEqual({c.get("effort") for c in self.book.calls("proofread")}, {"high"})

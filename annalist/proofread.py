@@ -432,7 +432,7 @@ def sessions(workdir, v, review):
         head = HEAD.format(first=first, last=last, scope=scope, book="\n\n".join(blocks[n] for n in range(first, last + 1)))
         for s in slices(wiki_items(workdir, review.kb, review.pages, first, last)):
             prompt = head + TASK.format(first=first, last=last, title=s.title, slice=s.text, types=", ".join(review.types), fields=fields)
-            yield (first, last), s, prompt
+            yield (first, last), s, head, prompt
 
 
 CHANGE_DETAIL = ("quotes", "why", "volume", "slice", "models")
@@ -461,21 +461,21 @@ def cmd_proofread(args):
         review = Review(workdir, kb, pages, book)
         planned = list(sessions(workdir, v, review))
         log(workdir, f"proofread: {v['name']} (ch {v['from']}-{v['to']}): {len(planned)} sessions, "
-                     f"about {max((tokens(p) for _, _, p in planned), default=0):,} tokens each at most")
+                     f"about {max((tokens(p) for *_, p in planned), default=0):,} tokens each at most")
         views.append((v, review, planned))
     owners = {}
     for model in settings.models_for(PURPOSE):
         one = settings.with_model(PURPOSE, model)
         for v, review, planned in views:
             kb = review.kb
-            for part, s, prompt in planned:
+            for part, s, head, prompt in planned:
                 spent = spent_since(workdir, started)
                 if args.budget is not None and spent >= args.budget and cached_reply(workdir, PURPOSE, prompt, one) is None:
                     raise BudgetSpent(f"spent ${spent:,.2f} of the ${args.budget:,.2f} budget; stopping before the "
                                       f"{f'{model} ' if several else ''}proofread of {v['name']}, {s.title}")
                 where = {"volume": v["name"], "chapters": list(part), "slice": s.key} | ({"model": model} if several else {})
                 counts = {"accepted": 0, "rejected": 0} | ({"duplicates": 0} if several else {})
-                for kind, piece, row in proposals(cached_llm(workdir, PURPOSE, prompt, check=reply_problem, chapter=part[1], settings=one)):
+                for kind, piece, row in proposals(cached_llm(workdir, PURPOSE, prompt, check=reply_problem, chapter=part[1], settings=one, prefix=head)):
                     reason = problem(review, piece, row, part)
                     accepted = None if reason else accepted_row(review, kind, row)
                     owner = None if reason else next((owners[b] for c in claims(kb, kind, row) for b in blockers(c) if b in owners), None)
