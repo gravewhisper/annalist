@@ -12,7 +12,7 @@ from .files import read_json, read_jsonl
 from .llm import cached_reply
 from .names import is_stub, name_key, parse_aliases, written_summary
 from .profile import page_profiles
-from .render import checkpoint_prompts, PERSONALITY_PROMPT, summary_prompt
+from .render import checkpoint_prompts, finished_arcs, history_prompts, PERSONALITY_PROMPT, summary_prompt
 from .state import MAIN_TIMELINE
 from .status import spoken_appearances
 from .text import chapter_text, mention_quote, verified_quotes
@@ -153,6 +153,16 @@ def entity_summary(workdir, entity, facts, safe_chapter, timelines, last):
     return {"chapter": safe_chapter, "text": str(reply["summary"]).strip()}
 
 
+def arc_history(workdir, entity, facts, relations, arcs, timelines, name_seen):
+    history = []
+    for arc, prompt in history_prompts(entity, facts, relations, arcs, timelines):
+        reply = cached_reply(workdir, "history", prompt)
+        if reply and reply.get("paragraph"):
+            history.append({"arc": arc["name"], "start": arc["start"], "end": arc["end"], "shown": max(arc["end"], name_seen),
+                            "text": str(reply["paragraph"]).strip()})
+    return history
+
+
 def nameless(etype, entry):
     return {"nameless": True} if etype == "character" and is_stub(entry) else {}
 
@@ -260,6 +270,11 @@ def build(workdir, theme):
             present.setdefault(page, set()).add(r["chapter"])
     tiers = read_json(workdir / "tiers.json", {"questions": {}})["questions"]
     readings = read_families(workdir)
+    arcs = finished_arcs(workdir)
+    ties = {}
+    for r in relations:
+        for end in ("source", "target"):
+            ties.setdefault(r[end], []).append(r)
     types = {e["name"]: e["type"] for e in entities}
 
     out_entities = []
@@ -318,6 +333,10 @@ def build(workdir, theme):
                 record["summaries"] = running
         if e["name"] in profiles and e["type"] == "character":
             record["profile"] = export_profile(workdir, e["name"], profiles[e["name"]], spoken.get(e["name"], []))
+        if e["type"] == "character":
+            history = arc_history(workdir, e, own, ties.get(e["name"], []), arcs, timelines, name_seen)
+            if history:
+                record["history"] = history
         out_entities.append(record)
         for a in e.get("absorbed", []):
             own = [{"name": x, "chapter": seen[(a["name"], x)]} for x in a["aliases"] if (a["name"], x) in seen]

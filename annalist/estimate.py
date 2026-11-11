@@ -26,6 +26,7 @@ RATES = {
     "families": Rate(input_tokens=29.2, output_tokens=15.69, wall_s=0.1103),
     "extract": Rate(input_tokens=5531.01, output_tokens=1350.29, wall_s=8.2391),
     "judge": Rate(input_tokens=0.0, output_tokens=0.0, wall_s=0.0),
+    "history": Rate(input_tokens=226.0, output_tokens=25.0, wall_s=0.35),
     "identify": Rate(input_tokens=180.0, output_tokens=12.0, wall_s=0.3),
     "link": Rate(input_tokens=96.0, output_tokens=36.4, wall_s=0.27),
     "ladder-spec": Rate(input_tokens=1.7, output_tokens=0.25, wall_s=0.01),

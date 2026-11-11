@@ -14,7 +14,7 @@ The site never shows anything from a chapter past the slider. Annalist enforces 
 
 - Every entry, alias, fact, relation, question, and answer records the chapter where the book first shows it. The site hides each one until the slider reaches that chapter. An entry that appears later shows "Not yet introduced".
 - Every quote is checked against the text of its chapter. A quote that matches less than 90% is dropped, and a fact or relation with no matching quote is marked as unverified.
-- Text that an LLM writes for a page, such as a summary, is generated as of a chapter from facts up to that chapter. A merge of two names, such as a secret identity, shows only from the chapter that reveals it.
+- Text that an LLM writes for a page, such as a summary, is generated as of a chapter from facts up to that chapter. A character's History paragraph for a story arc uses only facts and relations from that arc and shows once the slider reaches the arc's last chapter, so the arc in progress shows none. A merge of two names, such as a secret identity, shows only from the chapter that reveals it.
 - `tests/test_asof_leaks.py` runs a full build with a fake backend that copies every word of each prompt into its reply. It then renders every site view and every Markdown page as of each chapter N and fails if one shows a word that the book first uses after chapter N.
 
 The filtering happens in the browser. `site/data/wiki.json` holds everything the build read, and the site hides what is past the slider. The site also links to the chapter text under `site/text/`. To write a site without chapter text, and without quotes unless `book.json` sets `public_domain`, export it with `--public`:

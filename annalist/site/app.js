@@ -369,9 +369,15 @@ function obsList(obs, self) {
   return obs.map(o => expandRow(`${linkify(o.value, self, o.chapter)} ${chLink(o.chapter)}${tlBadge(o.timeline)}`, quoteNoun(o.quotes), quotes(o.quotes))).join('');
 }
 
+function historySection(e) {
+  const arcs = until(e.history || []);
+  if (!arcs.length) return '';
+  return `<h3>History</h3>${arcs.map(h => `<div class="chgroup"><h4><span class="chip">Ch ${h.start} to ${h.end}</span> ${esc(h.arc)}</h4><div class="prose"><p>${chapterRefs(linkify(h.text, e.id))}</p></div></div>`).join('')}`;
+}
+
 function profileSection(e) {
   const p = e.profile;
-  if (!p) return '';
+  if (!p) return historySection(e);
   const out = [];
   const appearance = until(p.lists.appearance || []);
   if (appearance.length) out.push(`<h3>Appearance</h3>${obsList(appearance, e.id)}`);
@@ -379,6 +385,7 @@ function profileSection(e) {
   const para = latest(p.personality || []);
   if (para) out.push(`<h3>Personality</h3><div class="prose"><p>${chapterRefs(linkify(para.text, e.id))}</p></div><div class="asof">Written from evidence up to chapter ${para.chapter}</div>${evidence.length ? expander(showHide(`the evidence (${evidence.length})`), obsList(evidence, e.id)).join('') : ''}`);
   else if (evidence.length) out.push(`<h3>Personality</h3>${obsList(evidence, e.id)}`);
+  out.push(historySection(e));
   const trivia = until(p.lists.trivia || []);
   if (trivia.length) out.push(`<h3>Trivia</h3>${obsList(trivia, e.id)}`);
   return out.join('');

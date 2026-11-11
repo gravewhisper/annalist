@@ -217,7 +217,7 @@ class GraphTest(unittest.TestCase):
 
     def test_every_disclosure_is_a_button_that_flips_aria_expanded_and_its_panel(self):
         livia = self.id["Livia Hale"]
-        out = self.site("toggle:mysteries@5?m=resolved&label=how it pays off", f"toggle:e:{livia}@5?label=quote", f"toggle:e:{livia}@5?tab=relations&label=quote")
+        out = self.site("toggle:mysteries@5?m=resolved&label=how it pays off", f"toggle:e:{livia}@5?tab=facts&label=quote", f"toggle:e:{livia}@5?tab=relations&label=quote")
         closed, opened = {"expanded": "false", "hidden": True}, {"expanded": "true", "hidden": False}
         for view, steps in out.items():
             self.assertEqual(steps, [closed, opened, closed], view)

@@ -14,6 +14,7 @@ ECHOED = {
     "discover": {"entries": [{"id": "C1", "type": "concept", "summary": ECHO}, {"id": "C2", "type": "concept", "summary": ECHO}]},
     "summary": {"summary": ECHO},
     "personality": {"paragraph": ECHO},
+    "history": {"paragraph": ECHO},
     "arc": {"summary": ECHO},
     "volume": {"overview": ECHO, "character_development": [{"character": "Ines Varro", "development": ECHO, "chapters": [1]}]},
     "events": {"events": [{"event": ECHO, "facts": ["F0001-001"]}]},
@@ -22,11 +23,16 @@ ECHOED = {
 }
 
 
+TWO_ARCS = {"arcs": [{"name": "The Missing Page", "start": 1}, {"name": "The Wreck", "start": 4}]}
+
+
 def echo_script():
     script = build_script()
     for r in script["replies"]:
         if r["purpose"] in ECHOED and "contains" not in r:
             r["reply"] = ECHOED[r["purpose"]]
+        elif r["purpose"] == "arcs":
+            r["reply"] = TWO_ARCS
         elif r["purpose"] == "reread":
             r["reply"] = {**r["reply"], "payoff": ECHO}
         elif r["purpose"] == "profile":
@@ -93,6 +99,7 @@ class AsOfLeakTest(unittest.TestCase):
         echoed = {"discover": next(e for e in entities if e["name"] == "Frostmonth")["blurbs"][0][1],
                   "summary": next(e["summary"]["text"] for e in entities if e.get("summary")),
                   "personality": next(e["profile"]["personality"][0]["text"] for e in entities if (e.get("profile") or {}).get("personality")),
+                  "history": next(e["history"][0]["text"] for e in entities if e.get("history")),
                   "arc": v["arcs"][0]["summary"], "volume": v["overview"], "events": v["key_events"][0]["event"],
                   "death": v["deaths"][0]["circumstances"],
                   "sweep": next(q["resolved"]["answer"] for q in self.wiki["questions"] if q["id"] == "Q0002-01")}

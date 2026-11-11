@@ -42,6 +42,7 @@ def evidence_script():
         {"purpose": "death", "contains": '"Livia Hale" die in chapter 4', "reply": FLASHBACK_DEATH},
         {"purpose": "summary", "reply": {"summary": "A figure of Corvel Quay."}},
         {"purpose": "personality", "reply": {"paragraph": "Careful (ch 1)."}},
+        {"purpose": "history", "reply": {"paragraph": "Kept the lamp (ch 1)."}},
         {"purpose": "arcs", "reply": {"arcs": [{"name": "The Missing Page", "start": 1}]}},
         {"purpose": "arc", "reply": {"summary": "Ines follows the cut page of the Salt Ledger."}},
         {"purpose": "volume", "reply": {"overview": "The keepers of Corvel Quay.", "character_development": []}},

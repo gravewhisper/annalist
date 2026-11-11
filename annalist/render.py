@@ -33,18 +33,29 @@ Some facts carry a timeline tag in brackets. A fact tagged erased happened only 
 """
 
 
+def tagged_lines(rows, timelines, until, line):
+    tags = [timeline_tag(timelines, r.get("timeline", "main"), until) for r in rows]
+    return "\n".join(line(r, f" [{tag}]" if tag else "") for r, tag in zip(rows, tags)), any(tags)
+
+
+def fact_line(f, tag):
+    return f"- ch{f['chapter']}, {f['status']}, {f['asserted_by']}{tag}: {f['claim']}"
+
+
 def summary_prompt(entity, facts, timelines, until, aliases=None):
-    tags = [timeline_tag(timelines, f.get("timeline", "main"), until) for f in facts]
-    lines = "\n".join(f"- ch{f['chapter']}, {f['status']}, {f['asserted_by']}" + (f" [{tag}]" if tag else "") + f": {f['claim']}"
-                      for f, tag in zip(facts, tags))
+    lines, tagged = tagged_lines(facts, timelines, until, fact_line)
     aliases = entity["aliases"] if aliases is None else aliases
     prompt = SUMMARY_PROMPT.format(name=entity["name"], type=entity["type"], aliases=", ".join(aliases) or "none", facts=lines)
-    return prompt + SUMMARY_TIMELINE_RULE if any(tags) else prompt
+    return prompt + SUMMARY_TIMELINE_RULE if tagged else prompt
 
 
 def page_facts(entity, facts):
     later = {a["name"]: a["chapter"] for a in entity.get("absorbed", [])}
     return sorted((f for f in facts if not (f.get("filed") in later and f["chapter"] < later[f["filed"]])), key=lambda f: f["chapter"])
+
+
+def named_aliases(entity, text):
+    return [a for a in entity["aliases"] if re.search(r"(?<!\w)" + re.escape(a) + r"(?!\w)", text)]
 
 
 def checkpoint_prompts(entity, facts, timelines, first=3):
@@ -53,11 +64,59 @@ def checkpoint_prompts(entity, facts, timelines, first=3):
     while k < len(own):
         c = own[k - 1]["chapter"]
         upto = [f for f in own if f["chapter"] <= c]
-        text = " ".join(x for f in upto for x in [f["claim"], *f["quotes"]])
-        aliases = [a for a in entity["aliases"] if re.search(r"(?<!\w)" + re.escape(a) + r"(?!\w)", text)]
+        aliases = named_aliases(entity, " ".join(x for f in upto for x in [f["claim"], *f["quotes"]]))
         prompts.setdefault(c, summary_prompt(entity, upto, timelines, c, aliases))
         k *= 2
     return prompts
+
+
+HISTORY_PROMPT = """Write one section of the History of "{name}", a character in a novel, for a fan wiki: what this character did and what happened to them during the story arc "{arc}" (chapters {start} to {end}). Use ONLY the facts and relations below, which come from those chapters. One paragraph of two to five sentences of plain past-tense prose, in story order. Cite the chapter of each claim inline as (ch N). Keep what characters merely believe or suspect clearly marked as belief. Do not add anything from outside knowledge.
+
+Known aliases: {aliases}
+
+Facts (chapter, status, asserted by, claim):
+{facts}
+
+Relations (chapter, source, relation, target):
+{relations}
+
+Reply with one JSON object: {{"paragraph": "..."}}
+"""
+
+
+HISTORY_MIN_FACTS = 5
+
+
+def relation_line(r, tag):
+    ends = [(r.get("filed") or {}).get(end, r[end]) for end in ("source", "target")]
+    detail = f" {r['detail']}" if r.get("detail") else ""
+    return f"- ch{r['chapter']}{tag}: {ends[0]} {r['type']} {ends[1]}{detail}"
+
+
+def history_prompts(entity, facts, relations, arcs, timelines):
+    own = [f for f in page_facts(entity, facts) if f.get("quote_ok")]
+    later = {a["name"]: a["chapter"] for a in entity.get("absorbed", [])}
+    ties = sorted((r for r in relations if r.get("quote_ok") and any(
+        r[end] == entity["name"] and not ((r.get("filed") or {}).get(end) in later and r["chapter"] < later[r["filed"][end]])
+        for end in ("source", "target"))), key=lambda r: r["chapter"])
+    prompts = []
+    for arc in arcs:
+        inside = [f for f in own if arc["start"] <= f["chapter"] <= arc["end"]]
+        if len(inside) < HISTORY_MIN_FACTS:
+            continue
+        rels = [r for r in ties if arc["start"] <= r["chapter"] <= arc["end"]]
+        fact_text, fact_tagged = tagged_lines(inside, timelines, arc["end"], fact_line)
+        rel_text, rel_tagged = tagged_lines(rels, timelines, arc["end"], relation_line)
+        aliases = named_aliases(entity, " ".join(x for row in inside + rels for x in [row.get("claim", ""), *row["quotes"]]))
+        prompt = HISTORY_PROMPT.format(name=entity["name"], arc=arc["name"], start=arc["start"], end=arc["end"],
+                                       aliases=", ".join(aliases) or "none", facts=fact_text, relations=rel_text or "none")
+        prompts.append((arc, prompt + SUMMARY_TIMELINE_RULE if fact_tagged or rel_tagged else prompt))
+    return prompts
+
+
+def finished_arcs(workdir, until=None):
+    volumes = sorted((read_json(p, {}) for p in (Path(workdir) / "volumes").glob("*.json")), key=lambda v: v["from"])
+    return [a for v in volumes for a in v.get("arcs", []) if until is None or a["end"] <= until]
 
 
 def entity_summary(workdir, entity, facts, timelines, until):
@@ -215,6 +274,30 @@ def infobox_rows(profile, until, link, timelines, spoken):
     return rows
 
 
+def cited_chapters(text, until, link):
+    return re.sub(r"\(ch ?(\d+)\)", lambda m: f"({link(int(m.group(1)))})" if int(m.group(1)) <= until else m.group(0), text)
+
+
+def arc_histories(workdir, kb, by_entity, arcs, pool):
+    people = [n for n, e in kb.entities.items() if e["type"] == "character" and len(by_entity.get(n, [])) >= HISTORY_MIN_FACTS]
+    wanted, ties = set(people), {}
+    for r in kb.relations:
+        for end in ("source", "target"):
+            if r[end] in wanted:
+                ties.setdefault(r[end], []).append(r)
+    for r in {id(r): r for rows in ties.values() for r in rows}.values():
+        r.update(verified_quotes(workdir, r["chapter"], r["quotes"]))
+    jobs = [(n, arc, prompt) for n in people
+            for arc, prompt in history_prompts(kb.entities[n], by_entity[n], ties.get(n, []), arcs, kb.timelines)]
+    replies = pool.map(lambda job: cached_llm(workdir, "history", job[2]), jobs)
+    histories = {}
+    for (n, arc, _), reply in zip(jobs, replies):
+        text = str(reply.get("paragraph") or "").strip()
+        if text:
+            histories.setdefault(n, []).append((arc, text))
+    return histories
+
+
 def profile_sections(profile, personality, until, link, timelines, spoken):
     lines = []
     rows = infobox_rows(profile, until, link, timelines, spoken)
@@ -226,7 +309,7 @@ def profile_sections(profile, personality, until, link, timelines, spoken):
             continue
         lines += [f"## {title}", ""]
         if key == "personality_evidence":
-            lines += [re.sub(r"\(ch ?(\d+)\)", lambda m: f"({link(int(m.group(1)))})" if int(m.group(1)) <= until else m.group(0), personality), ""]
+            lines += [cited_chapters(personality, until, link), ""]
             continue
         for o in shown:
             tag = timeline_tag(timelines, o.get("timeline", "main"), until)
@@ -350,9 +433,13 @@ def cmd_render(args):
         evidence = {n: visible(p["lists"].get("personality_evidence", []), until) for n, p in profiles.items()}
         evidence = {n: v for n, v in evidence.items() if v}
         personalities = dict(zip(evidence, pool.map(lambda n: personality_paragraph(workdir, n, evidence[n]), evidence)))
+        histories = arc_histories(workdir, kb, by_entity, finished_arcs(workdir, until), pool)
 
     def chapter_link(n, depth):
         return f"[Ch {n}: {titles.get(n, n)}]({'../' * depth}../chapters/{n:04d}.txt)"
+
+    def cite(n):
+        return f"[ch {n}](../../chapters/{n:04d}.txt)"
 
     def role(row):
         return timeline_role(kb.timelines.get(row.get("timeline", "main")), until)
@@ -392,8 +479,11 @@ def cmd_render(args):
                  + (f" Also known as: {', '.join(e['aliases'])}.*" if e["aliases"] else "*"), "",
                  summaries.get(name) or e["summary"] or "No summary yet.", ""]
         if name in profiles:
-            lines += profile_sections(profiles[name], personalities.get(name, ""), until,
-                                      lambda n: f"[ch {n}](../../chapters/{n:04d}.txt)", kb.timelines, spoken.get(name, []))
+            lines += profile_sections(profiles[name], personalities.get(name, ""), until, cite, kb.timelines, spoken.get(name, []))
+        if histories.get(name):
+            lines += ["## History", ""]
+        for arc, text in histories.get(name, []):
+            lines += [f"### {arc['name']}", "", f"*Chapters {arc['start']} to {arc['end']}.*", "", cited_chapters(text, until, cite), ""]
         rels = [r for r in kb.relations if name in (r["source"], r["target"])]
         erased = {}
         for row in facts + rels:
