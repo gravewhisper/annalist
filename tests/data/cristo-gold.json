@@ -852,7 +852,6 @@
       "target": "renee",
       "type": "married_to",
       "first_chapter": 13,
-      "lenient": true,
       "quote": {
         "chapter": 13,
         "text": "a fortnight afterwards he married Mademoiselle de Saint-Méran"
@@ -1121,7 +1120,7 @@
     "Who posted the denunciation: ch 4 shows Fernand pocketing it; in ch 5 Danglars guesses Fernand sent it. The posting itself is never shown, so fernand-denunciation is lenient.",
     "The letter from Elba: in ch 1 Danglars says Leclere 'confided a letter' to Dantès; that is the captain's letter for the grand-marshal (ch 7). The letter for Paris first appears in ch 3. Its addressee, Noirtier, is only named in ch 7.",
     "The Bonapartist 'committee in Paris' of the denunciation (ch 4, 7) is taken to be the Rue Saint-Jacques club that Noirtier helps lead (ch 10, 13). The text never says so outright; a separate page for the committee is not a scored error.",
-    "Marriages: Dantès and Mercédès are betrothed and never marry in scope. Villefort and Renée are betrothed in ch 6 and marry in ch 13. villefort-married_to-renee is lenient because the scorer's early check counts any romance row as stating the tie, so a correct ch 6 betrothal would fail it; the scorer does not read valid_until_chapter or superseded_by.",
+    "Marriages: Dantès and Mercédès are betrothed and never marry in scope. Villefort and Renée are betrothed in ch 6 and marry in ch 13. villefort-married_to-renee is strict: the early check reads only a marriage wording, not the ch 6 betrothal, as stating it.",
     "Two chapters are titled 'Father and Son': run ch 2 is Dantès and his father, run ch 12 is Noirtier and Villefort.",
     "The jailer: the turnkey Dantès threatens in ch 8 is Antoine (named ch 14); he leaves with the old governor at the end of ch 14, so the jailer of ch 15-16 is another man. Neither is scored.",
     "Statuses: 'arrested' and 'imprisoned' count as alive. Dantès starves himself in ch 15 but stops; Napoleon is alive throughout (exiled, then landed in France, then beaten at Waterloo in ch 13).",

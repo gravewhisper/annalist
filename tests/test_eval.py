@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from annalist.families import read_families, relation_family
-from annalist.scorecard import score, Wiki
+from annalist.scorecard import score, states_the_tie, Wiki
 from annalist.state import load_states
 from tests.test_build import MiniBuild, build_script
 
@@ -276,6 +276,14 @@ class EvalMiniTest(unittest.TestCase):
         partial = outcomes(score(self.book.workdir, {**gold, "partial": True}, self.wiki))
         self.assertNotIn("chapter:extra", partial)
         self.assertEqual({k: v for k, v in partial.items() if k.startswith("chapter:")}, {"chapter:1": "pass", "chapter:2": "pass", "chapter:3": "pass"})
+
+
+class StagedTieTest(unittest.TestCase):
+    def test_an_engagement_does_not_state_a_marriage_but_a_husband_does(self):
+        self.assertFalse(states_the_tie("married_to", {"type": "engaged to", "family": "romance"}, {}))
+        self.assertFalse(states_the_tie("engaged_to", {"type": "in love with", "family": "romance"}, {}))
+        self.assertTrue(states_the_tie("married_to", {"type": "husband of", "family": "romance"}, {}))
+        self.assertTrue(states_the_tie("in_love_with", {"type": "admires", "family": "romance"}, {}))
 
 
 if __name__ == "__main__":

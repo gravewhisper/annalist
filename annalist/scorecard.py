@@ -41,9 +41,15 @@ def shown_family(row, readings):
 STANDING_TIES = ("kin", "romance", "teaching")
 
 
+STAGES = ({"marr", "husb", "wife", "spou", "wido"}, {"enga", "betr", "fian"})
+
+
 def states_the_tie(gold_type, row, readings):
-    family = shown_family(row, readings)
-    return family in STANDING_TIES or bool(terms(wording_key(gold_type)) & terms(wording_key(row["type"])))
+    gold_terms, row_terms = terms(wording_key(gold_type)), terms(wording_key(row["type"]))
+    staged = [stage for stage in STAGES if gold_terms & stage]
+    if staged:
+        return any(row_terms & stage for stage in staged)
+    return shown_family(row, readings) in STANDING_TIES or bool(gold_terms & row_terms)
 
 
 def strength(name, aliases, wname, waliases):
