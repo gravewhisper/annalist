@@ -1,5 +1,5 @@
 {
-  "sync_commit": "be5460e",
+  "sync_commit": "796cc27",
   "covers": [
     {
       "file": "annalist/read.py",
@@ -22,7 +22,7 @@
     {
       "file": "annalist/read.py",
       "function": "extract_chapter",
-      "fingerprint": "ce7f1c71671e0036",
+      "fingerprint": "c394e889a83d7e6f",
       "model": "View, ExtractOk, ExtractFails"
     },
     {
