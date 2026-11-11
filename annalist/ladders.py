@@ -4,7 +4,7 @@ from pathlib import Path
 from .book import ladder_types, load_book, rank_type
 from .files import log, read_json, write_json
 from .llm import cached_llm
-from .names import name_key, name_pattern, names_of
+from .names import function_word_name, name_key, name_pattern, names_of
 from .state import load_states, write_derived
 from .survey import unseen_names
 from .template import book_types
@@ -144,7 +144,7 @@ EVIDENCE (chapter | what the wiki records | quote from that chapter):
 
 Reply with one JSON object:
 {{"ladders": [{{"group": "the {group}'s name", "steps": [{{"entry": "a {step} entry's exact name", "rank": 1, "chapter": 12, "quote": "the quote of the evidence line"}}]}}]}}
-Rules: list every {group} the evidence places at least one {step} in. "group" is the exact name of a listed {group} entry when one is that {group}, else the name the novel gives it. "entry" is the exact name of a listed {step} entry. {rank_rule} "chapter" and "quote" copy the chapter and quote of the earliest evidence line that places the {step} in that {group}. Leave out a {step} the evidence does not place in a {group}, and never guess a rank.
+Rules: list every {group} the evidence places at least one {step} in. "group" is the exact name of a listed {group} entry when one is that {group}, else the name the novel gives it. "entry" is the exact name of a listed {step} entry.{unlisted_rule} {rank_rule} "chapter" and "quote" copy the chapter and quote of the earliest evidence line that places the {step} in that {group}. Leave out a {step} the evidence does not place in a {group}, and never guess a rank.
 """
 
 
@@ -162,8 +162,14 @@ EVIDENCE (chapter | what the wiki records | quote from that chapter):
 
 Reply with one JSON object:
 {{"steps": [{{"entry": "a {step} entry's exact name", "rank": 1, "chapter": 12, "quote": "the quote of the evidence line", "stages": [{{"name": "a sub-stage of this {step}", "chapter": 12, "quote": "the quote of the evidence line"}}]}}]}}
-Rules: list every {step} the evidence places on the ladder. "entry" is the exact name of a listed {step} entry. {rank_rule} "chapter" and "quote" copy the chapter and quote of the earliest evidence line that places the {step} on the ladder. "stages" lists the sub-stages of that {step} the evidence names, such as a numbered layer or an early, middle or late stage, from the weakest to the strongest. A sub-stage's "name" is how the novel names it, without the {step}'s own name, and its "chapter" and "quote" copy the earliest evidence line that names it. Leave "stages" empty when the evidence names none, leave out a {step} the evidence does not place on the ladder, and never guess a rank or a sub-stage.
+Rules: list every {step} the evidence places on the ladder. "entry" is the exact name of a listed {step} entry.{unlisted_rule} {rank_rule} "chapter" and "quote" copy the chapter and quote of the earliest evidence line that places the {step} on the ladder. "stages" lists the sub-stages of that {step} the evidence names, such as a numbered layer or an early, middle or late stage, from the weakest to the strongest. A sub-stage's "name" is how the novel names it, without the {step}'s own name, and its "chapter" and "quote" copy the earliest evidence line that names it. Leave "stages" empty when the evidence names none, leave out a {step} the evidence does not place on the ladder, and never guess a rank or a sub-stage.
 """
+
+
+UNLISTED_RULES = {"grouped": ' When the evidence names a {step} that no listed {step} entry holds, such as the first {step} of a {group} named after '
+                            'it, "entry" is its name as the novel writes it, and its quote names it.',
+                  "shared": ' When the evidence names a {step} that no listed {step} entry holds, "entry" is its name as the novel writes it, '
+                            'and its quote names it.'}
 
 
 SHARED_RANK_RULES = {"number": '"rank" is the number the novel gives the {step} on the ladder.',
@@ -196,18 +202,23 @@ def evidence_lines(workdir, kb, spec):
     return [f'- ch{c} | {text} | "{quote}"' for c, text, quote in sorted(set(rows))]
 
 
-def grouped_prompt(workdir, kb, spec):
+def unlisted_rule(spec, word):
+    return UNLISTED_RULES[shape_of(spec)].format(group=spec.get("group_type"), step=spec["step_type"]) if word else ""
+
+
+def grouped_prompt(workdir, kb, spec, word):
     words = {"group": spec["group_type"], "step": spec["step_type"]}
     return LADDERS_PROMPT.format(**words, note=spec["note"], group_heading=spec["group_type"].upper(), step_heading=spec["step_type"].upper(),
                                  groups=entry_lines(kb, spec["group_type"]), steps=entry_lines(kb, spec["step_type"]),
                                  evidence="\n".join(evidence_lines(workdir, kb, spec)) or "(none)",
-                                 rank_rule=RANK_RULES[spec["rank"]].format(**words))
+                                 unlisted_rule=unlisted_rule(spec, word), rank_rule=RANK_RULES[spec["rank"]].format(**words))
 
 
-def shared_prompt(workdir, kb, spec):
+def shared_prompt(workdir, kb, spec, word):
     return SHARED_LADDER_PROMPT.format(step=spec["step_type"], note=spec["note"], step_heading=spec["step_type"].upper(),
                                        steps=entry_lines(kb, spec["step_type"]),
                                        evidence="\n".join(evidence_lines(workdir, kb, spec)) or "(none)",
+                                       unlisted_rule=unlisted_rule(spec, word),
                                        rank_rule=SHARED_RANK_RULES[spec["rank"]].format(step=spec["step_type"]))
 
 
@@ -222,18 +233,27 @@ def verified_place(workdir, raw, last):
     return {"chapter": chapter, "quote": quote}
 
 
-def placed_step(workdir, kb, spec, raw, last):
+def names_step(quote, name, word):
+    return all(re.search(rf"(?<!\w){re.escape(w)}", quote, re.I) for w in (name, word))
+
+
+def placed_step(workdir, kb, spec, raw, last, word):
     if not isinstance(raw, dict):
         return None
-    key = kb.resolve(str(raw.get("entry") or "").strip(), spec["step_type"])
+    name = str(raw.get("entry") or "").strip()
+    key = kb.resolve(name, spec["step_type"])
     try:
         rank = int(raw.get("rank"))
     except (TypeError, ValueError):
         return None
-    if not key or kb.entities[key]["type"] != spec["step_type"]:
-        return None
-    place = verified_place(workdir, raw, last)
-    return place and {"entry": key, "rank": rank, **place}
+    listed = key is not None and kb.entities[key]["type"] == spec["step_type"]
+    unlisted = (key is None and word and name and not function_word_name(name) and not kb.bare_rank(name))
+    place = verified_place(workdir, raw, last) if listed or unlisted else None
+    if place and listed:
+        return {"entry": key, "rank": rank, **place}
+    if place and names_step(place["quote"], name, word):
+        return {"entry": name, "rank": rank, **place, "new": True}
+    return None
 
 
 def ranked(steps, spec):
@@ -241,7 +261,7 @@ def ranked(steps, spec):
     return sorted(steps, key=lambda s: (sign * s["rank"], s["entry"]))
 
 
-def read_grouped(workdir, kb, spec, reply):
+def read_grouped(workdir, kb, spec, reply, word):
     last = max(kb.synopses, default=0)
     groups = {}
     for raw in reply["ladders"]:
@@ -250,7 +270,7 @@ def read_grouped(workdir, kb, spec, reply):
             continue
         holder = kb.resolve(name, spec["group_type"])
         steps = groups.setdefault(holder if holder and kb.entities[holder]["type"] == spec["group_type"] else name, {})
-        for step in filter(None, (placed_step(workdir, kb, spec, s, last) for s in raw.get("steps") or [])):
+        for step in filter(None, (placed_step(workdir, kb, spec, s, last, word) for s in raw.get("steps") or [])):
             if step["entry"] not in steps or step["chapter"] < steps[step["entry"]]["chapter"]:
                 steps[step["entry"]] = step
     ladders = [{"group": group, "group_type": spec["group_type"], "chapter": min(s["chapter"] for s in steps.values()),
@@ -269,11 +289,11 @@ def placed_stages(workdir, raw, last):
     return list(stages.values())
 
 
-def read_shared(workdir, kb, spec, reply):
+def read_shared(workdir, kb, spec, reply, word):
     last = max(kb.synopses, default=0)
     steps = {}
     for raw in reply["steps"]:
-        step = placed_step(workdir, kb, spec, raw, last)
+        step = placed_step(workdir, kb, spec, raw, last, word)
         if step and (step["entry"] not in steps or step["chapter"] < steps[step["entry"]]["chapter"]):
             steps[step["entry"]] = {**step, "stages": placed_stages(workdir, raw.get("stages"), last)}
     return [{"group": None, "group_type": None, "chapter": min(s["chapter"] for s in steps.values()),
@@ -300,14 +320,16 @@ SHAPE_STAGES = {"grouped": (grouped_prompt, listed("ladders"), read_grouped),
 
 def cmd_ladders(args):
     workdir = Path(args.workdir).resolve()
-    spec = load_book(workdir)["ladder"]
+    book = load_book(workdir)
+    spec = book["ladder"]
+    word = book["rank_word"] if spec and spec["step_type"] == rank_type(book) else ""
     kb = load_states(workdir)
     ladders = []
     if spec:
         prompt, check, read = SHAPE_STAGES[shape_of(spec)]
-        material = prompt(workdir, kb, spec)
+        material = prompt(workdir, kb, spec, word)
         reply = cached_llm(workdir, "ladders", material, check=lambda r: check(r, material))
-        ladders = read(workdir, kb, spec, reply)
+        ladders = read(workdir, kb, spec, reply, word)
     write_json(workdir / "ladders.json", ladders)
     write_derived(workdir, kb)
     log(workdir, f"ladders: {len(ladders)} {spec.get('group_type') or 'shared' if spec else 'group'} ladders with "

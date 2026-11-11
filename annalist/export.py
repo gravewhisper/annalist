@@ -202,18 +202,18 @@ def volume_record(v):
             "development": page.get("character_development", [])}
 
 
-def step_record(s, ids):
+def step_record(s, eid):
     stages = {"stages": [{"name": t["name"], "chapter": t["chapter"]} for t in s["stages"]]} if "stages" in s else {}
-    return {"id": ids[s["entry"]], "rank": s["rank"], "chapter": s["chapter"], **stages}
+    return {"id": eid, "rank": s["rank"], "chapter": s["chapter"], **stages}
 
 
-def ladder_records(workdir, registry, ids):
+def ladder_records(workdir, registry, ids, step_type):
     records = []
     for ladder in read_json(workdir / "ladders.json", []):
         group = ladder["group"] and registry.resolve(ladder["group"], ladder["group_type"])
         if group or ladder["group"] is None:
             records.append({"group": group and ids[group], "chapter": ladder["chapter"],
-                            "steps": [step_record(s, ids) for s in ladder["steps"]]})
+                            "steps": [step_record(s, ids[registry.resolve(s["entry"], step_type) or s["entry"]]) for s in ladder["steps"]]})
     return records
 
 
@@ -376,7 +376,7 @@ def build(workdir, theme):
                        **({} if r["quote_ok"] else {"unverified": True})}
                       for r, ends in zip(relations, rel_ends) if r["source"] in ids and r["target"] in ids],
         "questions": [question_record(q, tiers.get(q["id"], {})) for q in read_jsonl(workdir / "questions.jsonl")],
-        "ladders": ladder_records(workdir, registry, ids),
+        "ladders": ladder_records(workdir, registry, ids, (book.get("ladder") or {}).get("step_type")),
         "volumes": sorted((volume_record(read_json(p, {})) for p in (workdir / "volumes").glob("*.json")),
                           key=lambda v: v["from"]),
     }

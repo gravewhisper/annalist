@@ -102,6 +102,24 @@ class NamedRanksBuildTest(unittest.TestCase):
         saltmere = next(l for l in self.book.json("ladders.json") if l["group"] == "Saltmere School")
         self.assertEqual([(s["entry"], s["rank"]) for s in saltmere["steps"]][:2], [("Tidewatcher", 1), ("Brine Warden", 2)])
 
+    def test_a_school_named_after_its_first_circle_gets_that_circle_as_its_own_entry_and_first_step(self):
+        school = next(e for e in self.wiki["entities"] if e["type"] == "school" and e["name"] in ("Gloam", "Gloam School"))
+        circle = self.entries[("Gloam", "circle")]
+        self.assertNotEqual(school["id"], circle["id"])
+        self.assertEqual(circle["first"], 3)
+        gloam = next(l for l in self.book.json("ladders.json") if l["group"] == "Gloam")
+        self.assertEqual(gloam["steps"][0], {"entry": "Gloam", "rank": 1, "chapter": 3, "new": True,
+                                             "quote": "Gloam is the name of our school and the name of its first circle"})
+        ladder = next(l for l in self.wiki["ladders"] if l["group"] == school["id"])
+        self.assertEqual(ladder["steps"][0], {"id": circle["id"], "rank": 1, "chapter": 3})
+
+    def test_an_unlisted_step_needs_a_quote_that_names_it_and_a_name_no_other_entry_holds(self):
+        steps = {s["entry"] for l in self.book.json("ladders.json") for s in l["steps"]}
+        self.assertNotIn("Storm Abbot", steps)
+        self.assertNotIn("Iselde Varn", steps)
+        self.assertNotIn(("Storm Abbot", "circle"), self.entries)
+        self.assertEqual(self.entries[("Iselde Varn", "character")]["type"], "character")
+
     def test_an_item_named_after_a_rank_links_to_the_rank(self):
         name = {e["id"]: (e["name"], e["type"]) for e in self.wiki["entities"]}
         links = {(name[r["source"]], r["type"], name[r["target"]]) for r in self.wiki["relations"]}

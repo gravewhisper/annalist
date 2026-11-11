@@ -114,6 +114,7 @@ class Knowledge:
         self.types = Types(type_parents(power_types))
         self.power_types = set(self.types.parents)
         self.ladder = set(ladder_types(ladder))
+        self.step_type = ladder["step_type"] if ladder else None
         self.rank_name = re.compile(rf"{re.escape(ladder['step_type'])}\s*\d+") if ladder and ladder.get("rank") == "number" else None
         self.laddered = False
         self.entities = {}
@@ -479,7 +480,7 @@ class Knowledge:
         self.laddered = True
         made = 0
         for row in ladders:
-            steps = [(s, self.resolve(s["entry"])) for s in row["steps"] if until is None or s["chapter"] <= until]
+            steps = [(s, self.ladder_step(s)) for s in row["steps"] if until is None or s["chapter"] <= until]
             steps = [(s, key) for s, key in steps if key]
             if not steps or row["group"] is None:
                 continue
@@ -493,6 +494,12 @@ class Knowledge:
                 self.relations.append({"id": f"RG{s['chapter']:04d}-{made:03d}", "chapter": s["chapter"], "source": key, "target": group,
                                        "type": f"{self.entities[key]['type']} {s['rank']} of", "detail": "", "quotes": [s["quote"]],
                                        "asserted_by": "narrator", "status": "stated", "timeline": "main"})
+
+    def ladder_step(self, s):
+        key = self.resolve(s["entry"], self.step_type)
+        if key is None and s.get("new"):
+            key = self.upsert_entity({"name": s["entry"], "type": self.step_type}, s["chapter"])
+        return key
 
     def person_and_power(self, a, b):
         kinds = {self.entities[a]["type"], self.entities[b]["type"]}
