@@ -11,6 +11,7 @@ from .files import read_json, write_atomic
 from .families import wording_key
 from .llm import cached_llm
 from .names import display_names, name_key, slug
+from .pages import PageName, read_pages
 from .profile import page_profiles
 from .state import load_states, timeline_line, timeline_role, timeline_tag, UNRESOLVED
 from .status import current_status, spoken_appearances
@@ -44,10 +45,18 @@ def fact_line(f, tag):
     return f"- ch{f['chapter']}, {f['status']}, {f['asserted_by']}{tag}: {f['claim']}"
 
 
-def summary_prompt(entity, facts, timelines, until, aliases=None):
+def subject(page, chapter, aliases=()):
+    name = page.at(chapter)
+    if name_key(name) == name_key(page.entry):
+        return page.entry, aliases
+    known = [page.entry] if page.knows(page.entry, chapter) else []
+    return name, [a for a in known + list(aliases) if name_key(a) != name_key(name)]
+
+
+def summary_prompt(entity, facts, timelines, until, page, aliases=None):
     lines, tagged = tagged_lines(facts, timelines, until, fact_line)
-    aliases = entity["aliases"] if aliases is None else aliases
-    prompt = SUMMARY_PROMPT.format(name=entity["name"], type=entity["type"], aliases=", ".join(aliases) or "none", facts=lines)
+    name, aliases = subject(page, until, entity["aliases"] if aliases is None else aliases)
+    prompt = SUMMARY_PROMPT.format(name=name, type=entity["type"], aliases=", ".join(aliases) or "none", facts=lines)
     return prompt + SUMMARY_TIMELINE_RULE if tagged else prompt
 
 
@@ -61,14 +70,14 @@ def named_aliases(entity, text, until):
     return [a for a in entity["aliases"] if name_key(a) not in later and re.search(r"(?<!\w)" + re.escape(a) + r"(?!\w)", text)]
 
 
-def checkpoint_prompts(entity, facts, timelines, first=3):
+def checkpoint_prompts(entity, facts, timelines, page, first=3):
     own = page_facts(entity, facts)
     prompts, k = {}, first
     while k < len(own):
         c = own[k - 1]["chapter"]
         upto = [f for f in own if f["chapter"] <= c]
         aliases = named_aliases(entity, " ".join(x for f in upto for x in [f["claim"], *f["quotes"]]), c)
-        prompts.setdefault(c, summary_prompt(entity, upto, timelines, c, aliases))
+        prompts.setdefault(c, summary_prompt(entity, upto, timelines, c, page, aliases))
         k *= 2
     return prompts
 
@@ -96,7 +105,7 @@ def relation_line(r, tag):
     return f"- ch{r['chapter']}{tag}: {ends[0]} {r['type']} {ends[1]}{detail}"
 
 
-def history_prompts(entity, facts, relations, arcs, timelines):
+def history_prompts(entity, facts, relations, arcs, timelines, page):
     own = [f for f in page_facts(entity, facts) if f.get("quote_ok")]
     later = {a["name"]: a["chapter"] for a in entity.get("absorbed", [])}
     ties = sorted((r for r in relations if r.get("quote_ok") and any(
@@ -110,8 +119,8 @@ def history_prompts(entity, facts, relations, arcs, timelines):
         rels = [r for r in ties if arc["start"] <= r["chapter"] <= arc["end"]]
         fact_text, fact_tagged = tagged_lines(inside, timelines, arc["end"], fact_line)
         rel_text, rel_tagged = tagged_lines(rels, timelines, arc["end"], relation_line)
-        aliases = named_aliases(entity, " ".join(x for row in inside + rels for x in [row.get("claim", ""), *row["quotes"]]), arc["end"])
-        prompt = HISTORY_PROMPT.format(name=entity["name"], arc=arc["name"], start=arc["start"], end=arc["end"],
+        name, aliases = subject(page, arc["end"], named_aliases(entity, " ".join(x for row in inside + rels for x in [row.get("claim", ""), *row["quotes"]]), arc["end"]))
+        prompt = HISTORY_PROMPT.format(name=name, arc=arc["name"], start=arc["start"], end=arc["end"],
                                        aliases=", ".join(aliases) or "none", facts=fact_text, relations=rel_text or "none")
         prompts.append((arc, prompt + SUMMARY_TIMELINE_RULE if fact_tagged or rel_tagged else prompt))
     return prompts
@@ -128,13 +137,13 @@ def filed_under(name, facts, relations):
     return own, ties
 
 
-def kept_prompts(part, facts, relations, arcs, timelines, until):
+def kept_prompts(part, facts, relations, arcs, timelines, until, page):
     own, ties = filed_under(part["name"], facts, relations)
     entity = {"name": part["name"], "type": part["type"], "aliases": part["aliases"]}
     enough = len(own) >= 3
-    return {"summary": summary_prompt(entity, own, timelines, until) if enough else None,
-            "summaries": {c: p for c, p in checkpoint_prompts(entity, own, timelines).items() if c < part["chapter"]} if enough else {},
-            "history": [(arc, p) for arc, p in history_prompts(entity, own, ties, arcs, timelines) if arc["end"] < part["chapter"]]
+    return {"summary": summary_prompt(entity, own, timelines, until, page) if enough else None,
+            "summaries": {c: p for c, p in checkpoint_prompts(entity, own, timelines, page).items() if c < part["chapter"]} if enough else {},
+            "history": [(arc, p) for arc, p in history_prompts(entity, own, ties, arcs, timelines, page) if arc["end"] < part["chapter"]]
             if part["type"] == "character" else []}
 
 
@@ -146,8 +155,8 @@ def closed_arcs(workdir, until):
     return [a for v in volumes for a in v["arcs"] if a["end"] <= until]
 
 
-def entity_summary(workdir, entity, facts, timelines, until):
-    out = cached_llm(workdir, "summary", summary_prompt(entity, facts, timelines, until))
+def entity_summary(workdir, entity, facts, timelines, until, page):
+    out = cached_llm(workdir, "summary", summary_prompt(entity, facts, timelines, until, page))
     return str(out.get("summary") or "").strip()
 
 
@@ -275,11 +284,12 @@ def visible(observations, until):
     return [o for o in observations if o.get("shown", o["chapter"]) <= until and o.get("quote_ok")]
 
 
-def written_prompt(key, name, evidence):
+def written_prompt(key, page, evidence):
     quoted = [o for o in evidence if o["quotes"]]
     if len(quoted) < WRITTEN[key].least:
         return None
     lines = "\n".join(f"- ch{o['chapter']}: {o['value']} | \"{o['quotes'][0]}\"" for o in quoted)
+    name, _ = subject(page, max(o.get("shown", o["chapter"]) for o in evidence))
     return WRITTEN[key].prompt.format(name=name, evidence=lines)
 
 
@@ -329,7 +339,7 @@ def cited_chapters(text, until, link):
     return re.sub(r"\(ch ?(\d+)\)", lambda m: f"({link(int(m.group(1)))})" if int(m.group(1)) <= until else m.group(0), text)
 
 
-def arc_histories(workdir, kb, by_entity, arcs, pool):
+def arc_histories(workdir, kb, by_entity, arcs, pool, page):
     people = [n for n, e in kb.entities.items() if e["type"] == "character" and len(by_entity.get(n, [])) >= HISTORY_MIN_FACTS]
     wanted, ties = set(people), {}
     for r in kb.relations:
@@ -339,7 +349,7 @@ def arc_histories(workdir, kb, by_entity, arcs, pool):
     for r in {id(r): r for rows in ties.values() for r in rows}.values():
         r.update(verified_quotes(workdir, r["chapter"], r["quotes"]))
     jobs = [(n, arc, prompt) for n in people
-            for arc, prompt in history_prompts(kb.entities[n], by_entity[n], ties.get(n, []), arcs, kb.timelines)]
+            for arc, prompt in history_prompts(kb.entities[n], by_entity[n], ties.get(n, []), arcs, kb.timelines, page(n))]
     replies = pool.map(lambda job: cached_llm(workdir, "history", job[2]), jobs)
     histories = {}
     for (n, arc, _), reply in zip(jobs, replies):
@@ -451,7 +461,12 @@ def cmd_render(args):
     workdir = Path(args.workdir).resolve()
     until = args.until
     kb = load_states(workdir, until=until, ladders=True, corrections=EVERY_CORRECTION)
-    whole = kb if until is None else load_states(workdir, corrections=EVERY_CORRECTION)
+    whole = kb if until is None else load_states(workdir, ladders=True, corrections=EVERY_CORRECTION)
+    names = read_pages(workdir, whole).names
+
+    def page(name):
+        return names.get(name) or PageName(name, name, 0, 0, [])
+
     until = until if until is not None else max(kb.synopses, default=0)
     out_dir = workdir / (f"wiki-ch{args.until:04d}" if args.until is not None else "wiki")
     titles = {c["index"]: c["title"] for c in json.loads((workdir / "chapters.json").read_text(encoding="utf-8"))}
@@ -469,9 +484,9 @@ def cmd_render(args):
             ties = [r for r in kb.relations if n in (r["source"], r["target"])]
             for r in ties:
                 r.update(verified_quotes(workdir, r["chapter"], r["quotes"]))
-            kept[part["name"]] = kept_prompts(part, by_entity.get(n, []), ties, arcs, kb.timelines, until)
+            kept[part["name"]] = kept_prompts(part, by_entity.get(n, []), ties, arcs, kb.timelines, until, page(part["name"]))
     prompts = [(n, key, prompt) for n, p in profiles.items() if n in kept or (n in kb.entities and kb.entities[n]["type"] == "character")
-               for key in WRITTEN if (prompt := written_prompt(key, n, visible(p["lists"].get(key, []), until)))]
+               for key in WRITTEN if (prompt := written_prompt(key, page(n), visible(p["lists"].get(key, []), until)))]
     profiles = {k: v for k, v in profiles.items() if k in kb.entities}
     shown = display_names(kb.entities)
     for name, e in kb.entities.items():
@@ -492,15 +507,15 @@ def cmd_render(args):
     needs_summary = [n for n in kb.entities if len(by_entity.get(n, [])) >= 3]
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         summaries = dict(zip(needs_summary, pool.map(
-            lambda n: entity_summary(workdir, kb.entities[n], by_entity[n], kb.timelines, until), needs_summary)))
+            lambda n: entity_summary(workdir, kb.entities[n], by_entity[n], kb.timelines, until, page(n)), needs_summary)))
         list(pool.map(lambda prompt: cached_llm(workdir, "summary", prompt),
-                      [x for n in needs_summary for x in checkpoint_prompts(kb.entities[n], by_entity[n], kb.timelines).values()]
+                      [x for n in needs_summary for x in checkpoint_prompts(kb.entities[n], by_entity[n], kb.timelines, page(n)).values()]
                       + [x for k in kept.values() for x in [k["summary"], *k["summaries"].values()] if x]))
         list(pool.map(lambda prompt: cached_llm(workdir, "history", prompt), [p for k in kept.values() for _, p in k["history"]]))
         written = {}
         for (n, key, _), reply in zip(prompts, pool.map(lambda job: cached_llm(workdir, WRITTEN[job[1]].purpose, job[2]), prompts)):
             written.setdefault(n, {})[key] = str(reply.get("paragraph") or "").strip()
-        histories = arc_histories(workdir, kb, by_entity, arcs, pool)
+        histories = arc_histories(workdir, kb, by_entity, arcs, pool, page)
 
     def chapter_link(n, depth):
         return f"[Ch {n}: {titles.get(n, n)}]({'../' * depth}../chapters/{n:04d}.txt)"

@@ -35,43 +35,43 @@ def observations(rows):
              **({"shown": o["shown"]} if "shown" in o else {})} for o in rows if o.get("quote_ok")]
 
 
-def written_history(workdir, key, name, evidence):
+def written_history(workdir, key, page, evidence):
     history = []
     for c in sorted({o.get("shown", o["chapter"]) for o in evidence}):
-        prompt = written_prompt(key, name, [o for o in evidence if o.get("shown", o["chapter"]) <= c])
+        prompt = written_prompt(key, page, [o for o in evidence if o.get("shown", o["chapter"]) <= c])
         reply = prompt and cached_reply(workdir, WRITTEN[key].purpose, prompt)
         if reply and reply.get("paragraph"):
             history.append({"chapter": c, "text": str(reply["paragraph"]).strip()})
     return history
 
 
-def export_profile(workdir, name, profile, spoke):
+def export_profile(workdir, page, profile, spoke):
     fields = {k: observations(v) for k, v in {**profile["fields"], **profile["extra"]}.items()}
     lists = {k: observations(v) for k, v in profile["lists"].items()}
-    written = {spec.purpose: written_history(workdir, key, name, [o for o in profile["lists"].get(key, []) if o.get("quote_ok")])
+    written = {spec.purpose: written_history(workdir, key, page, [o for o in profile["lists"].get(key, []) if o.get("quote_ok")])
                for key, spec in WRITTEN.items()}
     return {"fields": {k: v for k, v in fields.items() if v}, "lists": {k: v for k, v in lists.items() if v},
             "spoke": [[c, tid] for c, tid in spoke], **written}
 
 
-def entity_summary(workdir, entity, facts, safe_chapter, timelines, last):
-    reply = cached_reply(workdir, "summary", summary_prompt(entity, facts, timelines, last))
+def entity_summary(workdir, entity, facts, safe_chapter, timelines, last, page):
+    reply = cached_reply(workdir, "summary", summary_prompt(entity, facts, timelines, last, page))
     if not reply or not reply.get("summary"):
         return None
     return {"chapter": safe_chapter, "text": str(reply["summary"]).strip()}
 
 
-def arc_history(workdir, prompts, name_seen):
+def arc_history(workdir, prompts, page):
     history = []
     for arc, prompt in prompts:
         reply = cached_reply(workdir, "history", prompt)
         if reply and reply.get("paragraph"):
-            history.append({"arc": arc["name"], "start": arc["start"], "end": arc["end"], "shown": max(arc["end"], name_seen),
+            history.append({"arc": arc["name"], "start": arc["start"], "end": arc["end"], "shown": max(arc["end"], page.known(arc["end"])[1]),
                             "text": str(reply["paragraph"]).strip()})
     return history
 
 
-def kept_prose(workdir, prompts, joined, part, last):
+def kept_prose(workdir, prompts, joined, part, last, page):
     prose = {}
     if prompts["summary"]:
         unseen = last if len(part["aliases"]) < len(joined["aliases"]) else 0
@@ -81,7 +81,7 @@ def kept_prose(workdir, prompts, joined, part, last):
             prose["summary"] = {"chapter": safe, "text": str(reply["summary"]).strip()}
     replies = {c: cached_reply(workdir, "summary", p) for c, p in prompts["summaries"].items()}
     running = [{"chapter": c, "text": str(r["summary"]).strip()} for c, r in replies.items() if r and r.get("summary")]
-    history = arc_history(workdir, prompts["history"], part["name_chapter"])
+    history = arc_history(workdir, prompts["history"], page)
     return {**prose, **({"summaries": running} if running else {}), **({"history": history} if history else {})}
 
 
@@ -218,7 +218,7 @@ def build(workdir, theme):
     out_entities = []
     for e in entities:
         page = names[e["name"]]
-        name_seen, aliases = page.chapter, page.aliases
+        aliases = page.aliases
         record = {"id": ids[e["name"]], "name": page.name, "name_chapter": page.chapter, "type": e["type"],
                   "first": page.first, "aliases": page.aliases, "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e)}
         record["mention"] = first_mention(texts, record)
@@ -234,22 +234,22 @@ def build(workdir, theme):
         own = by_entity.get(e["name"], [])
         if len(own) >= 3:
             unseen = last if len(aliases) < len(e["aliases"]) else 0
-            safe = max([e["last_chapter"], name_seen, unseen] + [a["chapter"] for a in aliases])
-            summary = entity_summary(workdir, e, own, safe, timelines, last)
+            safe = max([e["last_chapter"], page.known(last)[1], unseen] + [a["chapter"] for a in aliases])
+            summary = entity_summary(workdir, e, own, safe, timelines, last, page)
             if summary:
                 record["summary"] = summary
-            replies = {c: cached_reply(workdir, "summary", prompt) for c, prompt in checkpoint_prompts(e, own, timelines).items()}
+            replies = {c: cached_reply(workdir, "summary", prompt) for c, prompt in checkpoint_prompts(e, own, timelines, page).items()}
             running = [{"chapter": c, "text": str(r["summary"]).strip()} for c, r in replies.items() if r and r.get("summary")]
             if running:
                 record["summaries"] = running
         if e["name"] in profiles:
-            record["profile"] = export_profile(workdir, e["name"], profiles[e["name"]], spoken.get(e["name"], []))
+            record["profile"] = export_profile(workdir, page, profiles[e["name"]], spoken.get(e["name"], []))
         if e["type"] == "character":
-            history = arc_history(workdir, history_prompts(e, own, ties.get(e["name"], []), arcs, timelines), name_seen)
+            history = arc_history(workdir, history_prompts(e, own, ties.get(e["name"], []), arcs, timelines, page), page)
             if history:
                 record["history"] = history
         out_entities.append(titled(record, e["title"]) if e.get("title") else record)
-        kept = {a["name"]: kept_prompts(a, own, ties.get(e["name"], []), arcs, timelines, last) for a in reader_parts(e)}
+        kept = {a["name"]: kept_prompts(a, own, ties.get(e["name"], []), arcs, timelines, last, names[a["name"]]) for a in reader_parts(e)}
         for a in e.get("absorbed", []):
             kind = a.get("type", e["type"])
             named = names[a["name"]]
@@ -259,9 +259,9 @@ def build(workdir, theme):
             if kind == "character":
                 part["present"] = sorted(present.get(a["name"], ()))
             if a["name"] in profiles:
-                part["profile"] = export_profile(workdir, a["name"], profiles[a["name"]], spoken.get(a["name"], []))
+                part["profile"] = export_profile(workdir, named, profiles[a["name"]], spoken.get(a["name"], []))
             if a["name"] in kept:
-                part.update(kept_prose(workdir, kept[a["name"]], a, part, last))
+                part.update(kept_prose(workdir, kept[a["name"]], a, part, last, named))
             out_entities.append(part)
 
     for record in out_entities:

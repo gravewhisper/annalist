@@ -1,6 +1,7 @@
 import unittest
 
 from annalist.export import entity_id
+from annalist.pages import PageName
 from annalist.render import history_prompts
 from tests.test_asof_leaks import visible_text
 from tests.test_build import build_script, MiniBuild, ran, site_views
@@ -123,7 +124,7 @@ class HistoryPromptTest(unittest.TestCase):
                       "filed": {"source": "the Lamp Thief"}},
                      {"chapter": 4, "source": "Ada Quill", "target": "Ned Rook", "type": "married", "detail": "", "quotes": ["z"], "quote_ok": True}]
         arcs = [{"name": "Nets", "start": 1, "end": 2}, {"name": "North", "start": 3, "end": 4}]
-        prompts = history_prompts(entity, facts, relations, arcs, {})
+        prompts = history_prompts(entity, facts, relations, arcs, {}, PageName("Ada Quill", "Ada Quill", 1, 1, []))
         self.assertEqual([arc["name"] for arc, _ in prompts], ["Nets"])
         prompt = prompts[0][1]
         self.assertIn("Ada mended net 4.", prompt)
