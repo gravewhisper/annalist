@@ -1,5 +1,5 @@
 {
-  "sync_commit": "796cc27",
+  "sync_commit": "0c95d87",
   "covers": [
     {
       "file": "annalist/read.py",
@@ -52,13 +52,13 @@
     {
       "file": "annalist/state.py",
       "function": "load_states",
-      "fingerprint": "de1993a7e8587ac0",
+      "fingerprint": "d69bdcf5f6301a56",
       "model": "Loaded (every state file is applied as checked)"
     },
     {
       "file": "annalist/state.py",
       "function": "Knowledge.apply",
-      "fingerprint": "dd6c226b41763d56",
+      "fingerprint": "5994078386aad6e9",
       "model": "View (with_unchecked applies out to a kb copy) and SaveMem; assumption: reads out, never writes it"
     },
     {
