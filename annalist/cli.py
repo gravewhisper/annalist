@@ -2,10 +2,12 @@ import argparse
 import sys
 
 from .backends import ConfigError
+from .llm import BudgetSpent
 from .build import cmd_build, cmd_export_built
 from .epub import cmd_extract
 from .leads import cmd_leads
 from .profile import cmd_profile
+from .proofread import cmd_proofread
 from .read import cmd_read
 from .render import cmd_render
 from .discover import cmd_discover
@@ -151,6 +153,13 @@ def main():
     p.add_argument("--character", action="append", help="profile only this character; repeat for more")
     p.set_defaults(func=cmd_profile)
 
+    p = sub.add_parser("proofread", description="Review the wiki of each finished volume against the volume's full text and write "
+                                                 "the corrections that pass the quote and chapter checks to proofread.json.")
+    p.add_argument("workdir")
+    p.add_argument("--to", type=int, help="last chapter read; default every chapter with a state file")
+    p.add_argument("--budget", type=float, help="stop before the next uncached session once this run has spent this many dollars")
+    p.set_defaults(func=cmd_proofread, started=None)
+
     p = sub.add_parser("render")
     p.add_argument("workdir")
     p.add_argument("--until", type=int)
@@ -192,5 +201,5 @@ def main():
     args = parser.parse_args()
     try:
         args.func(args)
-    except ConfigError as exc:
+    except (ConfigError, BudgetSpent) as exc:
         sys.exit(f"annalist: {exc}")

@@ -48,7 +48,7 @@ class QuestionCorrections(unittest.TestCase):
 
     def test_the_question_stages_rerun_and_ask_nothing_about_a_settled_question(self):
         self.assertGreater(self.sweeps, 0)
-        self.assertEqual(re.findall(r"^== (\w+)$", self.rebuild.stdout, re.M), ["sweep", "answers", "render", "export"])
+        self.assertEqual(re.findall(r"^== (\w+)$", self.rebuild.stdout, re.M), ["sweep", "answers", "proofread", "render", "export"])
         self.assertEqual(self.new_calls, [])
 
     def test_an_answered_question_shows_resolved_from_its_chapter_and_not_before(self):

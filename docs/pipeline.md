@@ -21,16 +21,18 @@
 17. `answers` judges, at each volume end, which open questions are answered, narrowed by leads, or based on a false premise.
 18. `ending` judges the questions still open at the end of the book. It runs only when `book.json` sets `complete` and every chapter is read.
 19. `volumes` divides the chapters read into story arcs and writes each finished volume's overview, arcs, and key events. Every arc but the last of the volume in progress is closed, and `arcs.json` keeps each closed arc frozen: a later build with more chapters read divides only the chapters after it, and the finished volume keeps it. Each closed arc is named and summarised from its own chapters' synopses only.
-20. `render` writes page summaries, a History paragraph for each story arc in which a character has at least 5 quoted facts, and a Markdown and HTML wiki under `wiki/`.
-21. `export` writes the static site to `site/`.
-22. `review` writes `review.md` and `review.json`, a list of problems that code can find, such as merges across types, characters who die and then come back, and ranks the text names with the book's rank word that no ladder holds.
+20. `proofread` reviews the wiki of each finished volume the way a reader who knows the whole volume would. Each session gets the volume's full text, then one slice of the wiki as the pipeline built it at the volume's last chapter: the characters, the entries of the book's own types with the ladders, the places, organizations, and other entries, or the questions. A slice larger than about 100,000 tokens is split by a hash of each entry's name, so an entry keeps its slice while the number of slices stays the same. A volume longer than about 850,000 tokens is read in consecutive parts, and each slice is reviewed against each part. The model proposes corrections in the formats of `corrections.json`. Code keeps a proposal only when each chapter it gives lies in the text the session saw, each quote is found in its chapter, each name matches an entry or question, and its answer, value, title, or wording uses no word that the book first uses after its chapter. The kept rows go to `proofread.json`, and every rejected row is listed there with its reason. See [Correct a wiki](corrections.md#corrections-the-proofread-stage-proposes).
+21. `render` writes page summaries, a History paragraph for each story arc in which a character has at least 5 quoted facts, and a Markdown and HTML wiki under `wiki/`.
+22. `export` writes the static site to `site/`.
+23. `review` writes `review.md` and `review.json`, a list of problems that code can find, such as merges across types, characters who die and then come back, and ranks the text names with the book's rank word that no ladder holds.
 
-A build is resumable. If a stage fails, the build exits with status 2, and running the same command again continues from where it stopped. Five layers keep finished work:
+A build is resumable. If a stage fails, the build exits with status 2, and running the same command again continues from where it stopped. Six layers keep finished work:
 
 - `read` skips every chapter that already has a `state/NNNN.json`.
 - `build.json` stamps each finished stage with a digest of its input files and a digest of the code it runs. A stage reruns only when one of the two changes. `--dry-run` shows the reason, such as `run: code changed`.
 - `cache/` stores every LLM reply, keyed by the step, the backend, the model, and the prompt. A rerun with the same prompt reuses the reply and costs nothing.
 - `relate-replies.json` keeps each chapter's `relate` reply. A rebuild reuses it unless the chapter changed or the chapter names more than 2 new pairs of entries. Renames do not count as new pairs.
 - `answers.json` keeps a question's verdict through a rebuild unless the question or its leads changed, or more than 2 of the chapters it was shown changed. Small shifts in which chapters rank highest do not ask it again.
+- `proofread` makes one call per session, and the cache keys each call by its whole prompt. A rerun asks again only for a slice whose wiki changed. The `--budget` check also runs before each `proofread` session that the cache cannot answer, because one session costs about as much as reading the volume once.
 
 Every LLM call is logged to `calls.jsonl` with its tokens and cost. The `--budget` check sums those costs.

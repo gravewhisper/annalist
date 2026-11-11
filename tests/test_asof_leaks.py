@@ -20,6 +20,15 @@ ECHOED = {
     "events": {"events": [{"event": ECHO, "facts": ["F0001-001"]}]},
     "sweep": {"answers": [{"id": "Q0002-01", "answered": True, "chapter": 4, "quote": "My name was Livia Hale. Tomas was my father.”",
                            "answer": ECHO}]},
+    "proofread": {"entries": [{"name": "Tomas Hale", "fields": {"occupation": [{"chapter": 1, "value": ECHO, "quotes": [
+                                  "Tomas was the keeper of the harbour lamp and a sworn member of the Lamplighters' Guild"]}]}},
+                              {"name": "Bram Ostrow", "fields": {"trivia": [{"chapter": 5, "value": ECHO, "quotes": ["It was Bram who broke."]}]}},
+                              {"name": "Sabine Oake", "title": ECHO, "title_chapter": 3, "quotes": ["Not to the Guild, and not to Master Oake."]}],
+                  "relations": [{"source": "Ines Varro", "target": "Tomas Hale", "type": ECHO, "chapter": 2,
+                                 "quotes": ["He trained an apprentice."]},
+                                {"source": "Livia Hale", "target": "Ines Varro", "type": ECHO, "chapter": 5, "quotes": ["Livia Hale climbed beside her."]}],
+                  "questions": [{"id": "Q0001-02", "chapter": 3, "answer": ECHO, "quotes": ["Sister Wren looked at him for a long moment."]},
+                                {"id": "Q0001-03", "chapter": 5, "answer": ECHO, "quotes": ["I knew the barge."]}]},
 }
 
 
@@ -122,8 +131,16 @@ class AsOfLeakTest(unittest.TestCase):
                   "arc": v["arcs"][0]["summary"], "arc name": v["arcs"][0]["name"],
                   "history heading": next(e["history"][0]["arc"] for e in entities if e.get("history")), "volume": v["overview"], "events": v["key_events"][0]["event"],
                   "death": v["deaths"][0]["circumstances"],
-                  "sweep": next(q["resolved"]["answer"] for q in self.wiki["questions"] if q["id"] == "Q0002-01")}
+                  "sweep": next(q["resolved"]["answer"] for q in self.wiki["questions"] if q["id"] == "Q0002-01"),
+                  "proofread": next(q["resolved"]["answer"] for q in self.wiki["questions"] if q["id"] == "Q0001-03")}
         self.assertEqual({k for k, text in echoed.items() if "novel" in words(text)}, set(echoed))
+
+    def test_the_proofread_keeps_only_proposals_whose_words_the_book_has_used_by_their_chapter(self):
+        review = self.book.json("proofread.json")
+        kept = [r["name"] for r in review["entries"]] + [r["source"] for r in review["relations"]] + [r["id"] for r in review["questions"]]
+        self.assertEqual(set(kept), {"Bram Ostrow", "Livia Hale", "Q0001-03"})
+        hindsight = {r["row"].get("name") or r["row"].get("source") or r["row"].get("id") for r in review["rejected"] if r["reason"].startswith("uses ")}
+        self.assertEqual(hindsight, {"Tomas Hale", "Sabine Oake", "Ines Varro", "Q0001-02"})
 
     @unittest.skipIf(NODE is None, "node is not installed")
     def test_no_site_view_as_of_chapter_n_shows_a_word_the_book_first_uses_after_n(self):

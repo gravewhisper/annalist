@@ -21,7 +21,7 @@ CACHE = ROOT / "tests" / "data" / "cache"
 MINI = ROOT / "tests" / "data" / "mini.epub"
 MINI_WORDS = 3896
 STAGE_ORDER = ["extract", "book", "read", "timelines", "wordings", "retype", "discover", "resolve", "relate", "link", "leads", "sweep", "tiers", "profile", "ladders", "families", "answers", "ending", "volumes",
-               "render", "export", "review"]
+               "proofread", "render", "export", "review"]
 
 BOOK_REPLY = {"power_system": "", "power_types": [{"type": "ward", "parent": "artifact", "description": "a protective charm a keeper sets"}],
               "relation_example": "guards", "extra_fields": [], "power_keywords": ["ward", "charm", "lamp", "oath", "guild"],
@@ -55,6 +55,7 @@ LATER_REPLIES = {
     "volume": {"overview": "The keepers of Corvel Quay and the night the lamp went dark.", "character_development": []},
     "events": {"events": []},
     "death": {"died": False},
+    "proofread": {"entries": [], "relations": [], "drop_relations": [], "questions": []},
 }
 
 
@@ -247,8 +248,8 @@ class CodeChangeTest(unittest.TestCase):
         rebuilt = self.book.build()
         self.assertEqual(plan_rows(rebuilt.stdout)["resolve"], "run: code changed")
         self.assertEqual(plan_rows(rebuilt.stdout)["retype"], "done")
-        self.assertEqual(ran(rebuilt.stdout), ["resolve", "relate", "link", "leads", "sweep", "tiers", "profile", "families", "answers", "volumes", "render", "export",
-                                                "review"])
+        self.assertEqual(ran(rebuilt.stdout), ["resolve", "relate", "link", "leads", "sweep", "tiers", "profile", "families", "answers", "volumes", "proofread", "render",
+                                                "export", "review"])
         self.assertEqual(self.book.json("merges.json")["rules"], 2)
         self.assertEqual(len(self.book.calls()), self.calls)
 
@@ -396,7 +397,7 @@ class ResumeTest(unittest.TestCase):
             self.assertGreater(len([c for c in book.calls("profile") if not c["error"]]), 0)
             book.script(build_script())
             resumed = book.build()
-            self.assertEqual(ran(resumed.stdout), ["profile", "families", "answers", "volumes", "render", "export", "review"])
+            self.assertEqual(ran(resumed.stdout), ["profile", "families", "answers", "volumes", "proofread", "render", "export", "review"])
             profiled = len(book.json("profiles.json")["characters"])
             self.assertEqual(len([c for c in book.calls("profile") if not c["error"]]), profiled)
         finally:

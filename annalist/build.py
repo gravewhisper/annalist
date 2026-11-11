@@ -21,9 +21,10 @@ from .families import cmd_families
 from .files import read_json, write_json
 from .ladders import cmd_ladders, generate_ladder, ladder_needed
 from .leads import cmd_leads
-from .llm import ASKED, LLMError, LLMUnavailable, spent_since
+from .llm import ASKED, BudgetSpent, LLMError, LLMUnavailable, spent_since
 from .names import slug
 from .profile import cmd_profile
+from .proofread import cmd_proofread
 from .discover import cmd_discover
 from .ending import cmd_ending, ending_status
 from .read import cmd_read
@@ -237,13 +238,19 @@ STAGES = (
           STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "volumes.json"),
           lambda run: [ARCS_FILE] + [f"volumes/{slug(v['name'])}.json" for v in run.eligible_volumes()], ("arcs", "arc", "volume", "events"),
           skip=lambda run: None if started_volumes(run) else "no chapter read", code=("volume",)),
+    Stage("proofread", lambda run: cmd_proofread(namespace(run, to=run.last, budget=run.args.budget,
+                                                           started=read_json(run.workdir / STAMPS, {}).get("started"))),
+          STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "profiles.json",
+                   "ladders.json", "answers.json", "ending.json", "volumes.json"),
+          lambda run: ["proofread.json"], ("proofread",),
+          skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}", code=("proofread",)),
     Stage("render", lambda run: cmd_render(namespace(run, until=None, html=True)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
-                   "ending.json", "volumes", ARCS_FILE, "ladders.json", "corrections.json"),
+                   "ending.json", "volumes", ARCS_FILE, "ladders.json", "corrections.json", "proofread.json"),
           lambda run: ["wiki/index.md"], ("summary", "personality", "history"), code=("render",)),
     Stage("export", lambda run: cmd_export(Namespace(workdir=str(run.workdir), outdir=str(run.workdir / "site"), public=False, theme=None)),
           STATE + ("chapters.json", "types.json", "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
-                   "ending.json", "volumes", ARCS_FILE, "ladders.json", "families.json", "corrections.json"),
+                   "ending.json", "volumes", ARCS_FILE, "ladders.json", "families.json", "corrections.json", "proofread.json"),
           lambda run: ["site/data/wiki.json"], code=("export", "site", "themes")),
     Stage("review", lambda run: cmd_review(Namespace(workdir=str(run.workdir))),
           STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "profiles.json", "ladders.json"),
@@ -370,6 +377,8 @@ def stage_words(run, stage):
         return run.words({n for n in range(1, run.last + 1) if not run.state(n).exists()})
     if stage.name == "timelines":
         return run.words(set(unlabelled(run)))
+    if stage.name == "proofread":
+        return run.words({n for v in run.eligible_volumes() for n in range(v["from"], v["to"] + 1)})
     return run.words(set(range(1, run.last + 1)))
 
 
@@ -460,6 +469,9 @@ def run_stage(run, stage):
         stop(stage, str(exc))
     except LLMUnavailable as exc:
         stop(stage, str(exc))
+    except BudgetSpent as exc:
+        print(f"annalist build: {exc}", file=sys.stderr)
+        sys.exit(3)
     except SystemExit as exc:
         if exc.code not in (0, None):
             stop(stage, str(exc.code) if not isinstance(exc.code, int) else f"exit status {exc.code}")

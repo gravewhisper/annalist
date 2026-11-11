@@ -33,6 +33,10 @@ class LLMUnavailable(Exception):
     pass
 
 
+class BudgetSpent(Exception):
+    pass
+
+
 def parse_json_object(text):
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
     start, end = text.find("{"), text.rfind("}")

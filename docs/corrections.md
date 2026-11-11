@@ -106,3 +106,20 @@ Later volumes keep your corrections:
 - When `read` reads a new chapter, it shows the reader each correction as a note on that entry, using only values from earlier chapters. A `same_as` note appears only in chapters after its `chapter`. Chapters already read are not read again.
 
 A value that a later rebuild produces for another chapter stays in the history next to your correction.
+
+## Corrections the proofread stage proposes
+
+The `proofread` stage does the review you would do with the book in mind, once per finished volume. Each session gives the model the volume's full text and one slice of the wiki as the pipeline built it at the volume's last chapter. The model replies with rows in the formats above: `entries` rows that join two pages with `same_as`, change a `type`, set a `title`, set `fields`, or `drop` a value; `relations` and `drop_relations` rows; and `questions` rows that answer or dismiss a question. A `type` or `title` row also gives the `chapter` and `quotes` that show it.
+
+Code checks each row the way it checks yours, and more strictly:
+
+- Each chapter the row gives must be in the chapters that the session read. No session reads past its volume's last chapter.
+- Each quote must be found in its chapter, and each name or question id must match the wiki.
+- A `same_as` row must join two pages that the wiki keeps apart, from a chapter where both have appeared. A `drop` or `drop_relations` row must match a value or a tie that the wiki shows.
+- An answer, value, title, or tie wording must use no word that the book first uses after the row's chapter. This stops a row from naming what only a later chapter reveals.
+
+`proofread.json` holds the rows that pass, in the format of `corrections.json`, each marked with its `volume` and wiki `slice`. Its `rejected` list holds every row that failed, with the reason, and its `sessions` list holds one line per call. Code writes this file. Do not edit it. To overrule a row, write your own row in `corrections.json`.
+
+`render` and `export` apply both files through the same path, so a proposed row rewrites page text the way yours does. Where both files change the same thing, your row wins and the proposed row is skipped. The same thing means the same page's `same_as`, `type`, or `title`, the same infobox field at the same chapter, the same tie, or the same question. Your `drop` and `drop_relations` rows also remove a value or a tie that a proposed row added. `sweep`, `answers`, `ending`, and `read` see only your file.
+
+The stage reviews the pipeline's wiki without either file's corrections. So an edit to `corrections.json` never makes it ask the model again. A volume is reviewed again only when a session's prompt changes, which happens when the pipeline changes that volume's wiki.

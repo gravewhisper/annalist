@@ -73,7 +73,7 @@ The choice is saved in the run's `book.json`. See [docs/backends.md](docs/backen
 
 ## How it works
 
-`annalist build` runs 22 resumable stages. `read` goes through the chapters in order and saves each one's entries, facts, relations, and questions. Later stages merge names that turn out to be one person, add relations, search later chapters for answers, fill infoboxes, and write the site. Each stage reruns only when its input or its code changes.
+`annalist build` runs 23 resumable stages. `read` goes through the chapters in order and saves each one's entries, facts, relations, and questions. Later stages merge names that turn out to be one person, add relations, search later chapters for answers, fill infoboxes, and write the site. Each stage reruns only when its input or its code changes.
 
 ## Documentation
 
