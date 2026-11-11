@@ -168,6 +168,12 @@ class BuildMiniTest(unittest.TestCase):
         self.assertTrue((self.book.workdir / "site" / "index.html").exists())
         self.assertTrue((self.book.workdir / "wiki" / "volumes" / "the-salt-ledger.md").exists())
 
+    def test_the_volume_page_names_book_type_entries_without_assuming_a_power_system(self):
+        page = (self.book.workdir / "wiki" / "volumes" / "the-salt-ledger.md").read_text(encoding="utf-8")
+        self.assertNotIn("Power system", page)
+        wards = [e for e in self.book.json("entities.json") if e["type"] == "ward"]
+        self.assertEqual("## World introduced" in page, bool(wards))
+
     def test_book_json_is_generated_validated_and_keeps_the_backend(self):
         book = self.book.json("book.json")
         self.assertEqual(book["timeline_kind"], "flashback")

@@ -587,7 +587,7 @@ function renderVolume(id) {
   ${done && v.development.length ? `<h2>Character development</h2>${v.development.map(d => `<div class="chgroup"><h4>${linkify(d.character)}</h4><div class="prose"><p>${linkify(d.development)}</p></div></div>`).join('')}` : ''}
   ${deaths.length ? `<h2>Deaths</h2>${deaths.map(d => expandRow(`${linkify(d.name, null, d.chapter)} ${chLink(d.chapter)}`, 'what happened', `<div class="prose"><p>${linkify(d.circumstances, null, d.chapter)}</p></div>${quotes(d.quotes)}${until(d.later || []).map(l => `<div class="prose"><p>${chLink(l.chapter)} ${linkify(l.circumstances, null, l.chapter)}</p></div>${quotes(l.quotes)}`).join('')}`)).join('')}` : ''}
   ${chars.length ? `<h2>Characters introduced</h2><ul class="list">${chars.map(e => entRow(e)).join('')}</ul>` : ''}
-  ${powers.length ? `<h2>Power system introduced</h2><ul class="list">${powers.map(e => entRow(e)).join('')}</ul>` : ''}`;
+  ${powers.length ? `<h2>World introduced</h2><ul class="list">${powers.map(e => entRow(e)).join('')}</ul>` : ''}`;
 }
 
 const FAMILIES = {kin: 'Family', romance: 'Romance', alliance: 'Allies', teaching: 'Teaching', faith: 'Faith', service: 'Service', membership: 'Membership', hostility: 'Hostility', investigation: 'Investigation', place: 'Places', ownership: 'Belongings', kind: 'Kinds and ranks', other: 'Other'};

@@ -187,8 +187,9 @@ def volume_markdown(spec, kb, paths, chapter_link, power_types):
     introduced = sorted((e for e in kb.entities.values() if lo <= e["first_chapter"] <= hi), key=lambda e: (e["first_chapter"], e["name"]))
     lines += ["## Characters introduced", ""]
     lines += item_list([f"{entity(e['name'])} (ch {link(e['first_chapter'])}): {e['summary']}" for e in introduced if e["type"] == "character"])
-    lines += ["## Power system introduced", ""]
-    lines += item_list([f"{entity(e['name'])} *{e['type']}* (ch {link(e['first_chapter'])}): {e['summary']}" for e in introduced if e["type"] in power_types])
+    world = [f"{entity(e['name'])} *{e['type']}* (ch {link(e['first_chapter'])}): {e['summary']}" for e in introduced if e["type"] in power_types]
+    if world:
+        lines += ["## World introduced", ""] + item_list(world)
     base = slug(spec["name"])
     resolved = [q for q in kb.questions.values() if q["status"] == "resolved" and lo <= q["resolved_chapter"] <= hi]
     _, threads, loose = ending_groups([q for q in kb.questions.values() if q["status"] in UNRESOLVED])
