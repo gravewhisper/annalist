@@ -238,7 +238,7 @@ def cmd_ending(args):
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         judged = sum(pool.map(run, batches))
         implied = [k for k, d in read_json(path, {"questions": {}})["questions"].items()
-                   if unfinished(d) and d["verdict"] == "answered-implicitly"]
+                   if unfinished(d) and d["verdict"] == "answered-implicitly" and k in kb.questions]
         log(workdir, f"ending: rereading {len(implied)} implied answers")
         list(pool.map(confirm, implied))
     decisions = read_json(path, {"questions": {}})["questions"]

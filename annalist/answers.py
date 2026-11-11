@@ -52,7 +52,8 @@ MAX_SWAPPED_CHAPTERS = 2
 
 
 def verdict_basis(v, q):
-    return fingerprint(ANSWERS_PROMPT, f"{v['name']}\n{v['to']}", q["question"], q.get("quote", ""), *[f"{l['chapter']}:{l['text']}" for l in q["leads"]])
+    return fingerprint(ANSWERS_PROMPT, f"{v['name']}\n{v['to']}", q["question"], q.get("quote", ""), *[f"{l['chapter']}:{l['text']}" for l in q["leads"]],
+                       *[f"again {a['chapter']}:{a['question']}" for a in q.get("again", [])])
 
 
 def reusable(old, basis, chapters):
@@ -62,6 +63,7 @@ def reusable(old, basis, chapters):
 
 def answers_item(q, passages, synopses):
     lines = [f"ID {q['id']} (raised in chapter {q['chapter']})", f"Question: {q['question']}", f"Raising passage: \"{q.get('quote', '')}\""]
+    lines += [f"Asked again in chapter {a['chapter']}: {a['question']}" for a in q.get("again", [])]
     lines += [f"Lead from chapter {l['chapter']}: {l['text']}" for l in q["leads"]]
     lines.append("Passages:")
     for p in passages:

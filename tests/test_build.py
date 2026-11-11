@@ -38,6 +38,7 @@ LATER_REPLIES = {
     "relate": {"relations": []},
     "link": {"labels": []},
     "families": {"kinds": []},
+    "repeats": {"pairs": []},
     "leads": {"items": []},
     "sweep": {"answers": []},
     "answers": {"results": []},
@@ -261,7 +262,7 @@ class CodeChangeTest(unittest.TestCase):
     def test_a_change_to_a_module_a_stage_imports_reruns_the_stages_that_import_it(self):
         self.book.edit_code("corpus.py", "\nimport re\n", "\nimport re\n\nRULES = 2\n")
         rebuilt = self.book.build()
-        self.assertEqual(ran(rebuilt.stdout), ["resolve", "sweep", "tiers", "answers", "volumes", "render", "export"])
+        self.assertEqual(ran(rebuilt.stdout), ["resolve", "leads", "sweep", "tiers", "answers", "volumes", "render", "export"])
         self.assertEqual(len(self.book.calls()), self.calls)
 
     def test_a_change_to_the_site_assets_reruns_export(self):

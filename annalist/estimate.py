@@ -37,6 +37,7 @@ RATES = {
     "profile": Rate(input_tokens=1839.22, output_tokens=578.0, wall_s=4.0735),
     "profile-field": Rate(input_tokens=969.36, output_tokens=68.95, wall_s=1.3222),
     "profile-support": Rate(input_tokens=377.52, output_tokens=108.61, wall_s=1.1326),
+    "repeats": Rate(input_tokens=40.0, output_tokens=12.0, wall_s=0.1),
     "relate": Rate(input_tokens=2640.85, output_tokens=368.51, wall_s=2.7741),
     "reread": Rate(input_tokens=936.32, output_tokens=289.19, wall_s=3.7485),
     "reveal": Rate(input_tokens=60.0, output_tokens=5.0, wall_s=0.1),

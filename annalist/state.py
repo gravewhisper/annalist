@@ -125,6 +125,7 @@ class Knowledge:
         self.leads = {}
         self.timelines = {"main": dict(MAIN_TIMELINE)}
         self.summary_log = {}
+        self.repeats = {}
 
     def bare_rank(self, name):
         return bool(self.rank_name and self.rank_name.fullmatch(name_key(name)))
@@ -227,6 +228,12 @@ class Knowledge:
     def bare_entities(self):
         used = {f["entity"] for f in self.facts} | {r[end] for r in self.relations for end in ("source", "target")}
         return [name for name in self.entities if name not in used]
+
+    def asked_before(self, qid):
+        earlier = self.repeats.get(qid)
+        while earlier in self.repeats and earlier not in self.questions:
+            earlier = self.repeats[earlier]
+        return self.questions.get(earlier)
 
     def open_questions(self):
         return [q for q in self.questions.values() if q["status"] in UNRESOLVED]
@@ -382,14 +389,20 @@ class Knowledge:
                 continue
             raised += 1
             qid = f"Q{n:04d}-{raised:02d}"
+            earlier = self.asked_before(qid)
+            if earlier and earlier["status"] in UNRESOLVED:
+                earlier.setdefault("again", []).append({"chapter": n, "question": str(q["question"]).strip(),
+                                                        "quote": str(q.get("quote") or "").strip()})
+                continue
             self.questions[qid] = {"id": qid, "chapter": n, "question": str(q["question"]).strip(),
                                    "quote": str(q.get("quote") or "").strip(), "status": "open", "rejected": [], "leads": [],
                                    "timeline": label(f"Q{i}")}
         for r in out.get("questions_resolved") or []:
-            q = self.questions.get(str(r.get("id"))) if isinstance(r, dict) else None
+            claimed = str(r.get("id")) if isinstance(r, dict) else ""
+            q = self.questions.get(claimed) or self.asked_before(claimed)
             if not q or q["status"] not in UNRESOLVED or q["chapter"] == n:
                 continue
-            reread = (state.get("rereads") or {}).get(q["id"]) or {}
+            reread = (state.get("rereads") or {}).get(claimed) or {}
             attempt = {"chapter": n, "answer": str(r.get("answer") or "").strip(), "quote": str(r.get("quote") or "").strip()}
             if reread.get("verdict") == "accept":
                 settle(q, "resolved", resolved_chapter=n, answer=attempt["answer"], resolve_quote=attempt["quote"],
@@ -534,10 +547,15 @@ def question_events(workdir, answers_before=None):
 FILLED = {"relate.json": "RF", "link.json": "RL"}
 
 
-def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FILLED), discovered=True, answers_before=None, ladders=False):
+def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FILLED), discovered=True, answers_before=None, ladders=False,
+                repeats=True):
     book = read_json(Path(workdir) / "book.json", {})
     kb = Knowledge(book.get("ladder"), read_wordings(workdir), book.get("power_types") or ())
-    kb.leads = read_json(Path(workdir) / "leads.json", {"leads": {}})["leads"]
+    leads = read_json(Path(workdir) / "leads.json", {"leads": {}})
+    kb.leads = leads["leads"]
+    for pair in sorted(leads.get("repeats", []) if repeats else [], key=lambda p: p["earlier"]):
+        if pair["same"]:
+            kb.repeats.setdefault(pair["later"], pair["earlier"])
     events = question_events(workdir, answers_before)
     ending = read_json(Path(workdir) / "ending.json", {"last": None, "questions": {}})
     discovered_at = {}

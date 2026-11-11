@@ -12,7 +12,7 @@
 8. `resolve` merges entries that are one person, place, or thing under different names, including identities the book reveals later.
 9. `relate` adds relations that each chapter shows between entries it names close together.
 10. `link` adds relations that possessive names and character facts state.
-11. `leads` keeps rejected answers to a question that are still useful partial leads.
+11. `leads` folds a question raised again within two chapters of an open question about the same mystery into the open one, then keeps rejected answers to a question that are still useful partial leads.
 12. `sweep` searches later chapters for passages that answer each open question.
 13. `tiers` labels each question's scope as `series`, `arc`, or `cliffhanger`.
 14. `profile` fills each character's infobox and profile from quoted facts.

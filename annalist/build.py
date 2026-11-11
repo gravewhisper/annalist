@@ -208,7 +208,7 @@ STAGES = (
     Stage("link", lambda run: cmd_link(namespace(run)), STATE + ("types.json", "merges.json", "discover.json", "relate.json"),
           lambda run: ["link.json"], ("link",), code=("link",)),
     Stage("leads", lambda run: cmd_leads(namespace(run)), ("state", "types.json", "merges.json"),
-          lambda run: ["leads.json"], ("leads",), code=("leads",)),
+          lambda run: ["leads.json"], ("repeats", "leads"), code=("leads",)),
     Stage("sweep", lambda run: cmd_sweep(namespace(run, batch=6, limit=None, only=None, budget=None)),
           ("state", "types.json", "merges.json", "leads.json"), lambda run: ["sweep.json"], ("sweep",), code=("sweep",),
           failed=failed_items("sweep.json")),
