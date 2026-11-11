@@ -268,6 +268,15 @@ class EvalMiniTest(unittest.TestCase):
         self.assertEqual({i.id for i in items if i.outcome == "fail"}, {"chapter:1", "chapter:2"})
         self.assertFalse([i for i in items if i.section == "entities"])
 
+    def test_a_gold_marked_partial_scores_a_run_that_has_chapters_past_its_last(self):
+        gold = copy.deepcopy(self.gold)
+        gold["chapters"] = gold["chapters"][:3]
+        whole = outcomes(score(self.book.workdir, gold, self.wiki))
+        self.assertEqual(whole["chapter:extra"], "fail")
+        partial = outcomes(score(self.book.workdir, {**gold, "partial": True}, self.wiki))
+        self.assertNotIn("chapter:extra", partial)
+        self.assertEqual({k: v for k, v in partial.items() if k.startswith("chapter:")}, {"chapter:1": "pass", "chapter:2": "pass", "chapter:3": "pass"})
+
 
 if __name__ == "__main__":
     unittest.main()

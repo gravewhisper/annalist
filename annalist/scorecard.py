@@ -224,7 +224,7 @@ def chapter_items(gold, workdir, wiki):
         ok = mine.get("href") is None or mine["href"] == c["href"]
         items.append(Item("chapters", f"chapter:{c['index']}", "pass" if ok else "fail",
                           "same spine document" if ok else "a different spine document has this number", evidence))
-    extra = sorted(set(stored) - {c["index"] for c in gold.data["chapters"]})
+    extra = sorted(n for n in set(stored) - {c["index"] for c in gold.data["chapters"]} if not gold.data.get("partial") or n < gold.last)
     if extra:
         items.append(Item("chapters", "chapter:extra", "fail", f"run has chapters the gold lacks: {extra}", []))
     return items
