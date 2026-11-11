@@ -152,6 +152,13 @@ class BookGenerationTest(unittest.TestCase):
     def test_an_extra_field_that_joins_a_general_field_to_another_fact_is_rejected(self):
         reply = {**GOOD, "extra_fields": [{"name": "guild rank or affiliation", "description": "the rank, or else the guild"}]}
         self.assertIn('extra field "guild rank or affiliation" joins the general field "affiliation"', book_problems(reply, Knowledge()))
+    def test_an_extra_field_whose_values_are_forms_of_address_is_rejected(self):
+        address = {**GOOD, "extra_fields": [{"name": "social title", "description": "how the character is addressed",
+                                             "values": ["Mr.", "Mrs.", "Miss", "Dr.", "Sir"]}]}
+        self.assertIn('extra field "social title" lists forms of address', book_problems(address, Knowledge()))
+        ranks = {**GOOD, "extra_fields": [{"name": "title", "description": "the noble title", "values": ["Sir", "Baron", "Count"]}]}
+        self.assertIsNone(book_problems(ranks, Knowledge()))
+
 
 if __name__ == "__main__":
     unittest.main()

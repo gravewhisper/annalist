@@ -35,6 +35,9 @@ Rules: power_types lists the kinds of world entries a fan wiki of this novel kee
 """
 
 
+FORMS_OF_ADDRESS = {"mr", "mrs", "miss", "ms", "dr", "mister", "madam", "madame", "monsieur", "mademoiselle", "señor", "señora"}
+
+
 def speakers(kb):
     spoke = set()
     for row in kb.facts + kb.relations:
@@ -80,6 +83,10 @@ def book_problems(reply, kb):
                 problems.append(f'extra field "{f["name"]}" repeats the general field "{base.key}"; drop it.')
             elif joined:
                 problems.append(f'extra field "{f["name"]}" joins the general field "{joined.key}" to another fact; keep only the other fact.')
+            values = [str(v).strip().lower().rstrip(".") for v in f.get("values") or [] if str(v or "").strip()]
+            if values and 2 * sum(v in FORMS_OF_ADDRESS for v in values) >= len(values):
+                problems.append(f'extra field "{f["name"]}" lists forms of address ({", ".join(f["values"])}), which every novel has; '
+                                f"keep a field only for a rank, title, class or other fact this novel tracks.")
             specs[field_name(f["name"])] = extra_field_spec(f)
     for a, b in overlapping_pairs(specs):
         problems.append(f'extra fields "{a}" and "{b}" track the same thing; keep one field for it.')
