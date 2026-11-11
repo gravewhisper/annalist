@@ -1,6 +1,9 @@
 import json
 import unittest
 
+from annalist.deaths import DEATH_WORDS, death_candidates
+from annalist.state import load_states
+
 from tests.test_build import TOMAS_DIES
 from tests.test_pipeline import MiniBook, mini_script
 
@@ -74,3 +77,17 @@ class RepeatedDeathTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class KillerSideDeathTest(unittest.TestCase):
+    def test_a_death_filed_only_under_the_killer_makes_the_victim_a_candidate(self):
+        book = MiniBook(mini_script())
+        self.addCleanup(book.tmp.cleanup)
+        book.read(5)
+        kb = load_states(book.workdir)
+        kb.facts = [f for f in kb.facts if not (f["entity"] == "Tomas Hale" and DEATH_WORDS.search(f["claim"]))]
+        kb.relations = [r for r in kb.relations if r["target"] != "Tomas Hale"]
+        kb.facts.append({"entity": "Bram Ostrow", "chapter": 3, "claim": "Bram Ostrow kills Tomas Hale on the stairs.",
+                         "quotes": [], "status": "stated", "timeline": "main"})
+        volumes = [{"from": 1, "to": 5}]
+        self.assertIn(("Tomas Hale", 3), death_candidates(kb, {}, volumes, 5))

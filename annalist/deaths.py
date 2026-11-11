@@ -29,14 +29,14 @@ Facts outside main carry their timeline id in brackets. Add "timeline": the id o
 """
 
 
-DEATH_WORDS = re.compile(r"\b(die|dies|died|dead|death|deaths|dying|kill|killed|killing|murder|murdered|suicide|corpse|body|"
-                         r"euthanas\w*|perish\w*|slain|executed)\b", re.I)
+DEATH_WORDS = re.compile(r"\b(die|dies|died|dead|death|deaths|dying|kill|kills|killed|killing|murder|murders|murdered|murdering|suicide|corpse|body|"
+                         r"euthanas\w*|perish\w*|slay|slays|slew|slain|executed)\b", re.I)
 
 
-DEATH_RELATIONS = ("killed", "murdered", "executed")
+DEATH_RELATIONS = ("killed", "kills", "murdered", "murders", "executed", "executes", "slew", "slays")
 
 
-STATUS_WORDS = (r"died|dead|death|corpse|killed|alive|revived?|resurrect\w*|breathing|heartbeat|missing heart|healed|"
+STATUS_WORDS = (r"died|dead|death|corpse|kills|killed|murder\w*|slain|slew|alive|revived?|resurrect\w*|breathing|heartbeat|missing heart|healed|"
                 r"stopped breathing|lifeless|perished")
 
 
@@ -58,7 +58,10 @@ def death_candidates(kb, profiles, volumes, last):
     rows = []
     for name, p in profiles.items():
         rows += [(name, o) for o in p["fields"].get("status", []) if o["value"] == "dead" and o.get("quote_ok")]
-    rows += [(f["entity"], f) for f in kb.facts if DEATH_WORDS.search(f["claim"])]
+    named = [(n, name_pattern(names_of(e))) for n, e in kb.entities.items() if e["type"] == "character"]
+    for f in kb.facts:
+        if DEATH_WORDS.search(f["claim"]):
+            rows += [(f["entity"], f)] + [(n, f) for n, pattern in named if n != f["entity"] and pattern.search(f["claim"])]
     rows += [(r["target"], r) for r in kb.relations if wording_key(r["type"]) in DEATH_RELATIONS and r.get("status") == "stated"]
     chapters = {}
     for name, row in rows:
