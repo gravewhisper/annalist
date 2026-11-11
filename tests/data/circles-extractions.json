@@ -1,0 +1,219 @@
+{
+  "1": {
+    "synopsis": "Iselde Varn arrives at the Saltmere School, where Corrow Penhallow gives her the Tidewatcher elixir and she enters the first circle.",
+    "entities": [
+      {
+        "name": "Iselde Varn",
+        "type": "character",
+        "aliases": [],
+        "summary": "A new student at the Saltmere School."
+      },
+      {
+        "name": "Corrow Penhallow",
+        "type": "character",
+        "aliases": [],
+        "summary": "A teacher at the Saltmere School."
+      },
+      {
+        "name": "Saltmere School",
+        "type": "school",
+        "aliases": [
+          "Saltmere"
+        ],
+        "summary": "A school on a spit of black rock where the tide runs through the cellars."
+      },
+      {
+        "name": "Tidewatcher",
+        "type": "circle",
+        "aliases": [],
+        "summary": "The first circle of the Saltmere School."
+      },
+      {
+        "name": "Tidewatcher elixir",
+        "type": "elixir",
+        "aliases": [],
+        "summary": "A grey drink that smells of kelp and iron."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Tidewatcher",
+        "claim": "Tidewatcher is Circle 1 of the Saltmere School.",
+        "quotes": [
+          "Ours begins at Circle 1: Tidewatcher."
+        ],
+        "asserted_by": "Corrow Penhallow",
+        "status": "stated"
+      },
+      {
+        "entity": "Tidewatcher elixir",
+        "claim": "The Tidewatcher elixir smells of kelp and iron.",
+        "quotes": [
+          "a cup of grey liquid that smelled of kelp and iron"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Iselde Varn",
+        "target": "Saltmere School",
+        "type": "student of",
+        "quotes": [
+          "Iselde Varn came to the Saltmere School at the end of the herring season"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "2": {
+    "synopsis": "Iselde learns that Corrow is a Brine Warden and sees the Brine Warden elixir.",
+    "entities": [
+      {
+        "name": "Corrow Penhallow",
+        "type": "character",
+        "aliases": [],
+        "summary": "A teacher who sleeps in a hammock over the flooded cellar."
+      },
+      {
+        "name": "Brine Warden",
+        "type": "school",
+        "aliases": [],
+        "summary": "A rank of the Saltmere School that can hold a wave still."
+      },
+      {
+        "name": "Brine Warden elixir",
+        "type": "elixir",
+        "aliases": [],
+        "summary": "A green flask kept in a locked chest in the cellar."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Brine Warden",
+        "claim": "Brine Warden is Circle 2 of the Saltmere School.",
+        "quotes": [
+          "Brine Warden is Circle 2 of the Saltmere School."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Brine Warden elixir",
+        "claim": "Only Corrow has the key to the chest that holds the Brine Warden elixir.",
+        "quotes": [
+          "The Brine Warden elixir was kept in a locked chest in the cellar, and only Corrow had the key."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "3": {
+    "synopsis": "Hennet Larrow of the Gloam School visits Corrow and explains that Gloam names both her school and its first circle.",
+    "entities": [
+      {
+        "name": "Hennet Larrow",
+        "type": "character",
+        "aliases": [],
+        "summary": "A visitor from the Gloam School."
+      },
+      {
+        "name": "Gloam",
+        "type": "school",
+        "aliases": [
+          "Gloam School"
+        ],
+        "summary": "A school in the hills beyond the marsh, named after its first circle."
+      },
+      {
+        "name": "Wickbearer elixir",
+        "type": "elixir",
+        "aliases": [],
+        "summary": "A brew of the Gloam School, now made with beeswax."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Gloam",
+        "claim": "Gloam is the name of the school and of its first circle.",
+        "quotes": [
+          "Gloam is the name of our school and the name of its first circle"
+        ],
+        "asserted_by": "Hennet Larrow",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Hennet Larrow",
+        "target": "Gloam",
+        "type": "member of",
+        "quotes": [
+          "she had come from the Gloam School in the hills beyond the marsh"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "4": {
+    "synopsis": "Hennet names the four circles of the Gloam School and says she stands at the third.",
+    "entities": [
+      {
+        "name": "Hennet Larrow",
+        "type": "character",
+        "aliases": [],
+        "summary": "A visitor from the Gloam School who stands at its third circle."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Hennet Larrow",
+        "claim": "Hennet does not expect to climb higher than the third circle.",
+        "quotes": [
+          "I stand at the third, and I do not expect to climb any higher."
+        ],
+        "asserted_by": "Hennet Larrow",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "5": {
+    "synopsis": "Corrow reveals the third circle of Saltmere during the spring storms.",
+    "entities": [
+      {
+        "name": "Corrow Penhallow",
+        "type": "character",
+        "aliases": [],
+        "summary": "A teacher who has reached the last known circle of Saltmere."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Corrow Penhallow",
+        "claim": "Corrow shouted the name of the circle into the gale.",
+        "quotes": [
+          "heard him shout the name of the circle into the gale"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  }
+}
