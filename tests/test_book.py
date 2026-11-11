@@ -147,6 +147,16 @@ class BookGenerationTest(unittest.TestCase):
         self.assertIsNone(book_problems(GOOD, Knowledge()))
 
 
+    def test_a_type_described_as_its_own_kind_or_a_second_kind_is_rejected(self):
+        def society(description):
+            return {**GOOD, "power_types": [{"type": "secret society", "parent": "organization", "description": description}]}
+        widened = society("a society that keeps its members hidden, or a guild that keeps the harbour records")
+        catch_all = society("a society that keeps its members hidden, such as the Veiled Hand, or any group of the quay")
+        self.assertIn('power type "secret society" is described as more than one kind', book_problems(widened, Knowledge()))
+        self.assertIn('power type "secret society" is described as more than one kind', book_problems(catch_all, Knowledge()))
+        self.assertIsNone(book_problems(society("a society that keeps its members hidden, such as a cellar club, a dock cabal, "
+                                                "or a night choir"), Knowledge()))
+
     def test_a_novel_without_powers_is_asked_what_its_fan_wiki_tracks_and_keeps_that_field(self):
         ordinary = {"power_system": "Characters are ranked by the titles of the harbour gentry.", "power_types": [],
                     "extra_fields": [{"name": "title", "description": "the character's title as the text gives it",

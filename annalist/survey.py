@@ -51,6 +51,15 @@ def speakers(kb):
 PERSON_WORDS = re.compile(r"\b(?:who|whose|whom|person|people|someone)\b", re.I)
 
 
+EXAMPLES = re.compile(r"\b(?:such as|e\.g\.|for example|including)\b", re.I)
+SECOND_KIND = re.compile(r"\bor (?:an?|another|any)\b", re.I)
+CATCH_ALL = re.compile(r"\bor any\b", re.I)
+
+
+def second_kind(description):
+    return bool(SECOND_KIND.search(EXAMPLES.split(description, 1)[0]) or CATCH_ALL.search(description))
+
+
 def people_in_type(kb, power_type, spoke=None):
     spoke = speakers(kb) if spoke is None else spoke
     members = sorted(n for n, e in kb.entities.items() if e["type"] == power_type)
@@ -102,6 +111,9 @@ def book_problems(reply, kb, material=None):
         elif PERSON_WORDS.search(str(t.get("description") or "")):
             problems.append(f'power type "{key}" is described as a kind of person ("{t.get("description")}"). '
                             f"A class of people is an extra field of the character, not a power type.")
+        if second_kind(str(t.get("description") or "")):
+            problems.append(f'power type "{key}" is described as more than one kind of thing ("{t.get("description")}"), so it would take '
+                            f"in entries its name does not cover; describe only the kind its name says.")
     specs = {}
     for f in reply.get("extra_fields") or []:
         if isinstance(f, dict) and str(f.get("name") or "").strip():
