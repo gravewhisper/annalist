@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from .book import ladder_types
+from .corrections import correct_pages, known_from, load_corrections, PAGES
 from .files import read_json, read_jsonl, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
 from .template import INDIVIDUALS, type_parents, Types
@@ -127,6 +128,8 @@ class Knowledge:
         self.timelines = {"main": dict(MAIN_TIMELINE)}
         self.summary_log = {}
         self.repeats = {}
+        self.corrections = None
+        self.problems = []
 
     def bare_rank(self, name):
         return bool(self.rank_name and self.rank_name.fullmatch(name_key(name)))
@@ -505,17 +508,20 @@ class Knowledge:
         kinds = {self.entities[a]["type"], self.entities[b]["type"]}
         return bool(kinds & set(INDIVIDUALS)) and bool(kinds & self.power_types)
 
-    def apply_merges(self, decisions, until=None):
+    def apply_merges(self, decisions, until=None, known=None):
         for d in decisions:
             revealed = d.get("revealed") or {"basis": "legacy", "chapter": None}
             if not d.get("same") or revealed["basis"] == "unverified":
                 continue
-            if until is not None and revealed["chapter"] is not None and revealed["chapter"] > until:
-                continue
             canonical = self.resolve(d["canonical"])
             other = self.resolve(d["b"] if name_key(d["canonical"]) == name_key(d["a"]) else d["a"])
+            chapter = revealed["chapter"]
+            if chapter is not None and other and known:
+                chapter = min([chapter] + [known[k] for k in map(name_key, names_of(self.entities[other])) if k in known])
+            if until is not None and chapter is not None and chapter > until:
+                continue
             if canonical and other and canonical != other and not self.person_and_power(canonical, other):
-                self.merge(other, canonical, revealed["chapter"])
+                self.merge(other, canonical, chapter)
         self.relations = [r for r in self.relations if r["source"] != r["target"]]
         for d in decisions:
             lead = d.get("possibly")
@@ -555,9 +561,10 @@ FILLED = {"relate.json": "RF", "link.json": "RL"}
 
 
 def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FILLED), discovered=True, answers_before=None, ladders=False,
-                repeats=True):
+                repeats=True, corrections=()):
     book = read_json(Path(workdir) / "book.json", {})
     kb = Knowledge(book.get("ladder"), read_wordings(workdir), book.get("power_types") or ())
+    kb.corrections = load_corrections(workdir) if corrections else None
     leads = read_json(Path(workdir) / "leads.json", {"leads": {}})
     kb.leads = leads["leads"]
     for pair in sorted(leads.get("repeats", []) if repeats else [], key=lambda p: p["earlier"]):
@@ -583,13 +590,17 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
     if retypes:
         kb.apply_retypes(read_json(Path(workdir) / "types.json", {"entities": []})["entities"])
     if merges:
-        kb.apply_merges(read_json(Path(workdir) / "merges.json", {"pairs": []})["pairs"], until)
+        kb.apply_merges(read_json(Path(workdir) / "merges.json", {"pairs": []})["pairs"], until,
+                        known_from(kb.corrections) if PAGES in corrections else None)
     for name in filled:
         kb.apply_filled(read_json(Path(workdir) / name, {"chapters": {}})["chapters"], until, FILLED[name])
     if merges:
         kb.apply_disguises()
     if ladders:
         kb.apply_ladders(read_json(Path(workdir) / "ladders.json", []), until)
+    if kb.corrections:
+        reach = until if until is not None else max(kb.synopses, default=0)
+        kb.problems = kb.corrections.problems + (correct_pages(kb, kb.corrections, reach) if PAGES in corrections else [])
     return kb
 
 

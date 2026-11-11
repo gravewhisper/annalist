@@ -1,123 +1,13 @@
-import io
 import json
 import re
-import tempfile
 import unittest
-from contextlib import redirect_stdout
-from pathlib import Path
 
-from annalist.corrections import apply_to_wiki, load_corrections, reader_notes
-from annalist.state import Knowledge
 from tests.test_asof_leaks import visible_text
 from tests.test_build import MiniBuild, build_script, site_views
 
 REVEAL = "My name was Livia Hale."
-
-
-def two_pages():
-    return {
-        "entities": [
-            {"id": "n", "name": "Mira Vale", "name_chapter": 1, "type": "character", "first": 1, "aliases": [], "present": [1, 5],
-             "profile": {"fields": {"age": [{"chapter": 1, "value": "thirty", "quotes": ["q"]}]}, "lists": {}, "spoke": [[1, "main"]], "personality": []}},
-            {"id": "d", "name": "Grey Stranger", "name_chapter": 2, "type": "character", "first": 2, "aliases": [{"name": "the stranger", "chapter": 3}],
-             "present": [2, 3, 6], "blurbs": [[2, "A man in grey."], [6, "Seen again."]],
-             "profile": {"fields": {"hair": [{"chapter": 2, "value": "grey", "quotes": ["q"]}]}, "lists": {}, "spoke": [[2, "main"], [6, "main"]], "personality": []}},
-            {"id": "h", "name": "Hood", "name_chapter": 1, "type": "character", "first": 1, "aliases": [], "merged": {"into": "d", "chapter": 3}},
-        ],
-        "facts": [{"id": "f1", "chapter": 2, "entity": "d"}, {"id": "f2", "chapter": 6, "entity": "d"}],
-        "relations": [{"chapter": 2, "source": "d", "target": "n", "type": "watches"}, {"chapter": 6, "source": "d", "target": "n", "type": "watches"}],
-    }
-
-
-def same(chapter=4, name="Grey Stranger", same_as="Mira Vale"):
-    return {"name": name, "same_as": same_as, "chapter": chapter, "quotes": ["q"]}
-
-
-def by_id(corrected):
-    return {e["id"]: e for e in corrected["entities"]}
-
-
-class JoinOnTheSite(unittest.TestCase):
-    def test_the_description_page_becomes_part_of_the_named_page_from_the_chapter(self):
-        corrected, missing = apply_to_wiki(two_pages(), [same()])
-        pages = by_id(corrected)
-        self.assertEqual(missing, [])
-        self.assertEqual(pages["d"]["merged"], {"into": "n", "chapter": 4})
-        self.assertEqual(pages["n"]["aliases"], [{"name": "Grey Stranger", "chapter": 4}, {"name": "the stranger", "chapter": 4}])
-
-    def test_rows_from_the_chapter_on_move_to_the_named_page_and_earlier_ones_wait_for_it(self):
-        corrected, _ = apply_to_wiki(two_pages(), [same()])
-        pages = by_id(corrected)
-        self.assertEqual([(f["id"], f["entity"]) for f in corrected["facts"]], [("f1", "d"), ("f2", "n")])
-        self.assertEqual([(r["chapter"], r["source"], r["target"]) for r in corrected["relations"]], [(2, "d", "n")])
-        self.assertEqual(pages["n"]["profile"]["fields"]["hair"], [{"chapter": 2, "value": "grey", "quotes": ["q"], "shown": 4}])
-        self.assertEqual(pages["d"]["profile"]["fields"]["hair"][0]["chapter"], 2)
-        self.assertEqual((pages["d"]["present"], pages["n"]["present"]), ([2, 3], [1, 5, 6]))
-        self.assertEqual((pages["d"]["blurbs"], pages["n"]["blurbs"]), ([[2, "A man in grey."]], [[6, "Seen again."]]))
-        self.assertEqual(pages["n"]["profile"]["spoke"], [[1, "main"], [6, "main"]])
-
-    def test_a_page_already_merged_into_the_description_joins_no_earlier_than_the_correction(self):
-        corrected, _ = apply_to_wiki(two_pages(), [same()])
-        self.assertEqual(by_id(corrected)["h"]["merged"], {"into": "n", "chapter": 4})
-
-    def test_a_chapter_before_either_page_appears_is_skipped_with_a_warning(self):
-        out = io.StringIO()
-        with redirect_stdout(out):
-            corrected, missing = apply_to_wiki(two_pages(), [same(chapter=1)])
-        self.assertNotIn("merged", by_id(corrected)["d"])
-        self.assertIn("before one of them first appears", out.getvalue())
-
-    def test_an_unknown_name_on_either_side_is_reported(self):
-        for fix, name in ((same(name="Nobody"), "Nobody"), (same(same_as="Nobody"), "Nobody")):
-            corrected, missing = apply_to_wiki(two_pages(), [fix])
-            self.assertEqual(missing, [name])
-            self.assertEqual(corrected, two_pages())
-
-    def test_two_names_of_one_page_are_left_alone(self):
-        with redirect_stdout(io.StringIO()):
-            corrected, _ = apply_to_wiki(two_pages(), [same(name="the stranger", same_as="Grey Stranger")])
-        self.assertEqual(corrected, two_pages())
-
-
-class LoadSamePerson(unittest.TestCase):
-    def setUp(self):
-        folder = tempfile.TemporaryDirectory()
-        self.addCleanup(folder.cleanup)
-        self.workdir = Path(folder.name)
-        (self.workdir / "chapters").mkdir()
-        (self.workdir / "chapters" / "0004.txt").write_text("He pushed his spectacles up and said nothing.", encoding="utf-8")
-
-    def load(self, entry):
-        (self.workdir / "corrections.json").write_text(json.dumps({"entries": [entry]}), encoding="utf-8")
-        out = io.StringIO()
-        with redirect_stdout(out):
-            return load_corrections(self.workdir)[0], out.getvalue()
-
-    def test_keeps_a_link_whose_quote_is_in_its_chapter(self):
-        entry, said = self.load({"name": "Bespectacled man", "same_as": "Arlen", "chapter": 4, "quotes": ["He pushed his spectacles up"]})
-        self.assertEqual((entry["same_as"], said), ("Arlen", ""))
-
-    def test_drops_a_link_whose_quote_is_not_in_its_chapter(self):
-        entry, said = self.load({"name": "Bespectacled man", "same_as": "Arlen", "chapter": 4, "quotes": ["He took off his hat."]})
-        self.assertNotIn("same_as", entry)
-        self.assertIn("Bespectacled man.same_as ch4", said)
-
-    def test_drops_a_link_with_no_quote(self):
-        entry, _ = self.load({"name": "Bespectacled man", "same_as": "Arlen", "chapter": 4})
-        self.assertNotIn("same_as", entry)
-
-    def test_refuses_a_link_with_no_chapter(self):
-        with self.assertRaises(SystemExit):
-            self.load({"name": "Bespectacled man", "same_as": "Arlen", "quotes": ["He pushed his spectacles up"]})
-
-
-class ReaderNote(unittest.TestCase):
-    def test_the_reader_learns_the_link_only_in_chapters_after_it(self):
-        kb = Knowledge(None, {}, ())
-        kb.upsert_entity({"name": "Grey Stranger", "type": "character", "summary": "A man in grey."}, 2)
-        notes = {n: reader_notes(kb, [same()], n) for n in (4, 5)}
-        self.assertEqual(notes[4], {})
-        self.assertEqual(notes[5], {"Grey Stranger": "same as Mira Vale from chapter 4"})
+REWRITTEN = "REWRITTEN"
+PROSE = ("summary", "history", "personality")
 
 
 def unlinked_script():
@@ -137,24 +27,47 @@ def unlinked_script():
     return script
 
 
+def only_about(script, names):
+    replies = [r for r in script["replies"] if r["purpose"] not in PROSE or "contains" in r]
+    replies += [{"purpose": "summary", "contains": f'page about "{n}"', "reply": {"summary": f"{REWRITTEN} {n}."}} for n in names]
+    replies += [{"purpose": "personality", "contains": f'page about "{n}"', "reply": {"paragraph": f"{REWRITTEN} {n} (ch 5)."}} for n in names]
+    replies += [{"purpose": "history", "contains": f'History of "{n}"', "reply": {"paragraph": f"{REWRITTEN} {n} (ch 5)."}} for n in names]
+    return {"replies": replies}
+
+
 CORRECTIONS = {"entries": [
     {"name": "Sister Wren", "same_as": "Livia Hale", "chapter": 4, "quotes": [REVEAL]},
+    {"name": "Bram Ostrow", "same_as": "Odile Marr", "chapter": 5, "quotes": ["It was Bram who broke."]},
     {"name": "Captain Fenn", "same_as": "Odile Marr", "chapter": 5, "quotes": ["A line the book never has."]},
     {"name": "The Bespectacled Stranger", "same_as": "Ines Varro", "chapter": 3, "quotes": ["The sisters called her Sister Wren."]},
 ]}
+JOINED = {"Sister Wren": ("Livia Hale", 4), "Bram Ostrow": ("Odile Marr", 5)}
+
+
+def prose(wiki, n):
+    shown = {}
+    for e in wiki["entities"]:
+        main = e.get("summary") if e.get("summary") and e["summary"]["chapter"] <= n else None
+        shown[e["name"]] = ((main or {}).get("text"), [s["text"] for s in e.get("summaries", []) if s["chapter"] <= n],
+                            [h["text"] for h in e.get("history", []) if h["shown"] <= n],
+                            [p["text"] for p in (e.get("profile") or {}).get("personality", []) if p["chapter"] <= n])
+    return shown
 
 
 class SamePersonBuild(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.book = MiniBuild(unlinked_script())
+        script = unlinked_script()
+        cls.book = MiniBuild(script)
         cls.book.build()
-        before = cls.book.json("site/data/wiki.json")
-        cls.unlinked = {e["name"]: e.get("merged") for e in before["entities"] if e["name"] in ("Sister Wren", "Livia Hale")}
+        cls.before = cls.book.json("site/data/wiki.json")
+        cls.unlinked = {e["name"]: e.get("merged") for e in cls.before["entities"] if e["name"] in ("Sister Wren", "Livia Hale")}
         cls.calls = len(cls.book.calls())
         (cls.book.workdir / "corrections.json").write_text(json.dumps(CORRECTIONS), encoding="utf-8")
-        cls.rebuild = cls.book.build()
+        cls.book.script(only_about(script, {page for page, _ in JOINED.values()}))
+        cls.rebuild = cls.book.build(check=False)
         cls.new_calls = cls.book.calls()[cls.calls:]
+        cls.book.script(script)
         cls.export = cls.book.run_annalist("export", str(cls.book.workdir), str(cls.book.workdir / "site"))
         cls.wiki = cls.book.json("site/data/wiki.json")
         cls.id = {e["name"]: e["id"] for e in cls.wiki["entities"]}
@@ -175,9 +88,30 @@ class SamePersonBuild(unittest.TestCase):
     def test_without_the_correction_the_pipeline_keeps_two_pages(self):
         self.assertEqual(self.unlinked, {"Sister Wren": None, "Livia Hale": None})
 
-    def test_the_rebuild_reruns_render_and_export_with_no_model_call(self):
+    def test_the_rebuild_asks_the_model_only_about_the_pages_a_correction_joined_into(self):
+        self.assertEqual(self.rebuild.returncode, 0, self.rebuild.stderr[-2000:])
         self.assertEqual(re.findall(r"^== (\w+)$", self.rebuild.stdout, re.M), ["render", "export"])
-        self.assertEqual(self.new_calls, [])
+        self.assertEqual({c["purpose"] for c in self.new_calls}, {"summary", "history"})
+
+    def test_a_joined_page_reads_the_new_text_from_the_chapter_of_the_clue_and_the_old_text_before_it(self):
+        for part, (page, chapter) in JOINED.items():
+            with self.subTest(page=page):
+                self.assertEqual(prose(self.wiki, chapter - 1)[page], prose(self.before, chapter - 1)[page])
+                self.assertNotIn(REWRITTEN, json.dumps(prose(self.wiki, chapter - 1)[page]))
+                self.assertIn(REWRITTEN, json.dumps(prose(self.wiki, 5)[page]))
+
+    def test_before_a_correction_s_chapter_no_page_s_text_reflects_it(self):
+        for n in range(1, 4):
+            self.assertEqual(prose(self.wiki, n), {k: v for k, v in prose(self.before, n).items()}, f"chapter {n}")
+        changed = {name for name, text in prose(self.wiki, 4).items() if text != prose(self.before, 4).get(name)}
+        self.assertEqual(changed, {"Livia Hale"})
+
+    def test_a_description_page_keeps_its_own_summaries_from_before_the_chapter(self):
+        bram = next(e for e in self.wiki["entities"] if e["name"] == "Bram Ostrow")
+        old = next(e for e in self.before["entities"] if e["name"] == "Bram Ostrow")
+        self.assertEqual(bram["merged"]["chapter"], 5)
+        self.assertEqual([s for s in bram["summaries"] if s["chapter"] < 5], [s for s in old["summaries"] if s["chapter"] < 5])
+        self.assertTrue([s for s in bram["summaries"] if s["chapter"] < 5])
 
     def test_the_site_joins_the_pages_from_the_chapter_of_the_clue(self):
         merged = next(e for e in self.wiki["entities"] if e["name"] == "Sister Wren")["merged"]
@@ -211,8 +145,8 @@ class SamePersonBuild(unittest.TestCase):
         self.assertIn("white scar", after["livia-hale"].lower())
 
     def test_a_bad_quote_or_an_unknown_name_is_skipped_with_a_warning(self):
-        self.assertIn("Captain Fenn.same_as ch5 has no quote found in that chapter", self.export.stdout)
-        self.assertIn("'The Bespectacled Stranger', which matches no entry", self.export.stdout)
+        self.assertIn("warning: correction Captain Fenn.same_as ch5 has no quote found in that chapter, skipped", self.export.stdout)
+        self.assertIn("warning: corrections.json names 'The Bespectacled Stranger', which matches no entry, skipped", self.export.stdout)
         self.assertNotIn("merged", next(e for e in self.wiki["entities"] if e["name"] == "Captain Fenn"))
 
 

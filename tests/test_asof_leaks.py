@@ -24,7 +24,8 @@ ECHOED = {
 
 
 SAME_PERSON = {"entries": [{"name": "Captain Fenn", "same_as": "Odile Marr", "chapter": 4,
-                             "quotes": ["They buried Tomas Hale in the Guild plot behind the harbour chapel on a grey, windless morning."]}]}
+                             "quotes": ["They buried Tomas Hale in the Guild plot behind the harbour chapel on a grey, windless morning."]},
+                            {"name": "Bram Ostrow", "same_as": "Sabine Oake", "chapter": 5, "quotes": ["It was Bram who broke."]}]}
 
 
 TWO_ARCS = {"arcs": [{"name": ECHO, "start": 1}, {"name": ECHO, "start": 4}]}
@@ -101,8 +102,11 @@ class AsOfLeakTest(unittest.TestCase):
 
     def test_the_build_joins_the_pages_a_same_person_correction_names(self):
         ids = {e["name"]: e["id"] for e in self.wiki["entities"]}
-        merged = next(e["merged"] for e in self.wiki["entities"] if e["name"] == "Captain Fenn")
-        self.assertEqual(merged, {"into": ids["Odile Marr"], "chapter": 4})
+        merged = {e["name"]: e.get("merged") for e in self.wiki["entities"]}
+        self.assertEqual((merged["Captain Fenn"], merged["Bram Ostrow"]),
+                         ({"into": ids["Odile Marr"], "chapter": 4}, {"into": ids["Sabine Oake"], "chapter": 5}))
+        bram = next(e for e in self.wiki["entities"] if e["name"] == "Bram Ostrow")
+        self.assertTrue([s for s in bram["summaries"] if s["chapter"] < 5])
 
     def test_the_fake_model_writes_its_prompt_words_into_every_echoed_field(self):
         v = self.wiki["volumes"][0]

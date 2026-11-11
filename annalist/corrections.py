@@ -1,79 +1,141 @@
-import copy
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from .files import read_json
 from .names import name_key
+from .template import PROFILE_FIELDS, PROFILE_LISTS
 from .text import check_quote
 
 
+PAGES = "pages"
+EVERY_CORRECTION = (PAGES,)
+
+
+@dataclass(frozen=True)
+class Corrections:
+    entries: list
+    relations: list
+    dropped: list
+    problems: list
+
+
+def require(ok, message):
+    if not ok:
+        sys.exit(f"corrections.json: {message}")
+
+
 def load_corrections(workdir):
-    entries = read_json(Path(workdir) / "corrections.json", {"entries": []})["entries"]
-    if not all(isinstance(e, dict) and e.get("name") for e in entries):
-        sys.exit("corrections.json: every entry needs a name")
-    return [checked_entry(workdir, e) for e in entries]
+    raw = read_json(Path(workdir) / "corrections.json", {})
+    problems = []
+
+    def quoted(label, row):
+        if any(check_quote(str(workdir), row["chapter"], q)["ok"] for q in row.get("quotes", [])):
+            return True
+        problems.append(f"correction {label} ch{row['chapter']} has no quote found in that chapter, skipped")
+        return False
+
+    entries = raw.get("entries", [])
+    require(all(isinstance(e, dict) and e.get("name") for e in entries), "every entry needs a name")
+    relations = raw.get("relations", [])
+    require(all(isinstance(r, dict) and r.get("source") and r.get("target") and r.get("type") and r.get("chapter") for r in relations),
+            "every relation needs a source, target, type and chapter")
+    dropped = raw.get("drop_relations", [])
+    require(all(isinstance(r, dict) and r.get("source") and r.get("target") and r.get("type") and r.get("chapter") for r in dropped),
+            "every dropped relation needs a source, target, type and chapter")
+    return Corrections(entries=[checked_entry(e, quoted) for e in entries],
+                       relations=[r for r in relations if quoted(f"{r['source']} -> {r['target']}.{r['type']}", r)],
+                       dropped=dropped, problems=problems)
 
 
-def checked_entry(workdir, entry):
+def checked_entry(entry, quoted):
     entry = dict(entry)
+    name = entry["name"]
     if "fields" in entry:
-        entry["fields"] = {key: [r for r in rows if quoted(workdir, entry["name"], key, r)] for key, rows in entry["fields"].items()}
-    if "known_from" in entry and not quoted(workdir, entry["name"], "known_from", entry["known_from"]):
+        entry["fields"] = {key: [{**r, "quote_ok": True} for r in rows if quoted(f"{name}.{key}", r)] for key, rows in entry["fields"].items()}
+    if "known_from" in entry and not quoted(f"{name}.known_from", entry["known_from"]):
         del entry["known_from"]
-    if "same_as" in entry and not isinstance(entry.get("chapter"), int):
-        sys.exit(f"corrections.json: {entry['name']} needs the chapter from which it is the same as {entry['same_as']}")
-    if "same_as" in entry and not quoted(workdir, entry["name"], "same_as", entry):
+    require("same_as" not in entry or isinstance(entry.get("chapter"), int),
+            f"{name} needs the chapter from which it is the same as {entry.get('same_as')}")
+    if "same_as" in entry and not quoted(f"{name}.same_as", entry):
         del entry["same_as"]
     return entry
 
 
-def load_relations(workdir):
-    rows = read_json(Path(workdir) / "corrections.json", {}).get("relations", [])
-    if not all(isinstance(r, dict) and r.get("source") and r.get("target") and r.get("type") and r.get("chapter") for r in rows):
-        sys.exit("corrections.json: every relation needs a source, target, type and chapter")
-    return [r for r in rows if quoted(workdir, f"{r['source']} -> {r['target']}", r["type"], r)]
+def unmatched(name):
+    return f"corrections.json names {name!r}, which matches no entry, skipped"
 
 
-def quoted(workdir, name, key, row):
-    if any(check_quote(str(workdir), row["chapter"], q)["ok"] for q in row.get("quotes", [])):
-        return True
-    print(f"warning: correction {name}.{key} ch{row['chapter']} has no quote found in that chapter, skipped")
-    return False
+def known_from(corrections):
+    return {name_key(e["name"]): e["known_from"]["chapter"] for e in corrections.entries if "known_from" in e}
 
 
-def names_of(entity):
-    return {name_key(entity["name"]), *(name_key(a["name"]) for a in entity["aliases"])}
+def absorbed_part(entity, name):
+    key = name_key(name)
+    return next((a for a in entity.get("absorbed", []) if key in map(name_key, [a["name"]] + a["aliases"])), None)
 
 
-def merged_rows(existing, rows):
-    chapters = {r["chapter"] for r in rows}
-    return sorted([o for o in existing if o["chapter"] not in chapters] + rows, key=lambda o: o["chapter"])
+def join(kb, entry, until):
+    part, page, chapter = kb.resolve(entry["name"]), kb.resolve(entry["same_as"]), entry["chapter"]
+    if page is None:
+        return [unmatched(entry["same_as"])]
+    later = absorbed_part(kb.entities[page], entry["same_as"])
+    chapter = max(chapter, later["chapter"]) if later else chapter
+    problem = ("already part of another page" if absorbed_part(kb.entities[part], entry["name"]) and name_key(entry["name"]) != name_key(part)
+               else "already the same page" if part == page
+               else f"chapter {chapter} is before one of them first appears"
+               if chapter < max(kb.entities[part]["first_chapter"], kb.entities[page]["first_chapter"]) else None)
+    if problem:
+        return [f"correction {entry['name']} same_as {entry['same_as']}: {problem}, skipped"]
+    if chapter <= until:
+        own = kb.entities[part]
+        kept = {"by": "reader", "type": own["type"], "last_chapter": own["last_chapter"]}
+        kb.merge(part, page, chapter)
+        for a in kb.entities[page].get("absorbed", []):
+            if a["name"] == part and a["chapter"] == chapter:
+                a.update(kept)
+        kb.relations = [r for r in kb.relations if r["source"] != r["target"] or r["chapter"] < chapter]
+    return []
 
 
-def correct_page(page, correction):
-    if "type" in correction:
-        page["type"] = correction["type"]
-    if "title" in correction:
-        page["aliases"] = [a for a in page["aliases"] if name_key(a["name"]) != name_key(correction["title"])] + [{"name": page["name"], "chapter": page["first"]}]
-        page["name"], page["name_chapter"] = correction["title"], correction.get("title_chapter", page["first"])
-    if correction.get("fields"):
-        profile = page.setdefault("profile", {"fields": {}, "lists": {}, "spoke": [], "personality": []})
-        for key, rows in correction["fields"].items():
-            profile["fields"][key] = merged_rows(profile["fields"].get(key, []), rows)
+def add_relation(kb, row, k, until):
+    ends = {end: kb.resolve(row[end]) for end in ("source", "target")}
+    missing = [unmatched(row[end]) for end, key in ends.items() if key is None]
+    if missing or row["chapter"] > until:
+        return missing
+    filed = {end: a["name"] for end, key in ends.items() if (a := absorbed_part(kb.entities[key], row[end]))}
+    kb.relations.append({"id": f"RC{row['chapter']:04d}-{k:03d}", "chapter": row["chapter"], **ends, "type": row["type"],
+                         "detail": row.get("detail", ""), "family": row.get("family", "other"), "status": row.get("status", "stated"),
+                         "asserted_by": row.get("by", "narrator"), "quotes": row["quotes"], "timeline": "main", **({"filed": filed} if filed else {})})
+    return []
 
 
-def known_from(part, parent, chapter):
-    old = part["merged"]["chapter"]
-    part["merged"]["chapter"] = chapter
-    own = {name_key(part["name"]), *(name_key(a["name"]) for a in part["aliases"])}
-    for alias in parent["aliases"]:
-        if name_key(alias["name"]) in own:
-            alias["chapter"] = min(alias["chapter"], chapter)
-    profile = parent.get("profile") or {}
-    for rows in [*profile.get("fields", {}).values(), *profile.get("lists", {}).values()]:
-        for row in rows:
-            if row.get("shown") == old:
-                row["shown"] = max(row["chapter"], chapter)
+def drop_relation(kb, row):
+    ends = {end: kb.resolve(row[end]) for end in ("source", "target")}
+    kept = [r for r in kb.relations if not (r["chapter"] == row["chapter"] and r["type"] == row["type"]
+                                             and all(r[end] == key for end, key in ends.items()))]
+    if len(kept) == len(kb.relations):
+        return [unmatched(f"{row['source']} -> {row['target']}: {row['type']} (ch {row['chapter']})")]
+    kb.relations = kept
+    return []
+
+
+def correct_pages(kb, corrections, until):
+    problems = [unmatched(e["name"]) for e in corrections.entries if kb.resolve(e["name"]) is None]
+    for entry in corrections.entries:
+        if "same_as" in entry and kb.resolve(entry["name"]):
+            problems += join(kb, entry, until)
+    for entry in corrections.entries:
+        key = kb.resolve(entry["name"])
+        if key and "type" in entry:
+            kb.entities[key]["type"] = entry["type"]
+        if key and "title" in entry:
+            kb.entities[key]["title"] = {"name": entry["title"], **({"chapter": entry["title_chapter"]} if "title_chapter" in entry else {})}
+    for k, row in enumerate(corrections.relations, 1):
+        problems += add_relation(kb, row, k, until)
+    for row in corrections.dropped:
+        problems += drop_relation(kb, row)
+    return problems
 
 
 def joined_rows(rows, part_rows, chapter):
@@ -81,111 +143,39 @@ def joined_rows(rows, part_rows, chapter):
     return sorted(rows + held, key=lambda r: r["chapter"])
 
 
-def split_at(rows, chapter, at=lambda r: r["chapter"]):
-    return [r for r in rows if at(r) < chapter], [r for r in rows if at(r) >= chapter]
+def merged_rows(existing, rows):
+    chapters = {r["chapter"] for r in rows}
+    return sorted([o for o in existing if o["chapter"] not in chapters] + rows, key=lambda o: o["chapter"])
 
 
-def join_pages(corrected, part, page, chapter):
-    for e in corrected["entities"]:
-        if (e.get("merged") or {}).get("into") == part["id"]:
-            e["merged"] = {"into": page["id"], "chapter": max(e["merged"]["chapter"], chapter)}
-    part["merged"] = {"into": page["id"], "chapter": chapter}
-    have = names_of(page)
-    for name, seen in [(part["name"], part["name_chapter"])] + [(a["name"], a["chapter"]) for a in part["aliases"]]:
-        if name_key(name) not in have:
-            have.add(name_key(name))
-            page["aliases"].append({"name": name, "chapter": max(seen, chapter)})
-    page["aliases"].sort(key=lambda a: a["chapter"])
-    for key, at in (("blurbs", lambda b: b[0]), ("present", lambda c: c)):
-        if key in part:
-            part[key], later = split_at(part[key], chapter, at)
-            page[key] = sorted(page.get(key, []) + later, key=at)
-    if part.get("profile"):
-        profile = page.setdefault("profile", {"fields": {}, "lists": {}, "spoke": [], "personality": []})
-        for group in ("fields", "lists"):
-            for key, rows in part["profile"][group].items():
-                profile[group][key] = joined_rows(profile[group].get(key, []), rows, chapter)
-        part["profile"]["spoke"], later = split_at(part["profile"]["spoke"], chapter, lambda s: s[0])
-        profile["spoke"] = sorted(profile["spoke"] + later)
-    for f in corrected.get("facts", []):
-        if f["entity"] == part["id"] and f["chapter"] >= chapter:
-            f["entity"] = page["id"]
-    for r in corrected.get("relations", []):
-        for end in ("source", "target"):
-            if r[end] == part["id"] and r["chapter"] >= chapter:
-                r[end] = page["id"]
-    corrected["relations"] = [r for r in corrected.get("relations", []) if r["source"] != r["target"]]
+def profile_group(key):
+    return "lists" if key in PROFILE_LISTS else "fields" if key in PROFILE_FIELDS else "extra"
 
 
-def same_person(corrected, correction):
-    by_id = {e["id"]: e for e in corrected["entities"]}
-    part, page, chapter = find_page(corrected["entities"], correction["name"]), find_page(corrected["entities"], correction["same_as"]), correction["chapter"]
-    if page and "merged" in page:
-        page, chapter = by_id[page["merged"]["into"]], max(chapter, page["merged"]["chapter"])
-    problem = ("already part of another page" if "merged" in part else "already the same page" if part is page
-               else f"chapter {chapter} is before one of them first appears" if chapter < max(part["first"], page["first"]) else None)
-    if problem:
-        print(f"warning: correction {correction['name']} same_as {correction['same_as']}: {problem}, skipped")
-    else:
-        join_pages(corrected, part, page, chapter)
+def empty_profile():
+    return {"fields": {}, "extra": {}, "lists": {}}
 
 
-def find_page(entities, name):
-    key = name_key(name)
-    return next((e for e in entities if name_key(e["name"]) == key), None) or next((e for e in entities if key in names_of(e)), None)
-
-
-def added_relation(row, source, target):
-    return {"chapter": row["chapter"], "source": source["id"], "target": target["id"], "type": row["type"], "family": row.get("family", "other"),
-            "status": row.get("status", "stated"), "by": row.get("by", "narrator"), "quotes": row["quotes"], **({"detail": row["detail"]} if "detail" in row else {})}
-
-
-def load_dropped_relations(workdir):
-    rows = read_json(Path(workdir) / "corrections.json", {}).get("drop_relations", [])
-    if not all(isinstance(r, dict) and r.get("source") and r.get("target") and r.get("type") and r.get("chapter") for r in rows):
-        sys.exit("corrections.json: every dropped relation needs a source, target, type and chapter")
-    return rows
-
-
-def without_dropped(corrected, row):
-    ends = {end: find_page(corrected["entities"], row[end]) for end in ("source", "target")}
-    ids = {end: page["id"] for end, page in ends.items() if page}
-    kept = [r for r in corrected["relations"] if not (r["chapter"] == row["chapter"] and r["type"] == row["type"] and r["source"] == ids.get("source") and r["target"] == ids.get("target"))]
-    found = len(kept) < len(corrected["relations"])
-    corrected["relations"] = kept
-    return found
-
-
-def apply_to_wiki(data, corrections, relations=(), dropped=()):
-    corrected, missing = copy.deepcopy(data), []
-    entities = corrected["entities"]
-    by_id = {e["id"]: e for e in entities}
-    for correction in corrections:
-        page = find_page(entities, correction["name"])
-        if page:
-            correct_page(page, correction)
-            if "known_from" in correction and "merged" in page:
-                known_from(page, by_id[page["merged"]["into"]], correction["known_from"]["chapter"])
-        else:
-            missing.append(correction["name"])
-        if "same_as" in correction and not find_page(entities, correction["same_as"]):
-            missing.append(correction["same_as"])
-        elif "same_as" in correction and page:
-            same_person(corrected, correction)
-    for row in relations:
-        ends = {end: find_page(entities, row[end]) for end in ("source", "target")}
-        missing += [row[end] for end, page in ends.items() if page is None]
-        if all(ends.values()):
-            corrected["relations"].append(added_relation(row, ends["source"], ends["target"]))
-    missing += [f"{row['source']} -> {row['target']}: {row['type']} (ch {row['chapter']})" for row in dropped if not without_dropped(corrected, row)]
-    if relations:
-        corrected["relations"].sort(key=lambda r: r["chapter"])
-    return corrected, missing
+def correct_profiles(kb, pages, corrections):
+    for entry in corrections.entries:
+        key = kb.resolve(entry["name"])
+        if key is None or not entry.get("fields"):
+            continue
+        part = absorbed_part(kb.entities[key], entry["name"]) if name_key(entry["name"]) != name_key(key) else None
+        for field, rows in entry["fields"].items():
+            group = profile_group(field)
+            earlier = [r for r in rows if part and r["chapter"] < part["chapter"]]
+            if earlier:
+                own = pages.setdefault(part["name"], empty_profile())[group]
+                own[field] = merged_rows(own.get(field, []), earlier)
+            page = pages.setdefault(key, empty_profile())[group]
+            page[field] = merged_rows(page.get(field, []), [{**r, "shown": part["chapter"]} if r in earlier else r for r in rows])
+    return pages
 
 
 def reader_notes(kb, corrections, chapter):
     notes = {}
-    for correction in corrections:
+    for correction in corrections.entries:
         entity = kb.resolve(correction["name"])
         parts = [f"type: {correction['type']}"] if "type" in correction else []
         parts += [f"{key}: {row['value']} (chapter {row['chapter']})" for key, rows in correction.get("fields", {}).items()
@@ -195,14 +185,3 @@ def reader_notes(kb, corrections, chapter):
         if entity and parts:
             notes[entity] = "; ".join(parts)
     return notes
-
-
-def join_same_person(kb, corrections, until):
-    joined = []
-    for c in corrections:
-        part, page = (kb.resolve(c[k]) for k in ("name", "same_as")) if "same_as" in c else (None, None)
-        if part and page and part != page and max(kb.entities[part]["first_chapter"], kb.entities[page]["first_chapter"]) <= c["chapter"] <= until:
-            kb.merge(part, page, c["chapter"])
-            joined.append((part, page, c["chapter"]))
-    kb.relations = [r for r in kb.relations if r["source"] != r["target"]]
-    return joined

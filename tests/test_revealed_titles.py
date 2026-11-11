@@ -11,24 +11,10 @@ CHAPTER = ("Ilka met the warden at the gate, and the warden was silent. The lant
            "while the lamp warden slept. Brenna Stone sat on a stone, and the stone was cold as any stone. ")
 
 
-def entity(name, etype, aliases, first, last=4, **extra):
-    return {"name": name, "type": etype, "aliases": aliases, "summary": "", "first_chapter": first, "last_chapter": last, **extra}
-
-
 def seed(root):
-    entities = [
-        entity("Lantern bearer in the crypt", "character", ["Corvin Hale", "Dr. Corvin Hale", "Corvin"], 1),
-        entity("Miss Bodyguard", "character", ["Sarenne", "Miss Sarenne"], 1,
-               absorbed=[{"name": "Bodyguard by the door", "aliases": [], "first_chapter": 1, "chapter": 2}]),
-        entity("Mr. Q", "character", ["Warden"], 1),
-        entity("Warden", "rank", [], 1),
-        entity("The Harbor", "character", ["Mr. Harbor"], 1),
-        entity("Tide Reader expert", "character", ["Mirela", "Madam Mirela", "Tide Reader Madam Mirela", "Mirela Danescu"], 1),
-        entity("Lamp warden by the stair", "character", ["Oskar", "Lamp Warden Oskar"], 1),
-        entity("Keeper in the cellar", "character", ["Brenna", "Brenna Stone"], 1),
-    ]
     named = {1: [{"name": "Lantern bearer in the crypt", "type": "character", "aliases": []},
                  {"name": "Miss Bodyguard", "type": "character", "aliases": []},
+                 {"name": "Bodyguard by the door", "type": "character", "aliases": []},
                  {"name": "Mr. Q", "type": "character", "aliases": []},
                  {"name": "Warden", "type": "rank", "aliases": []},
                  {"name": "Tide Reader expert", "type": "character", "aliases": []},
@@ -47,10 +33,9 @@ def seed(root):
     for n in range(1, 5):
         (root / "chapters" / f"{n:04d}.txt").write_text(CHAPTER, encoding="utf-8")
         (root / "state" / f"{n:04d}.json").write_text(json.dumps({"chapter": n, "extraction": {"synopsis": "", "entities": named.get(n, [])}}), encoding="utf-8")
-    (root / "entities.json").write_text(json.dumps(entities), encoding="utf-8")
-    (root / "facts.jsonl").write_text("", encoding="utf-8")
-    (root / "relations.jsonl").write_text("", encoding="utf-8")
-    (root / "questions.jsonl").write_text("", encoding="utf-8")
+    merge = {"a": "Miss Bodyguard", "b": "Bodyguard by the door", "canonical": "Miss Bodyguard", "same": True,
+             "revealed": {"basis": "text", "chapter": 2}}
+    (root / "merges.json").write_text(json.dumps({"pairs": [merge]}), encoding="utf-8")
     (root / "chapters.json").write_text(json.dumps([{"index": n, "title": str(n)} for n in range(1, 5)]), encoding="utf-8")
     (root / "book.json").write_text(json.dumps({"title": "T"}), encoding="utf-8")
 
@@ -60,7 +45,7 @@ class RevealedTitles(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             seed(root)
-            return {(e["name"], e["type"]): e for e in build(root, {})["entities"]}
+            return {(e["name"], e["type"]): e for e in build(root, {})[1]["entities"]}
 
     def test_descriptor_page_takes_the_real_name_from_its_reveal_chapter(self):
         page = self.pages()[("Corvin Hale", "character")]

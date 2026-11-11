@@ -40,11 +40,37 @@ A top-level `relations` list adds ties the wiki missed:
 
 A top-level `drop_relations` list removes a wrong tie. Each row gives the tie's `source`, `target`, `type`, and `chapter` exactly as the wiki has them, and `export` warns about a row that matches nothing.
 
-After an edit, run `python3 -m annalist export runs/book runs/book/site`, which takes a few minutes for a long book. If the pipeline code has changed since the last build, `export` refuses to run until you rebuild. Add `--allow-stale` to apply corrections anyway. `annalist build` also reapplies the file whenever it changes, and `export` warns about any correction whose name no longer matches an entry.
+## A correction rewrites the text of the pages it affects
+
+Corrections are part of what the wiki knows. When `render` and `export` load the run, corrections enter with the pipeline's own decisions, such as `merges.json` and `types.json`, each from its chapter. So the page summaries, the summaries as of earlier chapters, History, Personality, the infobox, relations, the Markdown wiki, and the site all reflect them. A joined page's summary and History are written again from the facts of both pages from the chapter of the link.
+
+Before a correction's chapter, nothing reflects it. Each page keeps the text it had before, word for word: a summary as of an earlier chapter is written only from facts of that chapter or before, and a description page keeps its own summaries, History, and Personality up to the chapter of its `same_as` link.
+
+A correction changes only the prompts of the pages it affects, so every other page reuses its cached replies:
+
+| Correction | Prompts that change |
+| --- | --- |
+| `same_as` or `known_from` | The joined page's summary, its summaries at chapters from the link on, at most one per doubling of its fact count, its History for each finished arc that ends at or after the link, and its Personality when the other page brings personality evidence. |
+| `type` | The entry's summaries, since the prompt names the type, and its History when it becomes a character. |
+| `relations`, `drop_relations` | The History of both ends for the arc that holds the tie's chapter. |
+| `title`, `fields` | None. The title renames the page from `title_chapter`, and field values go into the infobox. |
+
+So a run with N corrections asks the model at most a few prompts per corrected page, never for a page no correction names. The `profile` stage does not read corrections: a joined page takes the other page's infobox values from the chapter of the link, and a `type` correction does not build an infobox for an entry the pipeline did not profile.
+
+## Apply your corrections
+
+After an edit, run `annalist build` on the run again. It sees that `corrections.json` changed and reruns `render` and `export`. `render` asks the model for the pages your corrections changed, so check the cost with `--dry-run` first and pass `--budget`:
+
+```sh
+python3 -m annalist build book.epub runs/book --dry-run
+python3 -m annalist build book.epub runs/book --budget 1
+```
+
+`annalist export runs/book runs/book/site` alone also applies the corrections, but it only reads replies that `render` already has, so a rewritten page shows no summary until the next build. If the pipeline code has changed since the last build, `export` refuses to run until you rebuild. Add `--allow-stale` to export anyway. `export` warns about any correction whose quote is not in its chapter or whose name no longer matches an entry.
 
 Later volumes keep your corrections:
 
-- Every export reapplies them, so a rebuild or a new volume does not lose them.
+- Every build reapplies them, so a rebuild or a new volume does not lose them.
 - When `read` reads a new chapter, it shows the reader each correction as a note on that entry, using only values from earlier chapters. A `same_as` note appears only in chapters after its `chapter`. Chapters already read are not read again.
 
-Corrections do not change anything the LLM has already written. Page summaries and the later stages' results keep their old text, and a joined page keeps the summary of its `same_as` page. The Markdown wiki under `wiki/` applies only `same_as`, and `annalist build` renders it again when the file changes, with no LLM calls. A value that a later rebuild produces for another chapter stays in the history next to your correction.
+A value that a later rebuild produces for another chapter stays in the history next to your correction.

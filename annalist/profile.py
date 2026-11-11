@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .audit import audit_items
 from .book import load_book
+from .corrections import joined_rows
 from .deaths import STATUS_WORDS, verified_deaths, verified_revivals
 from .evidence import add_evidence, class_pattern, stems
 from .files import read_json, write_json
@@ -363,25 +364,38 @@ def filed_page(workdir, entity, o):
 def page_profiles(workdir, entities, profiles):
     pages = {}
     for e in entities:
-        if e["name"] not in profiles:
+        if e["type"] != "character":
             continue
-        merged_at = {a["name"]: a["chapter"] for a in e.get("absorbed", [])}
-        split = {page: {"fields": {}, "extra": {}, "lists": {}} for page in [e["name"]] + list(merged_at)}
-        for group in ("fields", "extra", "lists"):
-            for key, obs in profiles[e["name"]][group].items():
-                for page in split.values():
-                    page[group][key] = []
-                for o in obs:
-                    pending = [c for c in merged_at.values() if o["chapter"] < c]
-                    page = filed_page(workdir, e, o) if pending else e["name"]
-                    if page == e["name"]:
-                        split[page][group][key].append(o)
-                        continue
-                    if page in merged_at:
-                        split[page][group][key].append(o)
-                    split[e["name"]][group][key].append({**o, "shown": merged_at.get(page, max(pending))})
-        pages.update(split)
+        joined = [a for a in e.get("absorbed", []) if a.get("by") == "reader" and a["name"] in profiles]
+        pages.update(split_profile(workdir, {**e, "absorbed": [a for a in e.get("absorbed", []) if a.get("by") != "reader"]}, profiles))
+        for a in joined:
+            own = pages[a["name"]] = {group: dict(profiles[a["name"]][group]) for group in ("fields", "extra", "lists")}
+            page = pages.setdefault(e["name"], {"fields": {}, "extra": {}, "lists": {}})
+            for group, rows in own.items():
+                for key, obs in rows.items():
+                    page[group][key] = joined_rows(page[group].get(key, []), obs, a["chapter"])
     return pages
+
+
+def split_profile(workdir, e, profiles):
+    if e["name"] not in profiles:
+        return {}
+    merged_at = {a["name"]: a["chapter"] for a in e.get("absorbed", [])}
+    split = {page: {"fields": {}, "extra": {}, "lists": {}} for page in [e["name"]] + list(merged_at)}
+    for group in ("fields", "extra", "lists"):
+        for key, obs in profiles[e["name"]][group].items():
+            for page in split.values():
+                page[group][key] = []
+            for o in obs:
+                pending = [c for c in merged_at.values() if o["chapter"] < c]
+                page = filed_page(workdir, e, o) if pending else e["name"]
+                if page == e["name"]:
+                    split[page][group][key].append(o)
+                    continue
+                if page in merged_at:
+                    split[page][group][key].append(o)
+                split[e["name"]][group][key].append({**o, "shown": merged_at.get(page, max(pending))})
+    return split
 
 
 def more_specific(old, new, classes):

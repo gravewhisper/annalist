@@ -121,11 +121,14 @@ class EvalMiniTest(unittest.TestCase):
     def test_a_page_starts_at_the_first_chapter_whose_text_names_it_even_when_the_read_listed_it_later(self):
         late = self.book.root / "late"
         shutil.copytree(self.book.workdir, late)
-        entities = json.loads((late / "entities.json").read_text(encoding="utf-8"))
-        quay = next(e for e in entities if e["name"] == "Corvel Quay")
-        self.assertEqual(quay["first_chapter"], 1)
-        quay["first_chapter"] = 4
-        (late / "entities.json").write_text(json.dumps(entities), encoding="utf-8")
+        for n in range(1, 5):
+            path = late / "state" / f"{n:04d}.json"
+            state = json.loads(path.read_text(encoding="utf-8"))
+            out = state["extraction"]
+            out["entities"] = [e for e in out["entities"] if e["name"] != "Corvel Quay"] + ([{"name": "Corvel Quay", "type": "place"}] if n == 4 else [])
+            out["relations"] = [r for r in out["relations"] if "Corvel Quay" not in (r["source"], r["target"])]
+            path.write_text(json.dumps(state), encoding="utf-8")
+        self.assertEqual(load_states(late).entities["Corvel Quay"]["first_chapter"], 4)
         proc = subprocess.run([sys.executable, "-m", "annalist", "export", str(late), str(late / "site")],
                               cwd=ROOT, capture_output=True, text=True, timeout=120)
         self.assertEqual(proc.returncode, 0, proc.stderr)

@@ -6,14 +6,14 @@ import shutil
 import sys
 from pathlib import Path
 
-from .corrections import apply_to_wiki, load_corrections, load_dropped_relations, load_relations
+from .corrections import correct_profiles, EVERY_CORRECTION
 from .families import read_families, relation_family
-from .files import read_json, read_jsonl
+from .files import read_json
 from .llm import cached_reply
 from .names import is_stub, name_key, parse_aliases, written_summary
 from .profile import page_profiles
-from .render import checkpoint_prompts, closed_arcs, history_prompts, PERSONALITY_PROMPT, summary_prompt
-from .state import MAIN_TIMELINE
+from .render import checkpoint_prompts, closed_arcs, history_prompts, kept_prompts, PERSONALITY_PROMPT, reader_parts, summary_prompt
+from .state import load_states
 from .status import spoken_appearances
 from .template import type_parents, Types
 from .text import chapter_text, mention_quote, verified_quotes
@@ -154,14 +154,28 @@ def entity_summary(workdir, entity, facts, safe_chapter, timelines, last):
     return {"chapter": safe_chapter, "text": str(reply["summary"]).strip()}
 
 
-def arc_history(workdir, entity, facts, relations, arcs, timelines, name_seen):
+def arc_history(workdir, prompts, name_seen):
     history = []
-    for arc, prompt in history_prompts(entity, facts, relations, arcs, timelines):
+    for arc, prompt in prompts:
         reply = cached_reply(workdir, "history", prompt)
         if reply and reply.get("paragraph"):
             history.append({"arc": arc["name"], "start": arc["start"], "end": arc["end"], "shown": max(arc["end"], name_seen),
                             "text": str(reply["paragraph"]).strip()})
     return history
+
+
+def kept_prose(workdir, prompts, joined, part, last):
+    prose = {}
+    if prompts["summary"]:
+        unseen = last if len(part["aliases"]) < len(joined["aliases"]) else 0
+        safe = max([joined["last_chapter"], part["name_chapter"], unseen] + [x["chapter"] for x in part["aliases"]])
+        reply = cached_reply(workdir, "summary", prompts["summary"])
+        if reply and reply.get("summary"):
+            prose["summary"] = {"chapter": safe, "text": str(reply["summary"]).strip()}
+    replies = {c: cached_reply(workdir, "summary", p) for c, p in prompts["summaries"].items()}
+    running = [{"chapter": c, "text": str(r["summary"]).strip()} for c, r in replies.items() if r and r.get("summary")]
+    history = arc_history(workdir, prompts["history"], part["name_chapter"])
+    return {**prose, **({"summaries": running} if running else {}), **({"history": history} if history else {})}
 
 
 def nameless(etype, entry):
@@ -230,16 +244,23 @@ def stored_theme(title):
     return next((s.get("theme") or {} for s in styles if name_key(s.get("title", "")) == name_key(title)), {})
 
 
+def titled(record, title):
+    aliases = [a for a in record["aliases"] if name_key(a["name"]) != name_key(title["name"])] + [{"name": record["name"], "chapter": record["first"]}]
+    return {**record, "name": title["name"], "name_chapter": title.get("chapter", record["first"]),
+            "aliases": sorted(aliases, key=lambda a: a["chapter"])}
+
+
 def build(workdir, theme):
     book = {**read_json(workdir / "book.json", {}), **theme}
     title = book.get("title") or workdir.name
-    entities = read_json(workdir / "entities.json", [])
-    facts = [{**f, **verified_quotes(workdir, f["chapter"], f["quotes"])} for f in read_jsonl(workdir / "facts.jsonl")]
-    relations = [{**r, **verified_quotes(workdir, r["chapter"], r["quotes"])} for r in read_jsonl(workdir / "relations.jsonl")]
+    kb = load_states(workdir, ladders=True, corrections=EVERY_CORRECTION)
+    entities = list(kb.entities.values())
+    facts = [{**f, **verified_quotes(workdir, f["chapter"], f["quotes"])} for f in kb.facts]
+    relations = [{**r, **verified_quotes(workdir, r["chapter"], r["quotes"])} for r in kb.relations]
     states = list(read_states(workdir))
     registry = Registry(entities)
     absorbed = Absorbed(entities)
-    timelines = {t["id"]: t for t in read_json(workdir / "timelines.json", [MAIN_TIMELINE])}
+    timelines = kb.timelines
     seen, blurbs = first_seen(registry, facts, relations, states, timelines, absorbed)
     for d in read_json(workdir / "discover.json", {"entities": []})["entities"]:
         canonical = registry.resolve(d["name"], d["type"])
@@ -257,7 +278,8 @@ def build(workdir, theme):
     by_entity = {}
     for f in facts:
         by_entity.setdefault(f["entity"], []).append(f)
-    profiles = page_profiles(workdir, entities, read_json(workdir / "profiles.json", {"characters": {}})["characters"])
+    profiles = correct_profiles(kb, page_profiles(workdir, entities, read_json(workdir / "profiles.json", {"characters": {}})["characters"]),
+                                kb.corrections)
     ids = {name: entity_id(name) for name in [e["name"] for e in entities] + list(absorbed.entries)}
     fact_page = {f["id"]: absorbed.page(f["entity"], f.get("filed"), f["chapter"]) for f in facts}
     rel_ends = [{end: absorbed.page(r[end], (r.get("filed") or {}).get(end), r["chapter"]) for end in ("source", "target")}
@@ -338,27 +360,31 @@ def build(workdir, theme):
             running = [{"chapter": c, "text": str(r["summary"]).strip()} for c, r in replies.items() if r and r.get("summary")]
             if running:
                 record["summaries"] = running
-        if e["name"] in profiles and e["type"] == "character":
+        if e["name"] in profiles:
             record["profile"] = export_profile(workdir, e["name"], profiles[e["name"]], spoken.get(e["name"], []))
         if e["type"] == "character":
-            history = arc_history(workdir, e, own, ties.get(e["name"], []), arcs, timelines, name_seen)
+            history = arc_history(workdir, history_prompts(e, own, ties.get(e["name"], []), arcs, timelines), name_seen)
             if history:
                 record["history"] = history
-        out_entities.append(record)
+        out_entities.append(titled(record, e["title"]) if e.get("title") else record)
+        kept = {a["name"]: kept_prompts(a, own, ties.get(e["name"], []), arcs, timelines, last) for a in reader_parts(e)}
         for a in e.get("absorbed", []):
-            own = [{"name": x, "chapter": seen[(a["name"], x)]} for x in a["aliases"] if (a["name"], x) in seen]
+            kind = a.get("type", e["type"])
+            aliases = [{"name": x, "chapter": seen[(a["name"], x)]} for x in a["aliases"] if (a["name"], x) in seen]
             part = {"id": ids[a["name"]], "name": a["name"], "name_chapter": seen.get((a["name"], a["name"]), a["first_chapter"]),
-                    "type": e["type"], "first": a["first_chapter"], "aliases": sorted(own, key=lambda x: x["chapter"]),
+                    "type": kind, "first": a["first_chapter"], "aliases": sorted(aliases, key=lambda x: x["chapter"]),
                     "blurbs": blurbs.get(a["name"], []), "merged": {"into": ids[e["name"]], "chapter": a["chapter"]},
-                    **nameless(e["type"], a)}
+                    **nameless(kind, a)}
             part["mention"] = first_mention(texts, part)
-            if e["type"] == "character":
+            if kind == "character":
                 part["present"] = sorted(present.get(a["name"], ()))
-            if a["name"] in profiles and e["type"] == "character":
+            if a["name"] in profiles:
                 part["profile"] = export_profile(workdir, a["name"], profiles[a["name"]], spoken.get(a["name"], []))
+            if a["name"] in kept:
+                part.update(kept_prose(workdir, kept[a["name"]], a, part, last))
             out_entities.append(part)
 
-    return {
+    return kb.problems, {
         "book": {"title": title, "max": last,
                  "public_domain": book.get("public_domain") is True, "theme": book.get("theme") or stored_theme(title),
                  "power_types": sorted((book.get("power_types") or {}).keys()), "parents": type_parents(book.get("power_types")),
@@ -371,11 +397,12 @@ def build(workdir, theme):
                    **({} if f["quote_ok"] else {"unverified": True})}
                   for f in facts if f["entity"] in ids],
         "relations": [{"chapter": r["chapter"], "source": ids[ends["source"]], "target": ids[ends["target"]], "type": r["type"],
-                       "family": relation_family(r["type"], readings, types.get(r["target"], "")), "status": r["status"], "by": r["asserted_by"],
+                       "family": r.get("family") or relation_family(r["type"], readings, types.get(r["target"], "")), "status": r["status"],
+                       "by": r["asserted_by"],
                        "quotes": r["quotes"], **timeline(r), **({"detail": r["detail"]} if r["detail"] else {}),
                        **({} if r["quote_ok"] else {"unverified": True})}
                       for r, ends in zip(relations, rel_ends) if r["source"] in ids and r["target"] in ids],
-        "questions": [question_record(q, tiers.get(q["id"], {})) for q in read_jsonl(workdir / "questions.jsonl")],
+        "questions": [question_record(q, tiers.get(q["id"], {})) for q in kb.questions.values()],
         "ladders": ladder_records(workdir, registry, ids, (book.get("ladder") or {}).get("step_type")),
         "volumes": sorted((volume_record(read_json(p, {})) for p in (workdir / "volumes").glob("*.json")),
                           key=lambda v: v["from"]),
@@ -385,9 +412,9 @@ def build(workdir, theme):
 def cmd_export(args):
     workdir, outdir = Path(args.workdir).resolve(), Path(args.outdir).resolve()
     theme = read_json(args.theme, {}) if args.theme else {}
-    data, unmatched = apply_to_wiki(build(workdir, theme), load_corrections(workdir), load_relations(workdir), load_dropped_relations(workdir))
-    for name in unmatched:
-        print(f"warning: corrections.json names {name!r}, which matches no entry, skipped")
+    problems, data = build(workdir, theme)
+    for problem in problems:
+        print(f"warning: {problem}")
     if args.public and not data["book"]["public_domain"]:
         data = strip_quotes(data)
     data["book"]["text"] = not args.public
