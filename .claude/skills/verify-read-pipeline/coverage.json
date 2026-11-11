@@ -1,5 +1,5 @@
 {
-  "sync_commit": "0c95d87",
+  "sync_commit": "c62aa62",
   "covers": [
     {
       "file": "annalist/read.py",
@@ -52,7 +52,7 @@
     {
       "file": "annalist/state.py",
       "function": "load_states",
-      "fingerprint": "d69bdcf5f6301a56",
+      "fingerprint": "fb14847191bcd0b9",
       "model": "Loaded (every state file is applied as checked)"
     },
     {
