@@ -50,9 +50,17 @@ def a_kind(usage):
     return usage["kind"] >= KIND_LEAST and usage["kind"] >= KIND_SHARE * usage["named"]
 
 
+DIVINE = re.compile(r"\b(?:gods?|goddess(?:es)?|deit(?:y|ies)|divine|divinit(?:y|ies)|worship\w*)\b", re.I)
+
+
+def divine(entity):
+    return bool(DIVINE.search(" ".join([entity["name"], *entity["aliases"], entity["summary"]])))
+
+
 def checked(kb, n, usage, spoke):
     etype = kb.entities[n]["type"]
-    return etype not in BASE_TYPES or etype == UNCATEGORIZED or n in usage or (etype == "creature" and n in spoke)
+    return (etype not in BASE_TYPES or etype == UNCATEGORIZED or n in usage
+            or (etype == "creature" and (n in spoke or divine(kb.entities[n]))))
 
 
 def cmd_retype(args):

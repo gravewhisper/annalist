@@ -17,7 +17,8 @@ ENTITY_TYPES = {t.name: t for t in (
     EntityType("event", "Event", "something that happened at a time: a battle, festival, disaster, or meeting"),
     EntityType("deity", "Deity", "a god or godlike being worshipped in the story"),
     EntityType("creature", "Creature", "a kind, species, or race of non-human being, such as a monster, beast, or spirit, or one such "
-                                       "being the story never names; one with a name of its own, or one who speaks, is a character"),
+                                       "being the story never names; one with a name of its own, or one who speaks, is a character; "
+                                       "one god is a deity, and a kind or class of gods is a concept"),
     EntityType("concept", "Concept", "an idea, rule, custom, or phenomenon of the story's world"),
 )}
 

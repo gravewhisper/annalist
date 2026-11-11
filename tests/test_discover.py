@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -64,6 +65,20 @@ class DiscoverBookTypeTest(unittest.TestCase):
         self.assertEqual([(e["name"], e["type"]) for e in kept], [("Tideglass", "elixir")])
         self.assertIn("- elixir:", prompts[0])
         self.assertNotIn("moonpetal", prompts[0])
+
+
+class DiscoverGodsTest(unittest.TestCase):
+    def test_a_recurring_name_for_a_class_of_gods_is_filed_as_a_concept_not_a_creature(self):
+        replies = [{"purpose": "discover", "contains": "one god is a deity, and a kind or class of gods is a concept",
+                    "reply": {"entries": [{"id": "C1", "type": "concept", "summary": "A class of malevolent gods."}]}},
+                   {"purpose": "discover", "reply": {"entries": [{"id": "C1", "type": "creature", "summary": "Beings under the shoals."}]}}]
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ, {k: v for k, v in os.environ.items()
+                                                                           if not k.startswith("ANNALIST_")}, clear=True):
+            (Path(tmp) / "book.json").write_text(json.dumps({"title": "Reef", "backend": {"name": "fake", "script": "script.json"}}),
+                                                 encoding="utf-8")
+            (Path(tmp) / "script.json").write_text(json.dumps({"replies": replies}), encoding="utf-8")
+            kept = judge(tmp, [{"name": "Hollow Gods", "chapters": [1, 2], "passage": "the Hollow Gods hunger beneath the shoals"}])
+        self.assertEqual([(e["name"], e["type"]) for e in kept], [("Hollow Gods", "concept")])
 
 
 if __name__ == "__main__":
