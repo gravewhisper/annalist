@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .book import load_book
+from .book import ladder_types, load_book
 from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import name_key, name_pattern, names_of
@@ -19,12 +19,56 @@ POWER SYSTEM: {power_system}
 POWER TYPES (type: description):
 {types}
 
-Decide whether the novel has a power ladder: named groups that are each a ranked series of steps, where the groups are entries of one power type above and the steps are entries of another (for example schools with circles, or guilds with grades).
+Decide whether the novel has a power ladder, and which of two shapes it has:
+- grouped: named groups that are each their own ranked series of steps, where the groups are entries of one power type above and the steps are entries of another (for example schools with circles, or guilds with grades).
+- shared: one ranked series of steps that every practitioner climbs, where the steps are entries of one power type above (for example cultivation realms), each often split into ordered sub-stages such as numbered layers or early, middle and late. Groups such as sects whose members all climb that one series do not make it grouped.
 
 Reply with one JSON object:
-{{"ladder": {{"group_type": "the power type of the groups", "step_type": "the power type of the ranked steps", "rank": "number when the novel numbers the steps, order when it only names them in sequence", "direction": "ascending when a higher number is stronger, descending when a lower number is stronger", "note": "one sentence on how the steps rank within a group"}}}}
-or {{"ladder": null}} when no two of the power types form such a ladder. group_type and step_type are two different types from the list above, written exactly as listed.
+{{"ladder": {{"shape": "grouped", "group_type": "the power type of the groups", "step_type": "the power type of the ranked steps", "rank": "number when the novel numbers the steps, order when it only names them in sequence", "direction": "ascending when a higher number is stronger, descending when a lower number is stronger", "note": "one sentence on how the steps rank within a group"}}}}
+or {{"ladder": {{"shape": "shared", "step_type": "the power type of the ranked steps", "rank": "number or order, as above", "direction": "ascending or descending, as above", "note": "one sentence on how the steps rank and how each splits into sub-stages"}}}}
+or {{"ladder": null}} when the power types form no such ladder. Every type is written exactly as listed above, and group_type and step_type are two different types.
 """
+
+
+def ranked_problems(ladder):
+    problems = []
+    if ladder.get("rank") not in RANKS:
+        problems.append(f"rank must be one of {', '.join(RANKS)}, not {ladder.get('rank')!r}.")
+    if ladder.get("rank") == "number" and ladder.get("direction") not in DIRECTIONS:
+        problems.append(f"direction must be one of {', '.join(DIRECTIONS)}, not {ladder.get('direction')!r}.")
+    return problems
+
+
+def typed_problems(ladder, keys, power_types):
+    return [f'{key} "{ladder.get(key)}" is not one of the power types {", ".join(power_types)}.'
+            for key in keys if name_key(ladder.get(key) or "") not in power_types]
+
+
+def grouped_problems(ladder, power_types):
+    problems = typed_problems(ladder, ("group_type", "step_type"), power_types)
+    if name_key(ladder.get("group_type") or "") == name_key(ladder.get("step_type") or ""):
+        problems.append("group_type and step_type must be two different power types.")
+    return problems + ranked_problems(ladder)
+
+
+def shared_problems(ladder, power_types):
+    return typed_problems(ladder, ("step_type",), power_types) + ranked_problems(ladder)
+
+
+def ranked_spec(raw):
+    return {"rank": raw["rank"], "direction": raw["direction"] if raw["rank"] == "number" else "ascending",
+            "note": str(raw.get("note") or "").strip()}
+
+
+SHAPE_SPECS = {
+    "grouped": (grouped_problems,
+                lambda raw: {"group_type": name_key(raw["group_type"]), "step_type": name_key(raw["step_type"]), **ranked_spec(raw)}),
+    "shared": (shared_problems, lambda raw: {"shape": "shared", "step_type": name_key(raw["step_type"]), **ranked_spec(raw)}),
+}
+
+
+def shape_of(ladder):
+    return ladder.get("shape", "grouped")
 
 
 def ladder_problems(reply, power_types):
@@ -35,20 +79,13 @@ def ladder_problems(reply, power_types):
         return None
     if not isinstance(ladder, dict):
         return "ladder must be an object or null."
-    problems = [f'{key} "{ladder.get(key)}" is not one of the power types {", ".join(power_types)}.'
-                for key in ("group_type", "step_type") if name_key(ladder.get(key) or "") not in power_types]
-    if name_key(ladder.get("group_type") or "") == name_key(ladder.get("step_type") or ""):
-        problems.append("group_type and step_type must be two different power types.")
-    if ladder.get("rank") not in RANKS:
-        problems.append(f"rank must be one of {', '.join(RANKS)}, not {ladder.get('rank')!r}.")
-    if ladder.get("rank") == "number" and ladder.get("direction") not in DIRECTIONS:
-        problems.append(f"direction must be one of {', '.join(DIRECTIONS)}, not {ladder.get('direction')!r}.")
-    return " ".join(problems) or None
+    if shape_of(ladder) not in SHAPE_SPECS:
+        return f"shape must be one of {', '.join(SHAPE_SPECS)}, not {ladder.get('shape')!r}."
+    return " ".join(SHAPE_SPECS[shape_of(ladder)][0](ladder, power_types)) or None
 
 
 def ladder_spec(raw):
-    return {"group_type": name_key(raw["group_type"]), "step_type": name_key(raw["step_type"]), "rank": raw["rank"],
-            "direction": raw["direction"] if raw["rank"] == "number" else "ascending", "note": str(raw.get("note") or "").strip()}
+    return SHAPE_SPECS[shape_of(raw)][1](raw)
 
 
 def ladder_needed(book):
@@ -89,6 +126,24 @@ RANK_RULES = {"number": '"rank" is the number the novel gives the {step} within 
               "order": '"rank" is the {step}\'s position in its {group} counted from the weakest, starting at 1.'}
 
 
+SHARED_LADDER_PROMPT = """You are building the power ladder page of a reference wiki for a novel. In this novel everyone climbs one shared ladder of {step} entries. {note}
+
+{step_heading} ENTRIES (name: summary):
+{steps}
+
+EVIDENCE (chapter | what the wiki records | quote from that chapter):
+{evidence}
+
+Reply with one JSON object:
+{{"steps": [{{"entry": "a {step} entry's exact name", "rank": 1, "chapter": 12, "quote": "the quote of the evidence line", "stages": [{{"name": "a sub-stage of this {step}", "chapter": 12, "quote": "the quote of the evidence line"}}]}}]}}
+Rules: list every {step} the evidence places on the ladder. "entry" is the exact name of a listed {step} entry. {rank_rule} "chapter" and "quote" copy the chapter and quote of the earliest evidence line that places the {step} on the ladder. "stages" lists the sub-stages of that {step} the evidence names, such as a numbered layer or an early, middle or late stage, from the weakest to the strongest. A sub-stage's "name" is how the novel names it, without the {step}'s own name, and its "chapter" and "quote" copy the earliest evidence line that names it. Leave "stages" empty when the evidence names none, leave out a {step} the evidence does not place on the ladder, and never guess a rank or a sub-stage.
+"""
+
+
+SHARED_RANK_RULES = {"number": '"rank" is the number the novel gives the {step} on the ladder.',
+                     "order": '"rank" is the {step}\'s position on the ladder counted from the weakest, starting at 1.'}
+
+
 def entry_lines(kb, etype):
     return "\n".join(f"- {k}: {e['summary']}" for k, e in sorted(kb.entities.items()) if e["type"] == etype) or "(none)"
 
@@ -98,8 +153,9 @@ def first_verified(workdir, row):
 
 
 def evidence_lines(workdir, kb, spec):
-    members = {k for k, e in kb.entities.items() if e["type"] in (spec["group_type"], spec["step_type"])}
-    named = name_pattern([n for k in members for n in names_of(kb.entities[k])] + [spec["group_type"], spec["step_type"]])
+    types = ladder_types(spec)
+    members = {k for k, e in kb.entities.items() if e["type"] in types}
+    named = name_pattern([n for k in members for n in names_of(kb.entities[k])] + list(types))
     rows = []
     for f in kb.facts:
         if f["entity"] in members or named.search(f["claim"]):
@@ -114,7 +170,7 @@ def evidence_lines(workdir, kb, spec):
     return [f'- ch{c} | {text} | "{quote}"' for c, text, quote in sorted(set(rows))]
 
 
-def ladders_prompt(workdir, kb, spec):
+def grouped_prompt(workdir, kb, spec):
     words = {"group": spec["group_type"], "step": spec["step_type"]}
     return LADDERS_PROMPT.format(**words, note=spec["note"], group_heading=spec["group_type"].upper(), step_heading=spec["step_type"].upper(),
                                  groups=entry_lines(kb, spec["group_type"]), steps=entry_lines(kb, spec["step_type"]),
@@ -122,23 +178,44 @@ def ladders_prompt(workdir, kb, spec):
                                  rank_rule=RANK_RULES[spec["rank"]].format(**words))
 
 
+def shared_prompt(workdir, kb, spec):
+    return SHARED_LADDER_PROMPT.format(step=spec["step_type"], note=spec["note"], step_heading=spec["step_type"].upper(),
+                                       steps=entry_lines(kb, spec["step_type"]),
+                                       evidence="\n".join(evidence_lines(workdir, kb, spec)) or "(none)",
+                                       rank_rule=SHARED_RANK_RULES[spec["rank"]].format(step=spec["step_type"]))
+
+
+def verified_place(workdir, raw, last):
+    try:
+        chapter = int(raw.get("chapter"))
+    except (TypeError, ValueError):
+        return None
+    quote = str(raw.get("quote") or "").strip()
+    if not 1 <= chapter <= last or not quote or not check_quote(workdir, chapter, quote)["ok"]:
+        return None
+    return {"chapter": chapter, "quote": quote}
+
+
 def placed_step(workdir, kb, spec, raw, last):
     if not isinstance(raw, dict):
         return None
     key = kb.resolve(str(raw.get("entry") or "").strip(), spec["step_type"])
     try:
-        rank, chapter = int(raw.get("rank")), int(raw.get("chapter"))
+        rank = int(raw.get("rank"))
     except (TypeError, ValueError):
         return None
-    quote = str(raw.get("quote") or "").strip()
-    if not key or kb.entities[key]["type"] != spec["step_type"] or not 1 <= chapter <= last or not quote:
+    if not key or kb.entities[key]["type"] != spec["step_type"]:
         return None
-    if not check_quote(workdir, chapter, quote)["ok"]:
-        return None
-    return {"entry": key, "rank": rank, "chapter": chapter, "quote": quote}
+    place = verified_place(workdir, raw, last)
+    return place and {"entry": key, "rank": rank, **place}
 
 
-def read_ladders(workdir, kb, spec, reply):
+def ranked(steps, spec):
+    sign = 1 if spec["direction"] == "ascending" else -1
+    return sorted(steps, key=lambda s: (sign * s["rank"], s["entry"]))
+
+
+def read_grouped(workdir, kb, spec, reply):
     last = max(kb.synopses, default=0)
     groups = {}
     for raw in reply["ladders"]:
@@ -150,11 +227,39 @@ def read_ladders(workdir, kb, spec, reply):
         for step in filter(None, (placed_step(workdir, kb, spec, s, last) for s in raw.get("steps") or [])):
             if step["entry"] not in steps or step["chapter"] < steps[step["entry"]]["chapter"]:
                 steps[step["entry"]] = step
-    sign = 1 if spec["direction"] == "ascending" else -1
     ladders = [{"group": group, "group_type": spec["group_type"], "chapter": min(s["chapter"] for s in steps.values()),
-                "steps": sorted(steps.values(), key=lambda s: (sign * s["rank"], s["entry"]))}
+                "steps": ranked(steps.values(), spec)}
                for group, steps in groups.items() if steps]
     return sorted(ladders, key=lambda l: (l["chapter"], l["group"]))
+
+
+def placed_stages(workdir, raw, last):
+    stages = {}
+    for s in raw if isinstance(raw, list) else []:
+        name = str(s.get("name") or "").strip() if isinstance(s, dict) else ""
+        place = verified_place(workdir, s, last) if name else None
+        if place and name_key(name) not in stages:
+            stages[name_key(name)] = {"name": name, **place}
+    return list(stages.values())
+
+
+def read_shared(workdir, kb, spec, reply):
+    last = max(kb.synopses, default=0)
+    steps = {}
+    for raw in reply["steps"]:
+        step = placed_step(workdir, kb, spec, raw, last)
+        if step and (step["entry"] not in steps or step["chapter"] < steps[step["entry"]]["chapter"]):
+            steps[step["entry"]] = {**step, "stages": placed_stages(workdir, raw.get("stages"), last)}
+    return [{"group": None, "group_type": None, "chapter": min(s["chapter"] for s in steps.values()),
+             "steps": ranked(steps.values(), spec)}] if steps else []
+
+
+def listed(key):
+    return lambda r: None if isinstance(r.get(key), list) else f"no {key} list"
+
+
+SHAPE_STAGES = {"grouped": (grouped_prompt, listed("ladders"), read_grouped),
+                "shared": (shared_prompt, listed("steps"), read_shared)}
 
 
 def cmd_ladders(args):
@@ -163,10 +268,10 @@ def cmd_ladders(args):
     kb = load_states(workdir)
     ladders = []
     if spec:
-        reply = cached_llm(workdir, "ladders", ladders_prompt(workdir, kb, spec),
-                           check=lambda r: None if isinstance(r.get("ladders"), list) else "no ladders list")
-        ladders = read_ladders(workdir, kb, spec, reply)
+        prompt, check, read = SHAPE_STAGES[shape_of(spec)]
+        reply = cached_llm(workdir, "ladders", prompt(workdir, kb, spec), check=check)
+        ladders = read(workdir, kb, spec, reply)
     write_json(workdir / "ladders.json", ladders)
     write_derived(workdir, kb)
-    log(workdir, f"ladders: {len(ladders)} {spec['group_type'] if spec else 'group'} ladders with "
+    log(workdir, f"ladders: {len(ladders)} {spec.get('group_type') or 'shared' if spec else 'group'} ladders with "
                  f"{sum(len(l['steps']) for l in ladders)} ranked steps")

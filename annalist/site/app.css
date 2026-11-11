@@ -483,6 +483,8 @@ svg.story .sline.on .son{stroke-width:3.6}
 .lprev{display:block;margin-left:13px;color:var(--muted);font-size:12px}
 .lholders li.lpast{opacity:.6}
 .lgap{padding:4px 0;color:var(--muted);font-size:12px;font-style:italic;border-bottom:1px solid var(--line)}
+.lstages{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px}
+.lstages li{font-size:12px;padding:1px 7px;border:1px solid var(--line);border-radius:10px}
 .lunknown{margin:6px 0 0;color:var(--muted)}
 @media (max-width:640px){.fgrid,.lgrid{grid-template-columns:minmax(0,1fr)}.lrung{grid-template-columns:minmax(0,1fr);gap:2px}.fties ul{columns:1}}
 .mlegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 8px;font-size:13px;color:var(--muted)}

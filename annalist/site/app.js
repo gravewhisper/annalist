@@ -307,7 +307,7 @@ function renderHome(c) {
 }
 const mentionQuote = e => e.mention.quote ? `<blockquote>${esc(e.mention.quote)}</blockquote>` : '';
 const ladderSteps = l => until(l.steps).filter(s => vis(D.byId[live(s.id)]));
-const visLadders = () => D.ladders.filter(l => vis(D.byId[live(l.group)]) && ladderSteps(l).length);
+const visLadders = () => D.ladders.filter(l => (l.group === null || vis(D.byId[live(l.group)])) && ladderSteps(l).length);
 const ladderList = l => `<ul class="list">${ladderSteps(l).map(s => `<li><span class="ch">${esc(cap(D.book.ladder.step_type))} ${s.rank}</span>${entLink(s.id)}${chLink(s.chapter)}</li>`).join('')}</ul>`;
 
 function renderCat(type) {
@@ -2248,7 +2248,12 @@ const rankOnly = () => new RegExp(`^${reEsc(D.book.ladder.step_type)}\\s*\\d+$`,
 const stepNames = e => visNames(e).filter(n => !rankOnly().test(n));
 const rankLabel = rank => D.book.ladder.rank === 'number' ? `${cap(D.book.ladder.step_type)} ${rank}` : `#${rank}`;
 
-function holdersAt(stepOf, power, groupIds) {
+const strongestStage = (text, stages) => {
+  const found = namedIn(text, stages.map((t, i) => [t.name, i]));
+  return found.size ? stages[Math.max(...found)] : null;
+};
+
+function holdersAt(stepOf, power, groupIds, stagesOf) {
   const powerKey = key => [...D.power].some(t => key.toLowerCase().includes(t));
   const names = [...stepOf.keys()].flatMap(id => stepNames(D.byId[id]).map(n => [n, id])).concat(groupIds.flatMap(id => visNames(D.byId[id]).map(n => [n, id])));
   const evidence = [];
@@ -2258,14 +2263,14 @@ function holdersAt(stepOf, power, groupIds) {
       const found = [...namedIn(o.value, names)];
       const groups = found.filter(id => groupIds.includes(id)), steps = found.filter(id => stepOf.has(id));
       const kept = groups.length ? steps.filter(s => groups.includes(stepOf.get(s))) : steps;
-      if (kept.length) kept.forEach(s => evidence.push({holder: e.id, group: stepOf.get(s), step: s, chapter: o.chapter}));
+      if (kept.length) kept.forEach(s => evidence.push({holder: e.id, group: stepOf.get(s), step: s, chapter: o.chapter, stage: strongestStage(o.value, stagesOf.get(s))}));
       else groups.forEach(g => evidence.push({holder: e.id, group: g, step: null, chapter: o.chapter}));
     }
   }
   for (const r of edgesAt()) {
     if (r.role === 'erased' || r.status !== 'stated' || !HOLD_FAMS.has(r.family)) continue;
     for (const [x, y] of [[r.source, r.target], [r.target, r.source]]) if (isPerson(x) && (stepOf.has(y) || groupIds.includes(y)))
-      for (const c of r.chapters) evidence.push({holder: x, group: stepOf.get(y) || y, step: stepOf.has(y) ? y : null, chapter: c});
+      for (const c of r.chapters) evidence.push({holder: x, group: stepOf.has(y) ? stepOf.get(y) : y, step: stepOf.has(y) ? y : null, chapter: c, stage: null});
   }
   const by = new Map();
   for (const ev of evidence) (by.get(ev.holder) || by.set(ev.holder, []).get(ev.holder)).push(ev);
@@ -2283,7 +2288,11 @@ function holdersAt(stepOf, power, groupIds) {
       const since = Math.min(...evs.filter(ev => (ev.step || ev.group) === key && ev.chapter > before).map(ev => ev.chapter));
       const sameLadder = cur.step ? [...first].filter(([step]) => !current.has(step) && stepOf.get(step) === cur.group).map(([step, chapter]) => ({step, chapter})) : [];
       const passed = sameLadder.filter(x => power.get(x.step) < power.get(cur.step)).sort((a, b) => power.get(a.step) - power.get(b.step));
-      placed.push({holder, group: cur.group, step: cur.step, since, passed, earlier: sameLadder.filter(x => !passed.includes(x))});
+      const staged = evs.filter(ev => ev.step === cur.step && ev.stage).sort((a, b) => a.chapter - b.chapter);
+      const stage = staged.at(-1)?.stage || null;
+      const stages = stagesOf.get(cur.step) || [];
+      const rose = staged.filter(ev => stages.indexOf(ev.stage) < stages.indexOf(stage)).map(ev => ({stage: ev.stage, chapter: ev.chapter}));
+      placed.push({holder, group: cur.group, step: cur.step, since, passed, earlier: sameLadder.filter(x => !passed.includes(x)), stage, rose: rose.slice(-1)});
     }
   }
   return placed.sort((a, b) => a.since - b.since || byName(a.holder, b.holder));
@@ -2294,17 +2303,20 @@ function ladderAt(arg) {
   if (!spec) return {view: 'ladder', focus: null, ladders: []};
   const strength = rank => spec.direction === 'descending' ? -rank : rank;
   const weakFirst = (a, b) => strength(a) - strength(b);
-  const known = visLadders().map(l => ({group: live(l.group), steps: ladderSteps(l).map(s => ({...s, id: live(s.id)}))}));
+  const known = visLadders().map(l => ({group: live(l.group), steps: ladderSteps(l).map(s => ({...s, id: live(s.id), stages: until(s.stages || [])}))}));
   const stepOf = new Map(known.flatMap(l => l.steps.map(s => [s.id, l.group])));
   const power = new Map(known.flatMap(l => l.steps.map(s => [s.id, strength(s.rank)])));
-  const placed = holdersAt(stepOf, power, known.map(l => l.group));
+  const stagesOf = new Map(known.flatMap(l => l.steps.map(s => [s.id, s.stages])));
+  const placed = holdersAt(stepOf, power, known.map(l => l.group).filter(Boolean), stagesOf);
   const ladders = known.map(l => ({group: l.group, unranked: placed.filter(p => p.group === l.group && !p.step),
     rungs: [...new Set(l.steps.map(s => s.rank))].sort(weakFirst).map(rank => ({rank,
-      steps: l.steps.filter(s => s.rank === rank).map(s => ({id: s.id, chapter: s.chapter, holders: placed.filter(p => p.step === s.id),
+      steps: l.steps.filter(s => s.rank === rank).map(s => ({id: s.id, chapter: s.chapter, stages: s.stages, holders: placed.filter(p => p.step === s.id),
         passed: placed.flatMap(p => p.passed.some(x => x.step === s.id) ? [{holder: p.holder, now: p.step, chapter: p.since}] : [])}))}))}));
   const focus = arg && ladders.some(l => l.group === live(arg)) ? live(arg) : null;
   return {view: 'ladder', focus, ladders};
 }
+
+const stageList = stages => stages.length ? `<ol class="lstages">${stages.map(t => `<li>${esc(t.name)}${newTag(t.chapter)}</li>`).join('')}</ol>` : '';
 
 function stepBlock(s) {
   const e = D.byId[s.id], main = displayName(e);
@@ -2317,16 +2329,35 @@ function stepBlock(s) {
   }
   const powers = [...kin].map(([t, ids]) => `<div class="lpow">${esc(cap(plural(t)))}: ${[...ids].sort(byName).map(entLink).join(', ')}</div>`).join('');
   const was = x => `${esc(displayName(D.byId[x.step]))} (ch ${x.chapter})`;
-  const history = h => [h.passed.length ? `advanced from ${was(h.passed.at(-1))}` : '', h.earlier.length ? `earlier ${h.earlier.map(was).join(', ')}` : ''].filter(Boolean).map(t => ` <span class="lprev">${t}</span>`).join('');
-  const rows = s.holders.map(h => `<li>${who(h.holder)} <span class="chip">since ch ${h.since}</span>${newTag(h.since)}${history(h)}</li>`)
+  const history = h => [h.passed.length ? `advanced from ${was(h.passed.at(-1))}` : '', h.earlier.length ? `earlier ${h.earlier.map(was).join(', ')}` : '',
+    ...h.rose.map(x => `rose from ${esc(x.stage.name)} (ch ${x.chapter})`)].filter(Boolean).map(t => ` <span class="lprev">${t}</span>`).join('');
+  const rows = s.holders.map(h => `<li>${who(h.holder)}${h.stage ? ` <span class="chip">${esc(h.stage.name)}</span>` : ''} <span class="chip">since ch ${h.since}</span>${newTag(h.since)}${history(h)}</li>`)
     .concat(s.passed.map(h => `<li class="lpast">${who(h.holder)} <span class="lprev">now ${esc(displayName(D.byId[h.now]))}, ch ${h.chapter}</span></li>`));
   const holders = rows.length ? `<ul class="lholders">${rows.join('')}</ul>` : '';
   return `<div class="lstep"><div class="lname">${entLink(s.id)}${aka.length ? ` <span class="laka">also ${aka.map(esc).join(', ')}</span>` : ''} ${chLink(s.chapter)}${newTag(s.chapter)}</div>`
-    + `${l.text ? `<p class="lsum">${linkify(l.text, s.id, l.chapter)}</p>` : ''}${powers}${holders}</div>`;
+    + `${l.text ? `<p class="lsum">${linkify(l.text, s.id, l.chapter)}</p>` : ''}${stageList(s.stages)}${powers}${holders}</div>`;
 }
 
+const LADDER_SHAPES = {
+  grouped: {
+    head: (l, on) => `<a ${goTo(ladderRoute(on ? '' : l.group))} aria-pressed="${on}">${esc(displayName(D.byId[l.group]))}</a>`,
+    color: l => typeColor(D.byId[l.group].type),
+    foot: l => `<a class="fopen" ${goTo('e:' + l.group)}>Open page</a>`,
+    subtitle: (spec, m) => m.ladders.length ? `${count(m.ladders.length, spec.group_type)} known by chapter ${S.n}, each from its weakest ${spec.step_type} to its strongest` : `No ${spec.group_type} has a known ${spec.step_type} by chapter ${S.n}.`,
+    legend: spec => `Each ${esc(spec.group_type)} runs from its weakest ${esc(spec.step_type)} at the top to its strongest known at the bottom. A ${esc(spec.step_type)} shows once the book places it, with what is known of it so far and who holds it. Someone who moves up keeps the powers of the ${esc(plural(spec.step_type))} below, so they stay listed there, fainter, with where they are now.`,
+  },
+  shared: {
+    head: () => esc(cap(plural(D.book.ladder.step_type))),
+    color: () => typeColor(D.book.ladder.step_type),
+    foot: () => '',
+    subtitle: (spec, m) => m.ladders.length ? `One ladder of ${plural(spec.step_type)} that everyone climbs: ${count(m.ladders[0].rungs.length, spec.step_type)} known by chapter ${S.n}, from the weakest to the strongest` : `No ${spec.step_type} is placed on the ladder by chapter ${S.n}.`,
+    legend: spec => `The ladder runs from the weakest ${esc(spec.step_type)} at the top to the strongest known at the bottom. Each ${esc(spec.step_type)} lists its sub-stages in order, weakest first, as the book names them. Each holder shows at the ${esc(spec.step_type)} and sub-stage the book last gives them. Someone who moves up stays listed at the ${esc(plural(spec.step_type))} below, fainter, with where they are now.`,
+  },
+};
+const ladderShape = () => LADDER_SHAPES[D.book.ladder.shape || 'grouped'];
+
 function ladderCard(l, on) {
-  const spec = D.book.ladder;
+  const spec = D.book.ladder, shape = ladderShape();
   const rows = [];
   l.rungs.forEach((r, i) => {
     const gap = spec.rank === 'number' && i ? Math.abs(r.rank - l.rungs[i - 1].rank) - 1 : 0;
@@ -2335,8 +2366,8 @@ function ladderCard(l, on) {
   });
   const unranked = l.unranked.length ? `<p class="lunknown">On this ${esc(spec.group_type)}, rank not yet known: ${l.unranked.map(p => who(p.holder)).join(', ')}</p>` : '';
   const holders = new Set([...l.rungs.flatMap(r => r.steps.flatMap(x => x.holders)), ...l.unranked].map(p => p.holder)).size;
-  return `<section class="lcard${on ? ' on' : ''}" style="--c:${typeColor(D.byId[l.group].type)}"><h3><a ${goTo(ladderRoute(on ? '' : l.group))} aria-pressed="${on}">${esc(displayName(D.byId[l.group]))}</a> <small>${count(l.rungs.length, 'rank')} known${holders ? `, ${count(holders, 'holder')}` : ''}</small></h3>`
-    + `<div class="lend">Weakest</div><ol class="lrungs">${rows.join('')}</ol><div class="lend">Strongest known</div>${unranked}<a class="fopen" ${goTo('e:' + l.group)}>Open page</a></section>`;
+  return `<section class="lcard${on ? ' on' : ''}" style="--c:${shape.color(l)}"><h3>${shape.head(l, on)} <small>${count(l.rungs.length, 'rank')} known${holders ? `, ${count(holders, 'holder')}` : ''}</small></h3>`
+    + `<div class="lend">Weakest</div><ol class="lrungs">${rows.join('')}</ol><div class="lend">Strongest known</div>${unranked}${shape.foot(l)}</section>`;
 }
 
 function renderLadder(m) {
@@ -2344,10 +2375,10 @@ function renderLadder(m) {
   const shown = m.focus ? [m.ladders.find(l => l.group === m.focus), ...m.ladders.filter(l => l.group !== m.focus)] : m.ladders;
   const steps = m.ladders.flatMap(l => l.rungs.flatMap(r => r.steps));
   const fresh = freshNote({step: steps.filter(s => s.chapter === S.n).length, holder: steps.reduce((n, s) => n + s.holders.filter(h => h.since === S.n).length, 0)});
-  const subtitle = !spec ? 'This book has no power ladder.' : m.ladders.length ? `${count(m.ladders.length, spec.group_type)} known by chapter ${S.n}, each from its weakest ${spec.step_type} to its strongest` : `No ${spec.group_type} has a known ${spec.step_type} by chapter ${S.n}.`;
+  const subtitle = !spec ? 'This book has no power ladder.' : ladderShape().subtitle(spec, m);
   return `<div class="crumbs"><a ${goTo('home')}>Home</a></div><h1>Graph</h1>${graphTabs('ladder')}${fresh}<div class="subtitle">${esc(subtitle)}</div>
   <div class="lgrid">${shown.map(l => ladderCard(l, l.group === m.focus)).join('')}</div>
-  ${m.ladders.length ? `<p class="muted glegend">Each ${esc(spec.group_type)} runs from its weakest ${esc(spec.step_type)} at the top to its strongest known at the bottom. A ${esc(spec.step_type)} shows once the book places it, with what is known of it so far and who holds it. Someone who moves up keeps the powers of the ${esc(plural(spec.step_type))} below, so they stay listed there, fainter, with where they are now.</p>` : ''}`;
+  ${m.ladders.length ? `<p class="muted glegend">${ladderShape().legend(spec)}</p>` : ''}`;
 }
 
 const KIN = [

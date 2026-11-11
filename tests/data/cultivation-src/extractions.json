@@ -1,0 +1,214 @@
+{
+  "1": {
+    "synopsis": "Tamsin Vey wades in the reed pond of the Silver Reed Sect, and Elder Kovic Brannoch tells her she has reached the third layer of Mist Gathering.",
+    "entities": [
+      {
+        "name": "Tamsin Vey",
+        "type": "character",
+        "aliases": [],
+        "summary": "A fifteen-year-old disciple of the Silver Reed Sect."
+      },
+      {
+        "name": "Kovic Brannoch",
+        "type": "character",
+        "aliases": [
+          "Elder Kovic Brannoch"
+        ],
+        "summary": "An elder of the Silver Reed Sect who carries a reed flute he never plays."
+      },
+      {
+        "name": "Silver Reed Sect",
+        "type": "sect",
+        "aliases": [],
+        "summary": "A sect in a valley of tall grey reeds."
+      },
+      {
+        "name": "Mist Gathering",
+        "type": "realm",
+        "aliases": [],
+        "summary": "The first realm, split into nine layers."
+      },
+      {
+        "name": "Dace Mullery",
+        "type": "character",
+        "aliases": [],
+        "summary": "A tall older disciple of the Silver Reed Sect."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Tamsin Vey",
+        "claim": "Tamsin is fifteen and kneels at the reed pond of the Silver Reed Sect.",
+        "quotes": [
+          "Tamsin Vey was fifteen the spring she knelt at the edge of the reed pond of the Silver Reed Sect"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Mist Gathering",
+        "claim": "Mist Gathering is the first realm, which every cultivator climbs first.",
+        "quotes": [
+          "Mist Gathering is the first realm, and every cultivator under heaven climbs it before anything else."
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      },
+      {
+        "entity": "Mist Gathering",
+        "claim": "Mist Gathering has nine layers, from the first layer to the ninth layer.",
+        "quotes": [
+          "It has nine layers, from the first layer to the ninth layer"
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      },
+      {
+        "entity": "Tamsin Vey",
+        "claim": "Tamsin has reached the third layer of Mist Gathering.",
+        "quotes": [
+          "Tamsin Vey has reached the third layer of Mist Gathering."
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      }
+    ],
+    "relations": [
+      {
+        "source": "Kovic Brannoch",
+        "type": "teaches",
+        "target": "Tamsin Vey",
+        "detail": "",
+        "quotes": [
+          "Breathe the way I showed you."
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "2": {
+    "synopsis": "Tamsin reaches the seventh layer of Mist Gathering, and Kovic tells her of Root Binding, the second realm.",
+    "entities": [
+      {
+        "name": "Root Binding",
+        "type": "realm",
+        "aliases": [],
+        "summary": "The second realm, with an early stage, a middle stage and a late stage."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Tamsin Vey",
+        "claim": "Tamsin has reached the seventh layer of Mist Gathering.",
+        "quotes": [
+          "Tamsin Vey has reached the seventh layer of Mist Gathering"
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      },
+      {
+        "entity": "Root Binding",
+        "claim": "Root Binding is the second realm.",
+        "quotes": [
+          "Root Binding is the second realm"
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      },
+      {
+        "entity": "Root Binding",
+        "claim": "Root Binding has an early stage, a middle stage and a late stage.",
+        "quotes": [
+          "Root Binding has an early stage, a middle stage and a late stage."
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      },
+      {
+        "entity": "Dace Mullery",
+        "claim": "Dace has stood in the early stage of Root Binding since the spring.",
+        "quotes": [
+          "he had stood in the early stage of Root Binding since the spring"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "3": {
+    "synopsis": "Tamsin loses a bout to Dace Mullery in the winter contest but reaches the ninth layer of Mist Gathering.",
+    "entities": [],
+    "facts": [
+      {
+        "entity": "Tamsin Vey",
+        "claim": "Tamsin lost her bout against Dace.",
+        "quotes": [
+          "She lost the bout in the time it took the reeds to bow twice"
+        ],
+        "asserted_by": "narrator",
+        "status": "stated"
+      },
+      {
+        "entity": "Tamsin Vey",
+        "claim": "Tamsin has reached the ninth layer of Mist Gathering.",
+        "quotes": [
+          "Tamsin Vey has reached the ninth layer of Mist Gathering"
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  },
+  "4": {
+    "synopsis": "Tamsin breaks through to the early stage of Root Binding, and Kovic tells her of Pearl Forming, the third realm.",
+    "entities": [
+      {
+        "name": "Pearl Forming",
+        "type": "realm",
+        "aliases": [],
+        "summary": "The third realm, where a cultivator forms a single pearl."
+      }
+    ],
+    "facts": [
+      {
+        "entity": "Tamsin Vey",
+        "claim": "Tamsin has broken through to the early stage of Root Binding.",
+        "quotes": [
+          "Tamsin Vey has broken through to the early stage of Root Binding"
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      },
+      {
+        "entity": "Pearl Forming",
+        "claim": "Pearl Forming is the third realm.",
+        "quotes": [
+          "Pearl Forming is the third realm."
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      },
+      {
+        "entity": "Silver Reed Sect",
+        "claim": "Nobody in the sect has formed a pearl in forty years.",
+        "quotes": [
+          "Nobody in this sect has formed a pearl in forty years."
+        ],
+        "asserted_by": "Kovic Brannoch",
+        "status": "stated"
+      }
+    ],
+    "relations": [],
+    "questions_raised": [],
+    "questions_resolved": []
+  }
+}

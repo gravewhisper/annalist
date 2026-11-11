@@ -268,7 +268,7 @@ def typed_page(wiki, n, name, etype):
 
 
 def present_check(wiki, wiki_data, names, n, s):
-    ladders = wiki_data.get("ladders", [])
+    ladders = [l for l in wiki_data.get("ladders", []) if l["group"]]
     groups = {wiki.page_id(l["group"], n) for l in ladders if wiki.visible(wiki.page_id(l["group"], n), n)}
     what = str(s.get("what", "")).strip().lower()
     etype = next((t for t in sorted({e["type"] for e in wiki.entities.values()}) if what in (t, plural(t))), None)

@@ -11,6 +11,10 @@ DEFAULT_BOOK = {"power_system": "", "power_types": DEFAULT_POWER_TYPES,
                 "timeline_kind": "linear", "timeline_note": "", "complete": False, "ladder": None}
 
 
+def ladder_types(ladder):
+    return tuple(t for t in (ladder.get("group_type"), ladder["step_type"]) if t) if ladder else ()
+
+
 def load_book(workdir):
     book = dict(DEFAULT_BOOK)
     book.update(read_json(Path(workdir) / "book.json", {}))

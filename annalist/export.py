@@ -201,13 +201,18 @@ def volume_record(v):
             "development": page.get("character_development", [])}
 
 
+def step_record(s, ids):
+    stages = {"stages": [{"name": t["name"], "chapter": t["chapter"]} for t in s["stages"]]} if "stages" in s else {}
+    return {"id": ids[s["entry"]], "rank": s["rank"], "chapter": s["chapter"], **stages}
+
+
 def ladder_records(workdir, registry, ids):
     records = []
     for ladder in read_json(workdir / "ladders.json", []):
-        group = registry.resolve(ladder["group"], ladder["group_type"])
-        if group:
-            records.append({"group": ids[group], "chapter": ladder["chapter"],
-                            "steps": [{"id": ids[s["entry"]], "rank": s["rank"], "chapter": s["chapter"]} for s in ladder["steps"]]})
+        group = ladder["group"] and registry.resolve(ladder["group"], ladder["group_type"])
+        if group or ladder["group"] is None:
+            records.append({"group": group and ids[group], "chapter": ladder["chapter"],
+                            "steps": [step_record(s, ids) for s in ladder["steps"]]})
     return records
 
 

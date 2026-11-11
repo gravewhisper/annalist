@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 
+from .book import ladder_types
 from .files import read_json, read_jsonl, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, same_kind, UNTYPED, written_summary
 from .text import distinctive_words, QUOTE_CHARS
@@ -111,7 +112,7 @@ class Knowledge:
     def __init__(self, ladder=None, wordings=None, power_types=()):
         self.wordings = wordings or {}
         self.power_types = set(power_types)
-        self.ladder = {ladder["group_type"], ladder["step_type"]} if ladder else set()
+        self.ladder = set(ladder_types(ladder))
         self.rank_name = re.compile(rf"{re.escape(ladder['step_type'])}\s*\d+") if ladder and ladder.get("rank") == "number" else None
         self.laddered = False
         self.entities = {}
@@ -461,7 +462,7 @@ class Knowledge:
         for row in ladders:
             steps = [(s, self.resolve(s["entry"])) for s in row["steps"] if until is None or s["chapter"] <= until]
             steps = [(s, key) for s, key in steps if key]
-            if not steps:
+            if not steps or row["group"] is None:
                 continue
             group = self.resolve(row["group"], row["group_type"])
             if group is None or self.entities[group]["type"] in UNTYPED:
