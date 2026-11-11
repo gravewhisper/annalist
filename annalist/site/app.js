@@ -2889,7 +2889,12 @@ function wire() {
     if ((el = act('[data-sec]'))) { ev.preventDefault(); if (el.dataset.in && el.dataset.in !== S.tab) go({tab: el.dataset.in}); return jump('sec-' + el.dataset.sec); }
     if ((el = act('[data-tab]'))) return go({tab: el.dataset.tab});
     if ((el = act('[data-m]'))) { more = 60; return go({m: el.dataset.m}); }
-    if ((el = act('[data-sort]'))) { ev.preventDefault(); return go({sort: el.dataset.sort}); }
+    if ((el = act('[data-sort]'))) {
+      ev.preventDefault();
+      const key = el.dataset.sort.replace(/^-/, '');
+      go({sort: el.dataset.sort});
+      return document.querySelector(`.ctable [data-sort="${key}"], .ctable [data-sort="-${key}"]`)?.focus();
+    }
     if ((el = act('[data-az]'))) { ev.preventDefault(); if (!$('az-' + el.dataset.az)) go({sort: 'name'}); return jump('az-' + el.dataset.az); }
     if ((el = act('[data-gt]'))) return toggleIn(shownTypes(G.model.view), el.dataset.gt);
     if ((el = act('[data-gfam]'))) return toggleIn(G.hideFams, el.dataset.gfam);
