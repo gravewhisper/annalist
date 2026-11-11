@@ -40,6 +40,16 @@ Options per backend:
 
 A bad config stops the command with a one-line reason, such as `annalist: backend.max_tokens must be a whole number`.
 
+## Effort
+
+With the `claude-cli` backend, an `efforts` map in `book.json` sets the reasoning effort per step, passed to `claude -p --effort`. Values are `low`, `medium`, `high`, `xhigh` and `max`, and a `default` key covers every step not named. Without the map, `claude -p` uses its own default.
+
+```json
+{"efforts": {"default": "high", "extract": "medium"}}
+```
+
+Replies saved at one effort are never reused at another.
+
 ## Retries
 
 Rate limits, overloads, server errors and timeouts (HTTP 408, 409, 429, 5xx and 529) back off 60, 120, 300, 600 and 720 seconds, longer if the server sends `retry-after`, then stop the command so you can rerun it. Errors that a retry will not fix stop at once: a rejected key, a bad request, or a refused connection to a local server that is not running.

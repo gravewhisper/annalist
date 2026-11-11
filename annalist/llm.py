@@ -103,6 +103,7 @@ def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, setti
     tally("fresh")
     settings = settings or load_settings(workdir)
     model = settings.model_for(purpose)
+    effort = settings.effort_for(purpose)
     backend = open_backend(workdir, settings)
     attempt_prompt, mode = prompt, "original"
     if rejected:
@@ -113,10 +114,11 @@ def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, setti
         attempt += 1
         started = time.time()
         record = {"purpose": purpose, "chapter": chapter, "attempt": attempt, "mode": mode, "backend": settings.backend,
-                  "model": model, "prompt_chars": len(attempt_prompt), "prompt_sha1": prompt_sha1(prompt), "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}
+                  "model": model, **({"effort": effort} if effort else {}), "prompt_chars": len(attempt_prompt), "prompt_sha1": prompt_sha1(prompt), "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}
         reply = transient = None
         try:
-            reply = backend.complete(Request(system=SYSTEM_PROMPT, prompt=attempt_prompt, model=model, purpose=purpose, chapter=chapter))
+            reply = backend.complete(Request(system=SYSTEM_PROMPT, prompt=attempt_prompt, model=model, purpose=purpose, chapter=chapter,
+                                             effort=effort))
         except Transient as exc:
             transient = exc
         except Fatal as exc:
@@ -164,7 +166,9 @@ def cache_key(purpose, text):
 
 
 def cache_paths(workdir, settings, purpose, prompt):
-    model = settings.model_for(purpose)
+    model, effort = settings.model_for(purpose), settings.effort_for(purpose)
+    if effort:
+        return [Path(workdir) / "cache" / cache_key(purpose, f"{settings.backend}\n{model}\neffort {effort}\n{prompt}")]
     current = Path(workdir) / "cache" / cache_key(purpose, f"{settings.backend}\n{model}\n{prompt}")
     legacy = Path(workdir) / "cache" / cache_key(purpose, prompt)
     return [current, legacy] if settings.backend == "claude-cli" else [current]

@@ -18,6 +18,7 @@ class Request:
     model: str
     purpose: str
     chapter: int | None = None
+    effort: str | None = None
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,7 @@ class ClaudeCLI:
         try:
             proc = subprocess.run(
                 ["claude", "-p", "--output-format", "json", "--model", request.model,
+                 *(["--effort", request.effort] if request.effort else []),
                  "--tools", "", "--strict-mcp-config", "--setting-sources", "",
                  "--no-session-persistence", "--system-prompt", request.system],
                 input=request.prompt, capture_output=True, text=True, timeout=900, cwd=self.workdir,
@@ -252,6 +254,9 @@ OPTIONS = {
 }
 
 
+EFFORTS = ("low", "medium", "high", "xhigh", "max")
+
+
 TYPE_NAMES = {str: "a string", int: "a whole number", dict: "an object"}
 
 
@@ -261,6 +266,10 @@ class Settings:
     default_model: str | None
     models: dict
     options: dict
+    efforts: dict = field(default_factory=dict)
+
+    def effort_for(self, purpose):
+        return self.efforts.get(purpose) or self.efforts.get("default")
 
     def model_for(self, purpose):
         model = self.models.get(purpose) or self.default_model
@@ -305,7 +314,13 @@ def parse_settings(book, env):
         if aliased:
             raise ConfigError(f"book.json models {aliased} name Claude CLI aliases, which an OpenAI-compatible server "
                               "does not know; give model ids the server serves")
-    return Settings(backend=name, default_model=model or BACKENDS[name].default_model, models=models, options=options)
+    efforts = book.get("efforts") or {}
+    if not isinstance(efforts, dict) or any(v not in EFFORTS for v in efforts.values()):
+        raise ConfigError(f"book.json efforts must map steps to one of {', '.join(EFFORTS)}")
+    if efforts and name not in ("claude-cli", "fake"):
+        raise ConfigError(f"book.json efforts work only with the claude-cli backend, not {name}")
+    return Settings(backend=name, default_model=model or BACKENDS[name].default_model, models=models, options=options,
+                    efforts=efforts)
 
 
 def load_settings(workdir):

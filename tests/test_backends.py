@@ -148,6 +148,22 @@ class ClaudeCLIBackendTest(unittest.TestCase):
         self.assertEqual(reply.cost_usd, 0.0000787)
         self.assertEqual((reply.usage["input_tokens"], reply.usage["output_tokens"]), (697, 18))
 
+    def test_an_effort_is_passed_to_claude(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict(os.environ, stub_claude(tmp, payload("claude-cli-envelope.json"))):
+                ClaudeCLI(tmp, {}).complete(Request(system=SYSTEM_PROMPT, prompt="p", model="sonnet", purpose="extract", effort="high"))
+            seen = json.loads((Path(tmp) / "argv.json").read_text())
+        self.assertEqual(seen["argv"][:7], ["-p", "--output-format", "json", "--model", "sonnet", "--effort", "high"])
+
+    def test_efforts_pick_a_step_then_the_default_and_reject_bad_values(self):
+        settings = parse_settings({"efforts": {"default": "medium", "extract": "high"}}, {})
+        self.assertEqual((settings.effort_for("extract"), settings.effort_for("support")), ("high", "medium"))
+        self.assertIsNone(parse_settings({}, {}).effort_for("extract"))
+        with self.assertRaisesRegex(ConfigError, "efforts must map"):
+            parse_settings({"efforts": {"extract": "huge"}}, {})
+        with self.assertRaisesRegex(ConfigError, "only with the claude-cli backend"):
+            parse_settings({"efforts": {"extract": "high"}, "backend": {"name": "openai", "model": "m"}}, {})
+
     def test_error_envelope_is_retried(self):
         envelope = json.dumps({"is_error": True, "subtype": "error_during_execution", "result": "overloaded"})
         with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, stub_claude(tmp, envelope, 1)):

@@ -67,6 +67,17 @@ class CacheTest(unittest.TestCase):
         entry = json.loads(next((self.workdir / "cache").iterdir()).read_text(encoding="utf-8"))
         self.assertEqual((entry["backend"], entry["model"]), ("claude-cli", "sonnet"))
 
+    def test_a_reply_at_one_effort_is_never_reused_at_another(self):
+        self.book()
+        self.legacy_entry({"summary": "old"})
+        self.claude_replies({"summary": "default"})
+        self.assertEqual(cached_llm(str(self.workdir), "summary", "another prompt"), {"summary": "default"})
+        self.book(efforts={"summary": "high"})
+        self.claude_replies({"summary": "high"})
+        self.assertEqual(cached_llm(str(self.workdir), "summary", PROMPT), {"summary": "high"})
+        self.assertEqual(cached_llm(str(self.workdir), "summary", "another prompt"), {"summary": "high"})
+        self.assertEqual([c.get("effort") for c in self.calls()], [None, "high", "high"])
+
     def test_other_backends_and_models_never_reuse_each_others_answers(self):
         self.legacy_entry({"summary": "from claude"})
         (self.workdir / "script.json").write_text(json.dumps({"replies": [{"purpose": "summary", "reply": {"summary": "fake"}}]}))
