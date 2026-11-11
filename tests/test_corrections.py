@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from annalist.corrections import correct_profiles, Corrections, EVERY_CORRECTION, kept_deaths, load_corrections, QUESTIONS, reader_notes
+from annalist.corrections import correct_profiles, Corrections, EVERY_CORRECTION, kept_deaths, load_corrections, PAGES, QUESTIONS, reader_notes
 from annalist.export import build
 from annalist.state import Knowledge, load_states
 
@@ -316,6 +316,59 @@ class Drops(unittest.TestCase):
         story = Story(self, {"entries": [{"name": "Mira Vale", "drop": {"trivia": [{"value": "Hums when nervous"}]}}]})
         with self.assertRaises(SystemExit):
             load_corrections(story.workdir)
+
+
+RISEN = "She rose from the grave and walked home."
+
+
+class ProofreadFile(unittest.TestCase):
+    def story(self, mine, proposed):
+        story = Story(self, mine)
+        (story.workdir / "proofread.json").write_text(json.dumps(proposed), encoding="utf-8")
+        return story
+
+    def test_its_rows_apply_like_the_reader_s_in_the_stages_that_take_it(self):
+        story = self.story({}, {"entries": [SAME, {"name": "Northmarch", "type": "place", "chapter": 1, "quotes": ["Mira Vale walked into Northmarch"]}]})
+        kb = story.kb()
+        self.assertNotIn("Grey Stranger", kb.entities)
+        self.assertEqual((page(kb, "Northmarch")["type"], kb.problems), ("place", []))
+        alone = story.kb(corrections=(PAGES, QUESTIONS))
+        self.assertEqual((page(alone, "Grey Stranger")["name"], page(alone, "Northmarch")["type"]), ("Grey Stranger", "uncategorized"))
+
+    def test_the_reader_s_row_wins_where_both_change_the_same_thing(self):
+        tie = {"source": "Mira Vale", "target": "Northmarch", "type": "rules", "chapter": 5, "quotes": ["Mira Vale lit a candle for her brother."]}
+        mine = {"entries": [{"name": "Northmarch", "type": "place"}, {"name": "Old Grey", "same_as": "Mira Vale", "chapter": 4, "quotes": ["He pushed his spectacles up"]}],
+                "relations": [tie], "questions": [ANSWER]}
+        proposed = {"entries": [{"name": "Northmarch", "type": "event"}, {"name": "Grey Stranger", "same_as": "The Veil", "chapter": 5, "quotes": ["The Veil was Mira all along."]}],
+                    "drop_relations": [{k: tie[k] for k in ("source", "target", "type", "chapter")}],
+                    "questions": [{"id": "Q0002-01", "dismiss": True}]}
+        kb = self.story(mine, proposed).kb()
+        self.assertEqual(page(kb, "Northmarch")["type"], "place")
+        self.assertEqual(next(a["chapter"] for a in kb.entities["Mira Vale"]["absorbed"] if a["name"] == "Grey Stranger"), 4)
+        self.assertEqual([r["chapter"] for r in kb.relations if r["type"] == "rules"], [5])
+        self.assertEqual(kb.questions["Q0002-01"]["answer"], "Mira's brother.")
+        self.assertEqual(kb.problems, [])
+
+    def test_the_reader_s_drop_removes_a_tie_or_value_the_proofread_added(self):
+        tie = {"source": "Grey Stranger", "target": "Northmarch", "type": "haunts", "chapter": 6, "quotes": ["The grey stranger returned to Northmarch."]}
+        value = {"name": "Mira Vale", "fields": {"status": [{"chapter": 6, "value": "risen", "quotes": [RISEN]}]}}
+        mine = {"entries": [{"name": "Mira Vale", "drop": {"status": [{"chapter": 6, "value": "risen"}]}}],
+                "drop_relations": [{k: tie[k] for k in ("source", "target", "type", "chapter")}]}
+        kb = self.story(mine, {"entries": [value], "relations": [tie]}).kb()
+        pages, problems = correct_profiles(kb, {}, kb.corrections)
+        self.assertEqual(([r for r in kb.relations if r["type"] == "haunts"], pages["Mira Vale"]["fields"]["status"]), ([], []))
+        self.assertEqual(kb.problems + problems, [])
+
+    def test_a_value_both_files_drop_leaves_once_without_a_warning(self):
+        drop = {"name": "Mira Vale", "drop": {"trivia": [{"chapter": 1, "value": "Hums when nervous"}]}}
+        kb = self.story({"entries": [drop]}, {"entries": [drop]}).kb()
+        pages, problems = correct_profiles(kb, Drops.pages(self), kb.corrections)
+        self.assertEqual(([o["value"] for o in pages["Mira Vale"]["lists"]["trivia"]], problems), (["Keeps a grey coin"], []))
+
+    def test_a_row_that_no_longer_matches_is_reported_under_its_own_file(self):
+        kb = self.story({}, {"entries": [{"name": "Nobody", "type": "place"}], "questions": [{"id": "Q0009-01", "dismiss": True}]}).kb()
+        self.assertEqual(kb.problems, ["proofread.json names 'Nobody', which matches no entry, skipped",
+                                       "proofread.json names question 'Q0009-01', which matches no question, skipped"])
 
 
 class LoadCorrections(unittest.TestCase):

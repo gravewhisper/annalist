@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 from .book import ladder_types
-from .corrections import correct_pages, known_from, load_corrections, PAGES, QUESTIONS, settle_questions
+from .corrections import correct_pages, known_from, load_corrections, PAGES, PROOFREAD, PROOFREAD_FILE, QUESTIONS, settle_questions, with_proofread
 from .files import read_json, read_jsonl, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
 from .template import INDIVIDUALS, type_parents, Types
@@ -599,6 +599,8 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
     if ladders:
         kb.apply_ladders(read_json(Path(workdir) / "ladders.json", []), until)
     if kb.corrections:
+        if PROOFREAD in corrections:
+            kb.corrections = with_proofread(kb, kb.corrections, load_corrections(workdir, PROOFREAD_FILE))
         reach = until if until is not None else max(kb.synopses, default=0)
         kb.problems = (kb.corrections.problems + (correct_pages(kb, kb.corrections, reach) if PAGES in corrections else [])
                        + (settle_questions(kb, kb.corrections, reach) if QUESTIONS in corrections else []))
