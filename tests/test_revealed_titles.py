@@ -6,7 +6,9 @@ from pathlib import Path
 from annalist.export import build
 
 CHAPTER = ("Ilka met the warden at the gate, and the warden was silent. The lantern bearer spoke with a bodyguard, and the bodyguard "
-           "nodded. The word warden is common here, and every warden and bodyguard knows it. The Warden rank is old. Corvin Hale bowed to Sarenne. The harbor slept and the harbor woke while the Harbor waited. ")
+           "nodded. The word warden is common here, and every warden and bodyguard knows it. The Warden rank is old. Corvin Hale bowed to Sarenne. The harbor slept and the harbor woke while the Harbor waited. "
+           "Mirela Danescu read the tide for a reader, and Madam Mirela said the tide reader must rest. Oskar trimmed the lamp "
+           "while the lamp warden slept. Brenna Stone sat on a stone, and the stone was cold as any stone. ")
 
 
 def entity(name, etype, aliases, first, last=4, **extra):
@@ -21,15 +23,25 @@ def seed(root):
         entity("Mr. Q", "character", ["Warden"], 1),
         entity("Warden", "rank", [], 1),
         entity("The Harbor", "character", ["Mr. Harbor"], 1),
+        entity("Tide Reader expert", "character", ["Mirela", "Madam Mirela", "Tide Reader Madam Mirela", "Mirela Danescu"], 1),
+        entity("Lamp warden by the stair", "character", ["Oskar", "Lamp Warden Oskar"], 1),
+        entity("Keeper in the cellar", "character", ["Brenna", "Brenna Stone"], 1),
     ]
     named = {1: [{"name": "Lantern bearer in the crypt", "type": "character", "aliases": []},
                  {"name": "Miss Bodyguard", "type": "character", "aliases": []},
                  {"name": "Mr. Q", "type": "character", "aliases": []},
-                 {"name": "Warden", "type": "rank", "aliases": []}],
+                 {"name": "Warden", "type": "rank", "aliases": []},
+                 {"name": "Tide Reader expert", "type": "character", "aliases": []},
+                 {"name": "Lamp warden by the stair", "type": "character", "aliases": []},
+                 {"name": "Keeper in the cellar", "type": "character", "aliases": []}],
+             2: [{"name": "Tide Reader expert", "type": "character", "aliases": ["Mirela", "Madam Mirela", "Tide Reader Madam Mirela"]},
+                 {"name": "Lamp warden by the stair", "type": "character", "aliases": ["Lamp Warden Oskar", "Oskar"]},
+                 {"name": "Keeper in the cellar", "type": "character", "aliases": ["Brenna", "Brenna Stone"]}],
              3: [{"name": "Lantern bearer in the crypt", "type": "character", "aliases": ["Corvin Hale", "Corvin"]},
                  {"name": "Miss Bodyguard", "type": "character", "aliases": ["Sarenne", "Miss Sarenne"]},
                  {"name": "The Harbor", "type": "character", "aliases": ["Mr. Harbor"]}],
-             4: [{"name": "Mr. Q", "type": "character", "aliases": ["Warden"]}]}
+             4: [{"name": "Mr. Q", "type": "character", "aliases": ["Warden"]},
+                 {"name": "Tide Reader expert", "type": "character", "aliases": ["Mirela Danescu"]}]}
     (root / "state").mkdir()
     (root / "chapters").mkdir()
     for n in range(1, 5):
@@ -63,6 +75,20 @@ class RevealedTitles(unittest.TestCase):
 
     def test_an_honorific_on_a_common_word_is_not_a_real_name(self):
         self.assertIn(("The Harbor", "character"), self.pages())
+
+    def test_a_stated_full_name_is_the_title_over_a_form_with_a_role_and_descriptor_before_the_name(self):
+        page = self.pages()[("Mirela Danescu", "character")]
+        self.assertEqual(page["name_chapter"], 4)
+        self.assertEqual({a["name"]: a["chapter"] for a in page["aliases"]},
+                         {"Tide Reader expert": 1, "Mirela": 2, "Madam Mirela": 2, "Tide Reader Madam Mirela": 2})
+
+    def test_the_plain_name_is_the_title_over_a_descriptor_before_it_when_no_full_name_is_stated(self):
+        page = self.pages()[("Oskar", "character")]
+        self.assertEqual(page["name_chapter"], 2)
+        self.assertIn("Lamp Warden Oskar", [a["name"] for a in page["aliases"]])
+
+    def test_a_surname_that_is_also_a_common_word_stays_in_the_title(self):
+        self.assertIn(("Brenna Stone", "character"), self.pages())
 
     def test_rank_word_alias_is_not_the_title_and_keeps_its_own_chapter(self):
         pages = self.pages()

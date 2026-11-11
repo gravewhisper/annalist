@@ -49,28 +49,45 @@ def uses(forms, texts):
 COMMON_SHARE = 10
 
 
+def role_word(word):
+    return bool({word.lower(), f"{word.lower()}."} & ROLE_WORDS)
+
+
 def name_parts(name):
-    return [t for w in plain_words(name) if not {w.lower(), f"{w.lower()}."} & ROLE_WORDS for t in re.findall(r"\w+", w)]
+    return [t for w in plain_words(name) if not role_word(w) for t in re.findall(r"\w+", w)]
 
 
 def personal_part(part, words):
     return words[part] > COMMON_SHARE * words[part.lower()]
 
 
+def full_part(part, words):
+    return len(part) >= 3 and personal_part(part, words)
+
+
 def personal_name(name, words):
     return not is_stub({"name": name}) and not POSSESSIVE.search(name) and any(personal_part(p, words) for p in name_parts(name))
 
 
+def name_start(name, words):
+    plain = plain_words(name)
+    return next((i for i, w in enumerate(plain) if not role_word(w) and any(full_part(p, words) for p in re.findall(r"\w+", w))), len(plain))
+
+
 def extends_with_names(alias, name, words):
+    kept = {p.lower() for p in name_parts(" ".join(plain_words(name)[name_start(name, words):]))}
     added = [p for p in name_parts(alias) if p.lower() not in map(str.lower, name_parts(name))]
-    return name_stems(alias) > name_stems(name) and bool(added) and all(personal_part(p, words) for p in added)
+    return kept <= {p.lower() for p in name_parts(alias)} and bool(added) and all(full_part(p, words) for p in added)
 
 
 def revealed_name(name, aliases, words):
     personal = personal_name(name, words)
     found = [a for a in aliases if personal_name(a["name"], words) and (not personal or extends_with_names(a["name"], name, words))]
-    return min(found, default=None, key=lambda a: (-len(name_stems(a["name"])), a["chapter"],
-                                                   any(w.lower() in ROLE_WORDS for w in plain_words(a["name"]))))
+
+    def rank(a):
+        own = {p.lower() for p in name_parts(a["name"]) if full_part(p, words)}
+        return -len(own), name_start(a["name"], words), -len(name_stems(a["name"])), a["chapter"]
+    return min(found, default=None, key=rank)
 
 
 def page_title(name, aliases, own_texts, texts, share=0.1):
