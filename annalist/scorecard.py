@@ -169,6 +169,9 @@ class Wiki:
             return {"value": "dead", "chapter": past["chapter"], "basis": "past"}
         if spoke:
             return {"value": "alive", "chapter": max(spoke), "basis": "spoke"}
+        appeared = [c for c, tid in profile.get("appeared", []) if c <= n and self.role(tid, n) == "current"]
+        if appeared:
+            return {"value": "alive", "chapter": max(appeared), "basis": "appeared"}
         if any(o["value"] == "dead" and self.timelines.get(o.get("timeline"), {}).get("kind") == "run" for o in visible):
             return {"value": "alive", "chapter": n, "basis": "erased_death"}
         return None

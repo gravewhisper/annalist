@@ -490,6 +490,8 @@ function currentStatus(profile) {
   const past = visible.filter(o => o.value === 'dead' && D.tl[o.timeline]?.kind === 'flashback').at(-1);
   if (past && past.chapter >= Math.max(0, ...seen)) return {value: 'dead', chapter: past.chapter, basis: 'past', earlier: [], timeline: past.timeline};
   if (seen.length) return {value: 'alive', chapter: Math.max(...seen), basis: 'spoke', earlier: [], erasedDeath};
+  const present = (profile.appeared || []).filter(([c, tid]) => c <= S.n && role(tid) === 'current').map(([c]) => c);
+  if (present.length) return {value: 'alive', chapter: Math.max(...present), basis: 'appeared', earlier: [], erasedDeath};
   if (erasedDeath) return {value: 'alive', chapter: erasedDeath, basis: 'erased_death', earlier: []};
   return null;
 }
@@ -498,7 +500,7 @@ function statusRow(profile) {
   if (!s) return '';
   let cell;
   if (s.basis === 'erased_death') cell = `Alive <div class="prev">died only in an erased timeline (ch ${s.chapter})</div>`;
-  else if (s.basis === 'spoke') cell = `Alive <span class="prev">(as of ch ${s.chapter}, inferred)</span>${s.erasedDeath ? `<div class="prev">died only in an erased timeline (ch ${s.erasedDeath})</div>` : ''}`;
+  else if (s.basis === 'spoke' || s.basis === 'appeared') cell = `Alive <span class="prev">(as of ch ${s.chapter}, inferred)</span>${s.erasedDeath ? `<div class="prev">died only in an erased timeline (ch ${s.erasedDeath})</div>` : ''}`;
   else cell = `${esc(cap(s.value))} <span class="prev">(ch ${s.chapter})</span>${tlBadge(s.timeline)}`;
   if (s.earlier.length) cell += `<div class="prev">previously ${s.earlier.map(o => `${esc(cap(o.value))} (ch ${o.chapter})`).join(', ')}</div>`;
   return `<tr><th>${esc(label('status'))}</th><td>${cell}</td></tr>`;
