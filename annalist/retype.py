@@ -17,6 +17,8 @@ RETYPE_PROMPT = """Each entry below comes from a wiki built from a novel and sho
 Decide for each entry whether it is one specific individual: a named or uniquely described person, creature, or being with an identity of its own. An individual is a deity if the novel worships it as a god or godlike being, and a character otherwise, whatever class, species, rank, or power category the novel puts them in. An entry that is a kind, class, or group of beings, a power, an item, a rank, a place, or a concept is not an individual: give it the best type from this list:
 {types}
 
+A type listed as a kind of a general type fits an entry only when the type's name and its description both cover it. Give an entry that such a type does not fit the general type it is a kind of, or another type that fits.
+
 {items}
 
 Reply with one JSON object: {{"items": [{{"id": "...", "type": "character, deity, or a type from the list", "reason": "one short sentence"}}]}}, one entry per item.

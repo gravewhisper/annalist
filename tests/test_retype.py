@@ -8,6 +8,7 @@ from pathlib import Path
 
 from annalist.state import load_states
 from tests.test_backends import stub_claude
+from tests.test_merge_rules import Run
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "tests" / "data" / "cache"
@@ -129,6 +130,48 @@ class LeftoverTest(unittest.TestCase):
             self.assertEqual(sorted(f["name"] for f in left["findings"]), ["Harbor Row", "Varn"])
         finally:
             ember.close()
+
+
+SOCIETY_CHAPTERS = {
+    1: ("The Cellar",
+        "The Veiled Hand met in a cellar that no member would admit to knowing. At dawn the Salt Guild posted its tide prices on the "
+        "harbour wall for every passer-by to read.\n"),
+}
+
+SOCIETY_EXTRACTIONS = {
+    1: {"entities": [entry("Veiled Hand", "secret society", "A society whose members meet in a hidden cellar."),
+                     entry("Salt Guild", "secret society", "A guild that posts its tide prices on the harbour wall.")],
+        "facts": [fact("Salt Guild", "The Salt Guild posts its tide prices on the harbour wall.",
+                       "the Salt Guild posted its tide prices on the harbour wall for every passer-by to read")]},
+}
+
+SOCIETY_BOOK = {"title": "Cellar", "backend": {"name": "fake", "script": "script.json"}, "power_system": "", "timeline_kind": "linear",
+                "power_types": {"secret society": {"parent": "organization",
+                                                   "description": "a society that keeps its members and meetings hidden"}}}
+
+SOCIETY_REPLIES = [
+    {"purpose": "retype", "contains": "fits an entry only when the type's name and its description both cover it",
+     "reply": retype_reply(["organization", "secret society"])},
+    {"purpose": "retype", "reply": retype_reply(["secret society", "secret society"])},
+]
+
+
+class BookTypeFitTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.cellar = Run(SOCIETY_CHAPTERS, SOCIETY_EXTRACTIONS, SOCIETY_BOOK, SOCIETY_REPLIES)
+        cls.cellar.run("retype", str(cls.cellar.workdir), "--jobs", "1")
+        cls.kb = load_states(cls.cellar.workdir)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.cellar.close()
+
+    def test_a_public_group_filed_under_a_narrow_book_type_drops_to_its_general_type(self):
+        self.assertEqual(self.kb.entities["Salt Guild"]["type"], "organization")
+
+    def test_a_group_the_book_type_fits_keeps_it(self):
+        self.assertEqual(self.kb.entities["Veiled Hand"]["type"], "secret society")
 
 
 if __name__ == "__main__":
