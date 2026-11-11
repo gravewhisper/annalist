@@ -4,6 +4,7 @@ import sys
 import unittest
 
 from annalist.ladders import ladder_needed
+from annalist.ranks import stated_steps
 from annalist.state import Knowledge
 from annalist.survey import book_problems
 from tests.test_build import LATER_REPLIES, MiniBuild, ROOT
@@ -93,6 +94,14 @@ class NamedRanksBuildTest(unittest.TestCase):
         self.assertIsNone(calls[1]["error"])
         self.assertEqual(self.book.json("book.json")["ladder"], SPEC)
 
+    def test_a_rank_the_read_filed_under_the_group_type_moves_to_the_rank_type_and_onto_its_ladder(self):
+        self.assertIn(("Brine Warden", "circle"), self.entries)
+        self.assertNotIn(("Brine Warden", "school"), self.entries)
+        self.assertIn({"name": "Brine Warden", "from": "school", "to": "circle", "source": "rank",
+                       "reason": 'The wiki records "Brine Warden is Circle 2 of the Saltmere School."'}, self.book.json("types.json")["entities"])
+        saltmere = next(l for l in self.book.json("ladders.json") if l["group"] == "Saltmere School")
+        self.assertEqual([(s["entry"], s["rank"]) for s in saltmere["steps"]][:2], [("Tidewatcher", 1), ("Brine Warden", 2)])
+
     def test_an_item_named_after_a_rank_links_to_the_rank(self):
         name = {e["id"]: (e["name"], e["type"]) for e in self.wiki["entities"]}
         links = {(name[r["source"]], r["type"], name[r["target"]]) for r in self.wiki["relations"]}
@@ -113,6 +122,30 @@ class RankWordTest(unittest.TestCase):
 
     def test_a_book_without_named_ranks_needs_no_rank_type(self):
         self.assertIsNone(book_problems({**NO_RANK_TYPE, "rank_word": ""}, Knowledge(), None, self.NOVEL))
+
+
+class StatedStepsTest(unittest.TestCase):
+    def kb(self, claims, relations=()):
+        kb = Knowledge(SPEC, power_types={"school": {"parent": "organization", "description": ""}, "circle": {"parent": "concept", "description": ""}})
+        for name in ("Saltmere School", "Brine Warden", "Gloam", "Night Cantor", "Lantern", "Wick"):
+            kb.upsert_entity({"name": name, "type": "school"}, 1)
+        kb.facts += [{"entity": entity, "claim": claim} for entity, claim in claims]
+        kb.relations += [{"source": s, "type": t, "target": o} for s, t, o in relations]
+        return kb
+
+    def test_an_entry_of_the_group_type_stated_to_be_a_numbered_or_ordered_rank_is_a_step(self):
+        kb = self.kb([("Brine Warden", "Brine Warden is Circle 2 of the Saltmere School."),
+                      ("Gloam", "Gloam is the name of the school and of its first circle."),
+                      ("Night Cantor", "Night Cantor is the third circle of Gloam.")],
+                     [("Wick", "is the second circle of", "Lantern")])
+        self.assertEqual(stated_steps(kb, SPEC, "circle"), {"Brine Warden": "Brine Warden is Circle 2 of the Saltmere School.",
+                                                            "Night Cantor": "Night Cantor is the third circle of Gloam.",
+                                                            "Wick": "Wick is the second circle of Lantern"})
+
+    def test_an_entry_the_text_also_gives_ranks_of_its_own_stays_a_group(self):
+        kb = self.kb([("Lantern", "Circle 1: Lantern is where every student begins."), ("Lantern", "Circle 2 of Lantern is Wick.")],
+                     [("Gloam", "is the first circle of", "Saltmere School"), ("Night Cantor", "is Circle 3 of", "Gloam")])
+        self.assertEqual(stated_steps(kb, SPEC, "circle"), {"Night Cantor": "Night Cantor is Circle 3 of Gloam"})
 
 
 class RankLadderSpecTest(unittest.TestCase):

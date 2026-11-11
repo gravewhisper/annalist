@@ -7,7 +7,7 @@
 3. `read` reads each chapter in order and writes `state/NNNN.json` with that chapter's entries, facts, relations, and open questions.
 4. `timelines` labels which timeline each chapter happens in. It is skipped when `book.json` says the story is linear.
 5. `wordings` splits relation wordings from older runs into a predicate and a detail.
-6. `retype` checks the type each entry is filed under.
+6. `retype` checks the type each entry is filed under. An entry filed under the ladder's group type that a fact or relation states is a numbered or ordered rank, such as "X is Circle 2 of Y", moves to the rank type, unless the wiki also gives it ranks of its own.
 7. `discover` adds entries for names that recur in the text but that `read` never listed.
 8. `resolve` merges entries that are one person, place, or thing under different names, including identities the book reveals later.
 9. `relate` adds relations that each chapter shows between entries it names close together.
