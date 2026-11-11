@@ -25,6 +25,94 @@ def spine_documents(epub_path):
         yield path, z.read(path).decode("utf-8")
 
 
+def toc_anchors(epub_path):
+    """{spine path: [anchor, ...]} for every TOC entry (NCX or EPUB 3 nav) that points into a document by fragment."""
+    z = zipfile.ZipFile(epub_path)
+    container = ET.fromstring(z.read("META-INF/container.xml"))
+    opf_path = container.find(".//c:rootfile", NS).get("full-path")
+    opf = ET.fromstring(z.read(opf_path))
+    base = posixpath.dirname(opf_path)
+    anchors = {}
+    for item in opf.find("opf:manifest", NS):
+        if item.get("media-type") != "application/x-dtbncx+xml" and "nav" not in (item.get("properties") or "").split():
+            continue
+        toc = posixpath.normpath(posixpath.join(base, item.get("href")))
+        root = ET.fromstring(z.read(toc))
+        if item.get("media-type") == "application/x-dtbncx+xml":
+            targets = [c.get("src") for c in root.iterfind(".//{*}navMap//{*}navPoint/{*}content")]
+        else:
+            tocs = [n for n in root.iter("{http://www.w3.org/1999/xhtml}nav")
+                    if (n.get("{http://www.idpf.org/2007/ops}type") or "toc") == "toc"][:1]
+            targets = [a.get("href") for n in tocs for a in n.iter("{http://www.w3.org/1999/xhtml}a")]
+        for target in targets:
+            path, _, anchor = (target or "").partition("#")
+            if not anchor:
+                continue
+            path = posixpath.normpath(posixpath.join(posixpath.dirname(toc), path))
+            if anchor not in anchors.setdefault(path, []):
+                anchors[path].append(anchor)
+    return anchors
+
+
+HEADING_WORDS = 12
+
+
+GUTENBERG_END = re.compile(r"^(?:\*{3}\s*)?END OF (?:THE |THIS )?PROJECT GUTENBERG", re.I | re.M)
+
+
+def document_segments(markup, anchors):
+    """[(None, text before the first TOC anchor), (anchor, text up to the next TOC anchor), ...] for one document."""
+    starts = []
+    for a in anchors:
+        m = re.search(rf'\b(?:id|name)="{re.escape(a)}"', markup)
+        if m:
+            starts.append((markup.rfind("<", 0, m.start()), a))
+    starts.sort()
+    bounds = [(0, None)] + starts + [(len(markup), None)]
+    return [(anchor, html_to_text(markup[begin:end])) for (begin, anchor), (end, _) in zip(bounds, bounds[1:])]
+
+
+def toc_pieces(segments):
+    """Cut the way Annalist's extract cuts a document: a segment of short headings alone (a caption, a part title)
+    joins the piece after it, or the last piece at the end of the document."""
+    pieces, pending = {}, ""
+    for anchor, text in segments:
+        if all(len(p.split()) <= HEADING_WORDS for p in text.split("\n\n")):
+            pending += text + "\n\n"
+        else:
+            pieces[anchor], pending = pending + text, ""
+    if pending and pieces:
+        last = list(pieces)[-1]
+        pieces[last] += "\n\n" + pending
+    return pieces
+
+
+def book_chapters(epub_path):
+    """{href: text} for each spine document, and {href#anchor: text} for each chapter of a document that holds two or
+    more TOC chapters. The text such a document holds before its first chapter ends the chapter before it. Nothing
+    after the Gutenberg end line counts."""
+    anchors = toc_anchors(epub_path)
+    out, ended = {}, False
+    for path, markup in spine_documents(epub_path):
+        segments = []
+        for anchor, text in document_segments(markup, anchors.get(path, [])):
+            m = None if ended else GUTENBERG_END.search(text)
+            segments.append((anchor, "" if ended else text[:m.start()] if m else text))
+            ended = ended or m is not None
+        (_, prefix), pieces = segments[0], toc_pieces(segments[1:])
+        if len(pieces) < 2:
+            out[path] = "\n\n".join(text for _, text in segments)
+            continue
+        before = next((k for k in reversed(out) if out[k].strip()), None)
+        if before:
+            out[before] += "\n\n" + prefix
+        else:
+            first = next(iter(pieces))
+            pieces[first] = prefix + "\n\n" + pieces[first]
+        out.update((f"{path}#{anchor}", text) for anchor, text in pieces.items())
+    return out
+
+
 def html_to_text(markup):
     markup = re.sub(r"(?is)<(script|style|head)\b.*?</\1>", " ", markup)
     markup = re.sub(r"(?i)<br\s*/?>|</(p|div|h\d|li|tr)>", "\n", markup)
