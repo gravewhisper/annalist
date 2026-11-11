@@ -54,11 +54,9 @@ def candidates(workdir, kb, min_chapters=2):
             and not any(toks <= k or (k <= toks and 2 * len(k) >= len(toks)) for k in known)]
 
 
-BOOK_TYPE = "an element of this book's power or magic system that the book itself calls by this word"
-
-
 def judge(workdir, batch):
-    types = {**{name: BOOK_TYPE for name in load_book(workdir)["power_types"]}, **{t.name: t.description for t in ENTITY_TYPES.values()}}
+    types = {**{name: f"a kind of {spec['parent']} that this book itself calls by this word" for name, spec in load_book(workdir)["power_types"].items()},
+             **{t.name: t.description for t in ENTITY_TYPES.values()}}
     lines = [f"- C{i} \"{c['name']}\" (named in {len(c['chapters'])} chapters): \"{c['passage']}\""
              for i, c in enumerate(batch, 1)]
     reply = cached_llm(workdir, "discover", DISCOVER_PROMPT.format(

@@ -7,6 +7,7 @@ from .files import write_json
 from .llm import cached_llm
 from .names import name_key
 from .state import load_states, write_derived
+from .survey import speakers
 from .template import BASE_TYPES, ENTITY_TYPES, INDIVIDUALS, UNCATEGORIZED
 from .text import chapter_text, text_window
 
@@ -49,15 +50,17 @@ def a_kind(usage):
     return usage["kind"] >= KIND_LEAST and usage["kind"] >= KIND_SHARE * usage["named"]
 
 
-def checked(kb, n, usage):
-    return kb.entities[n]["type"] not in BASE_TYPES or kb.entities[n]["type"] == UNCATEGORIZED or n in usage
+def checked(kb, n, usage, spoke):
+    etype = kb.entities[n]["type"]
+    return etype not in BASE_TYPES or etype == UNCATEGORIZED or n in usage or (etype == "creature" and n in spoke)
 
 
 def cmd_retype(args):
     workdir = Path(args.workdir).resolve()
     kb = load_states(workdir, merges=False, retypes=False, discovered=False)
     book = load_book(workdir)
-    allowed = {**{t: "" for t in sorted(ENTITY_TYPES)}, **{t: spec["description"] for t, spec in book["power_types"].items()}}
+    allowed = {**{t: ENTITY_TYPES[t].description for t in sorted(ENTITY_TYPES)},
+               **{t: f"a kind of {spec['parent']}: {spec['description']}" for t, spec in book["power_types"].items()}}
     by_entity = {}
     for f in kb.facts:
         by_entity.setdefault(f["entity"], []).append(f)
@@ -71,7 +74,8 @@ def cmd_retype(args):
     counted = [{"name": n, "from": kb.entities[n]["type"], "to": "concept", "source": "usage",
                 "reason": f"The text uses the name as a kind {usage[n]['kind']} times and as a name {usage[n]['named']} times."}
                for n in kinds]
-    todo = sorted(n for n in kb.entities if checked(kb, n, usage) and n not in kinds)
+    spoke = speakers(kb)
+    todo = sorted(n for n in kb.entities if checked(kb, n, usage, spoke) and n not in kinds)
     batches = [todo[i:i + 20] for i in range(0, len(todo), 20)]
     ladder = set((book.get("ladder") or {}).values()) & set(book["power_types"])
 

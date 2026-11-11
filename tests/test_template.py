@@ -55,7 +55,8 @@ class TemplateTest(unittest.TestCase):
         prompt = EXTRACT_PROMPT.format(knowledge="", n=1, title="", text="", power_names="", power_types="",
                                        power_relation="advances to", base_types=", ".join(ENTITY_TYPES),
                                        relation_types=", ".join(f'"{r}"' for r in RELATION_TYPES))
-        self.assertIn("Use these exact types where they fit: character, place, organization, artifact, event, deity, concept.", prompt)
+        self.assertIn("Use these exact types where they fit: character, place, organization, artifact, event, deity, creature, concept.", prompt)
+
         self.assertIn('("sister of", "member of", "mentor of", "enemy of", "located in", "advances to")', prompt)
 
 

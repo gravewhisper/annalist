@@ -620,7 +620,7 @@ const TYPE_GROUPS = [
   {key: 'groups', label: 'Groups', types: ['organization']},
   {key: 'places', label: 'Places', types: ['place']},
   {key: 'things', label: 'Things', types: ['artifact']},
-  {key: 'lore', label: 'Lore', types: ['concept', 'event', 'deity', 'uncategorized']},
+  {key: 'lore', label: 'Lore', types: ['concept', 'event', 'deity', 'creature', 'uncategorized']},
 ];
 const groupTypes = g => g.key === 'lore' ? D.typeOrder.filter(t => !TYPE_GROUPS.some(o => o !== g && o.types.includes(t))) : g.types.filter(t => D.typeOrder.includes(t));
 const peopleFirst = () => D.typeOrder.includes('character') ? ['character'] : D.typeOrder.slice(0, 1);

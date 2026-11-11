@@ -16,6 +16,8 @@ ENTITY_TYPES = {t.name: t for t in (
     EntityType("artifact", "Item", "one specific object: a weapon, relic, document, vehicle, or possession"),
     EntityType("event", "Event", "something that happened at a time: a battle, festival, disaster, or meeting"),
     EntityType("deity", "Deity", "a god or godlike being worshipped in the story"),
+    EntityType("creature", "Creature", "a kind, species, or race of non-human being, such as a monster, beast, or spirit, or one such "
+                                       "being the story never names; one with a name of its own, or one who speaks, is a character"),
     EntityType("concept", "Concept", "an idea, rule, custom, or phenomenon of the story's world"),
 )}
 
