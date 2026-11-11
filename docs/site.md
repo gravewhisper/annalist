@@ -25,3 +25,7 @@ python3 -m annalist export --public runs/book runs/book/site-public
 ```
 
 `export` refuses to run when a stage's code changed since the last build. Run `build` again first.
+
+## Light and dark
+
+The button at the right of the header switches between light and dark. In light mode every book gets the same reading surfaces: a warm frame around a softer reading area, white cards, and ink-blue underlined links. A theme in `annalist/themes/` sets the book's fonts and dark palette, but only `accent` and `heading` for light mode. The accent marks the book's identity, such as the header rule, the infobox title band, and the sidebar labels, and is never a link colour. `tests/test_theme_contrast.py` checks every text colour at 4.5:1 and every mark at 3:1.

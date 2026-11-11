@@ -7,14 +7,7 @@
       "https://cdn.jsdelivr.net/npm/@fontsource/oxanium@5.0.13/700.css"
     ],
     "light": {
-      "bg": "#f0f3f7",
-      "fg": "#141d27",
-      "muted": "#4d5a6b",
-      "line": "#d4dbe4",
-      "card": "#ffffff",
-      "hover": "#e5eaf1",
       "accent": "#c02c26",
-      "link": "#0956ae",
       "heading": "#0f2a44"
     },
     "dark": {

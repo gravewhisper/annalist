@@ -7,14 +7,7 @@
       "https://cdn.jsdelivr.net/npm/@fontsource/cinzel@5.0.13/700.css"
     ],
     "light": {
-      "bg": "#f5f4f7",
-      "fg": "#1d1826",
-      "muted": "#5c5568",
-      "line": "#dedae5",
-      "card": "#ffffff",
-      "hover": "#ebe8f0",
       "accent": "#8a6520",
-      "link": "#5b3494",
       "heading": "#3a2c12"
     },
     "dark": {
