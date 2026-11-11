@@ -13,9 +13,9 @@ RANKS = ("number", "order")
 DIRECTIONS = ("ascending", "descending")
 
 
-LADDER_SPEC_PROMPT = """A reference wiki is being built from a novel. An earlier step described the novel's power system and the kinds of power-system entries the wiki keeps:
+LADDER_SPEC_PROMPT = """A reference wiki is being built from a novel. An earlier step named the order that the novel's power types belong to (a power or magic system, or a social, military, or other order) and described each power type:
 
-POWER SYSTEM: {power_system}
+ORDER: {power_system}
 
 POWER TYPES (type: description):
 {types}
