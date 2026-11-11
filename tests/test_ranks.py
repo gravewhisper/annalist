@@ -147,6 +147,12 @@ class NamedRanksBuildTest(unittest.TestCase):
         self.assertRegex(re.sub(r"<[^>]+>", " ", pages[f"{wick}@4"]), r"circle 2 of")
         self.assertIn("Not yet introduced", pages[f"{cantor}@3"])
 
+    def test_the_review_lists_ranks_the_text_names_that_no_ladder_holds(self):
+        check = next(c for c in self.book.json("review.json")["checks"] if c["key"] == "ranks_off_ladder")
+        self.assertEqual(check["title"], "Ranks the text names that are not on a ladder")
+        self.assertEqual(check["findings"], [{"name": "Gale Reader", "chapter": 5, "form": "Circle 3: Gale Reader", "entry": None,
+                                              "text": "**Gale Reader** (Circle 3: Gale Reader, ch 5): no entry"}])
+
     def test_an_item_named_after_a_rank_links_to_the_rank(self):
         name = {e["id"]: (e["name"], e["type"]) for e in self.wiki["entities"]}
         links = {(name[r["source"]], r["type"], name[r["target"]]) for r in self.wiki["relations"]}

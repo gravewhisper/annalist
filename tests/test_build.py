@@ -195,7 +195,7 @@ class BuildMiniTest(unittest.TestCase):
 
     def test_the_review_is_written_and_summarised(self):
         review = self.book.json("review.json")
-        self.assertEqual(len(review["checks"]), 10)
+        self.assertEqual(len(review["checks"]), 11)
         self.assertTrue((self.book.workdir / "review.md").exists())
         self.assertIn("review:", self.first.stdout)
         self.assertIn("Main characters with an empty status or power field", self.first.stdout.split("review:")[-1])

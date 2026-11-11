@@ -23,7 +23,7 @@
 19. `volumes` divides the chapters read into story arcs and writes each finished volume's overview, arcs, and key events. Every arc but the last of the volume in progress is closed, and `arcs.json` keeps each closed arc frozen: a later build with more chapters read divides only the chapters after it, and the finished volume keeps it. Each closed arc is named and summarised from its own chapters' synopses only.
 20. `render` writes page summaries, a History paragraph for each story arc in which a character has at least 5 quoted facts, and a Markdown and HTML wiki under `wiki/`.
 21. `export` writes the static site to `site/`.
-22. `review` writes `review.md` and `review.json`, a list of problems that code can find, such as merges across types and characters who die and then come back.
+22. `review` writes `review.md` and `review.json`, a list of problems that code can find, such as merges across types, characters who die and then come back, and ranks the text names with the book's rank word that no ladder holds.
 
 A build is resumable. If a stage fails, the build exits with status 2, and running the same command again continues from where it stopped. Five layers keep finished work:
 

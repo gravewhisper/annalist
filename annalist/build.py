@@ -246,7 +246,8 @@ STAGES = (
                    "ending.json", "volumes", ARCS_FILE, "ladders.json", "families.json", "corrections.json"),
           lambda run: ["site/data/wiki.json"], code=("export", "site", "themes")),
     Stage("review", lambda run: cmd_review(Namespace(workdir=str(run.workdir))),
-          STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "profiles.json"), lambda run: ["review.json", "review.md"], code=("review",)),
+          STATE + ("types.json", "merges.json", "discover.json", "relate.json", "link.json", "profiles.json", "ladders.json"),
+          lambda run: ["review.json", "review.md"], code=("review",)),
 )
 
 

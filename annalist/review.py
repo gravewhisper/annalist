@@ -5,10 +5,12 @@ from pathlib import Path
 from .book import load_book
 from .files import read_json, write_atomic, write_json
 from .evidence import class_pattern, stems
+from .names import name_key, names_of
+from .ranks import rank_mentions
 from .state import load_states, timeline_role
 from .status import current_status, spoken_appearances
 from .survey import people_in_type, speakers
-from .template import UNCATEGORIZED
+from .template import INDIVIDUALS, UNCATEGORIZED
 from .text import chapter_text
 
 
@@ -203,6 +205,27 @@ def uncategorized(run):
             for e in run.kb.entities.values() if e["type"] == UNCATEGORIZED]
 
 
+def ranks_off_ladder(run):
+    word = run.book["rank_word"]
+    if not word:
+        return []
+    placed = set()
+    for ladder in read_json(run.workdir / "ladders.json", []):
+        for s in ladder["steps"]:
+            key = run.kb.resolve(s["entry"], (run.book.get("ladder") or {}).get("step_type") or "")
+            placed |= {name_key(n) for n in [s["entry"]] + (names_of(run.kb.entities[key]) if key else [])}
+    out, seen = [], set()
+    for m in rank_mentions(run.workdir, sorted(run.kb.synopses), word):
+        key = run.kb.resolve(m["name"])
+        if name_key(m["name"]) in placed | seen | set(run.book["power_types"]) or (key and run.kb.entities[key]["type"] in INDIVIDUALS):
+            continue
+        seen.add(name_key(m["name"]))
+        status = f"filed as {run.kb.entities[key]['type']}" if key else "no entry"
+        out.append({"name": m["name"], "chapter": m["chapter"], "form": m["form"], "entry": key,
+                    "text": f"**{m['name']}** ({m['form']}, ch {m['chapter']}): {status}"})
+    return out
+
+
 @dataclass(frozen=True)
 class Check:
     key: str
@@ -221,6 +244,7 @@ CHECKS = (
     Check("front_matter", "Front matter or license text in chapters", front_matter),
     Check("minor_mentions", "Entries shown only as minor mentions", minor_mentions),
     Check("uncategorized", "Entries left without a type", uncategorized),
+    Check("ranks_off_ladder", "Ranks the text names that are not on a ladder", ranks_off_ladder),
 )
 
 
