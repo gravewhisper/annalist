@@ -5,6 +5,7 @@ import shutil
 import sys
 from pathlib import Path
 
+from .book import added_types
 from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .families import read_families, relation_family
 from .files import read_json
@@ -15,7 +16,7 @@ from .profile import page_profiles
 from .render import checkpoint_prompts, closed_arcs, history_prompts, kept_prompts, reader_parts, summary_prompt, WRITTEN, written_prompt
 from .state import load_states
 from .status import named_characters, spoken_appearances, stated_appearances
-from .template import type_parents, Types
+from .template import book_types, Types, written
 from .text import mention_quote
 
 SITE = Path(__file__).resolve().parent / "site"
@@ -23,6 +24,16 @@ THEMES = Path(__file__).resolve().parent / "themes"
 QUOTE_KEYS = {"quote", "quotes", "resolve_quote"}
 def entity_id(name):
     return hashlib.sha1(name.encode()).hexdigest()[:8]
+
+
+def category_labels(categories, texts):
+    """Each category's label in the book's words, from the first chapter that writes it, and never before its type exists."""
+    labels = {}
+    for t, spec in categories.items():
+        start = next((n for n in sorted(texts) if spec.get("label") and written(spec["label"], texts[n])), None)
+        if start is not None:
+            labels[t] = {"text": spec["label"], "chapter": max(start, spec.get("chapter", 0))}
+    return labels
 
 
 def timeline(row):
@@ -208,14 +219,17 @@ def build(workdir, theme):
     for r in relations:
         for end in ("source", "target"):
             ties.setdefault(r[end], []).append(r)
-    kinds = Types(type_parents(book.get("power_types")))
+    added = added_types(workdir)
+    categories = {**book_types(book.get("power_types")), **added}
+    kinds = Types({t: spec["parent"] for t, spec in categories.items()})
     types = {e["name"]: kinds.kind(e["type"]) for e in entities}
 
     out_entities = []
     for e in entities:
         page = names[e["name"]]
         record = {"id": ids[e["name"]], "name": page.name, "name_chapter": page.chapter, "type": e["type"],
-                  "first": page.first, "aliases": page.aliases, "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e)}
+                  "first": page.first, "aliases": page.aliases, "blurbs": blurbs.get(e["name"], []), **nameless(e["type"], e),
+                  **({"retyped": e["retyped"]} if e.get("retyped") else {})}
         record["mention"] = first_mention(texts, record)
         if e["type"] == "character":
             record["present"] = sorted(present.get(e["name"], ()))
@@ -265,7 +279,8 @@ def build(workdir, theme):
     return kb.problems + missed, {
         "book": {"title": title, "max": last,
                  "public_domain": book.get("public_domain") is True, "theme": book.get("theme") or stored_theme(title),
-                 "power_types": sorted((book.get("power_types") or {}).keys()), "parents": type_parents(book.get("power_types")),
+                 "power_types": sorted(categories), "parents": kinds.parents, "labels": category_labels(categories, texts),
+                 "added": {t: spec["chapter"] for t, spec in added.items()},
                  "ladder": book.get("ladder")},
         "chapters": chapters,
         "timelines": list(timelines.values()),

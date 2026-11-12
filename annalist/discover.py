@@ -74,7 +74,7 @@ def judge(workdir, batch):
 
 def cmd_discover(args, batch=80):
     workdir = Path(args.workdir).resolve()
-    found = candidates(workdir, load_states(workdir, merges=False, discovered=False, filled=()))
+    found = candidates(workdir, load_states(workdir, merges=False, discovered=False, filled=(), added=False))
     by_chapter = {}
     for c in found:
         by_chapter.setdefault(c["chapters"][0], []).append(c)

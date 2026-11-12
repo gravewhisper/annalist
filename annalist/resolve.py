@@ -659,7 +659,7 @@ def decide(workdir, kb, by_entity, attached, key, info):
 
 def cmd_resolve(args):
     workdir = Path(args.workdir).resolve()
-    kb = load_states(workdir, merges=False, filled=())
+    kb = load_states(workdir, merges=False, filled=(), added=False)
     by_entity = {}
     for f in kb.facts:
         by_entity.setdefault(f["entity"], []).append(f)

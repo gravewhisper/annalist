@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .book import load_book
+from .book import added_types, load_book
 from .files import read_json, write_atomic, write_json
 from .evidence import class_pattern, stems
 from .names import name_key, names_of
@@ -10,7 +10,7 @@ from .ranks import rank_mentions
 from .state import load_states, timeline_role
 from .status import current_status, kb_appearances, spoken_appearances
 from .survey import people_in_type, speakers
-from .template import INDIVIDUALS, UNCATEGORIZED
+from .template import category_problems, INDIVIDUALS, UNCATEGORIZED
 from .text import chapter_text
 
 
@@ -165,6 +165,12 @@ def power_type_people(run):
     return out
 
 
+def category_clashes(run):
+    types = {**run.book["power_types"], **added_types(run.workdir)}
+    names = {n: e["type"] for e in run.kb.entities.values() for n in names_of(e)}
+    return [{"text": p} for p in category_problems(types, names)]
+
+
 def relation_rejections(run, floor=0.3, least=4):
     out, totals = [], [0, 0]
     for state in run.states:
@@ -244,6 +250,7 @@ CHECKS = (
     Check("erased_resolutions", "Questions resolved in erased timelines", erased_resolutions),
     Check("quote_gaps", "Profile values whose quote lacks the value's key words", quote_gaps),
     Check("power_type_people", "Power types that contain people", power_type_people),
+    Check("category_clashes", "Categories that overlap or are named like an entry", category_clashes),
     Check("relation_rejections", "High relation audit rejection rates", relation_rejections),
     Check("front_matter", "Front matter or license text in chapters", front_matter),
     Check("minor_mentions", "Entries shown only as minor mentions", minor_mentions),
