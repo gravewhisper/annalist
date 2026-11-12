@@ -338,6 +338,26 @@ function entRow(e, extra) {
   return `<li><span class="ch">Ch ${e.first}</span>${entLink(e.id)}<span class="badge">${esc(e.type)}</span>${extra || ''}<span class="sum">${esc(l.text)}</span></li>`;
 }
 
+const FEATURE = {pool: 12, leads: 6};
+function featured() {
+  const degree = {};
+  for (const r of edgesAt()) if (r.role !== 'erased') for (const id of [r.source, r.target]) degree[id] = (degree[id] || 0) + 1;
+  const people = D.entities.filter(e => e.type === 'character' && full(e) && degree[e.id] && lede(e).text);
+  people.sort((a, b) => degree[b.id] - degree[a.id] || displayName(a).localeCompare(displayName(b)));
+  const summed = people.filter(e => (e.summary && e.summary.chapter <= S.n) || until(e.summaries || []).length);
+  const pool = (summed.length ? summed : people).slice(0, FEATURE.pool);
+  return pool.length ? pool[S.n % pool.length] : null;
+}
+
+function portal() {
+  const e = featured();
+  const leads = D.questions.filter(q => qState(q) === 'partial').map(q => ({q, lead: until(q.leads).at(-1)}))
+    .sort((a, b) => b.lead.chapter - a.lead.chapter || a.q.id.localeCompare(b.q.id)).slice(0, FEATURE.leads);
+  const feature = e ? `<section class="panel feature"><h3>Featured entry</h3><h4>${entLink(e.id)}</h4><p>${linkify(clip(lede(e).text, 420), e.id, S.n)}</p><a ${goTo(`e:${e.id}`)}>Read the full entry</a></section>` : '';
+  const ask = leads.length ? `<section class="panel"><h3>Questions with new leads</h3><ul class="plist">${leads.map(({q, lead}) => `<li><span>${linkify(q.question, null, q.chapter)}</span><span class="chip">lead ch ${lead.chapter}</span></li>`).join('')}</ul><a ${goTo('mysteries')}>All mysteries</a></section>` : '';
+  return feature || ask ? `<div class="portal">${feature}${ask}</div>` : '';
+}
+
 function renderHome(c) {
   const types = Object.keys(c).sort((a, b) => c[b] - c[a] || a.localeCompare(b));
   const recent = D.entities.filter(full).sort((a, b) => b.first - a.first || a.name.localeCompare(b.name)).slice(0, 12);
@@ -347,6 +367,7 @@ function renderHome(c) {
   const intro = S.n === 1 && !store.get(D.storeKey + ':seen') ? `<div class="note">Set the slider to the chapter you have just finished. Nothing past it is shown anywhere on the site.</div>` : '';
   return `<div class="home"><h1>${esc(D.book.title)}</h1><div class="subtitle">Everything known up to chapter ${S.n}: ${esc(ctitle(S.n))}</div>${intro}
   <div class="stats"><div class="stat"><b>${D.entities.filter(full).length}</b>entries</div><div class="stat"><b>${visFactsAll()}</b>facts</div><div class="stat"><b>${qs.filter(x => x === 'open').length}</b>open mysteries</div><div class="stat"><b>${qs.filter(x => x === 'partial').length}</b>with leads</div><div class="stat"><b>${qs.filter(settled).length}</b>solved</div></div>
+  ${portal()}
   <h2>Latest chapters</h2><div class="cards">${chs.map(ch => chapterCard(ch)).join('')}</div>
   ${vols.length ? `<h2>Volumes</h2><div class="cards">${vols.map(v => `<a class="ccard" ${goTo(`v:${v.id}`)}><div><span class="chip">Ch ${v.from} to ${v.to}</span></div><h3>${esc(v.name)}</h3><p>${S.n >= v.to ? 'Complete' : 'In progress'}</p></a>`).join('')}</div>` : ''}
   <h2>Categories</h2><div class="cats">${types.map(t => `<a class="cat" ${goTo(`cat:${t}`)}>${esc(catName(t))}<span>${c[t]}</span></a>`).join('')}</div>
@@ -2844,6 +2865,13 @@ function render() {
   $('n').value = S.n;
   $('nlab').textContent = S.n;
   $('ctitle').textContent = ctitle(S.n);
+  const vol = volumeAt(S.n), vb = $('vol');
+  vb.hidden = !vol;
+  if (vol) {
+    vb.textContent = vol.label;
+    vb.classList.toggle('end', vol.end);
+    vb.title = vol.end ? 'Everything up to the end of this volume is shown' : 'Jump to the end of this volume';
+  }
   $('brand').href = '#' + hashFor({p: 'home', tab: '', m: ''});
   const c = counts();
   renderSide(c);
@@ -2876,6 +2904,58 @@ function showHover(el) {
   hover.classList.add('show');
 }
 function hideHover() { hover.classList.remove('show'); }
+
+function volumeAt(n) {
+  const v = D.volumes.find(x => x.from <= n && n <= x.to);
+  if (!v) return null;
+  const end = n === v.to;
+  return {id: v.id, to: v.to, end, label: end ? `End of ${v.name}` : `${v.name} \u00b7 ${n - v.from + 1} of ${v.to - v.from + 1}`};
+}
+
+function volumeTicks() {
+  const list = document.createElement('datalist');
+  list.id = 'volticks';
+  list.innerHTML = D.volumes.map(v => `<option value="${v.to}" label="${esc(v.name)}"></option>`).join('');
+  document.body.appendChild(list);
+  $('n').setAttribute('list', 'volticks');
+}
+
+const NOTES = {count: 0};
+async function probeNotes() {
+  try {
+    const r = await fetch('api/notes', {cache: 'no-store'});
+    const d = r.ok ? await r.json() : null;
+    if (!Array.isArray(d?.notes)) return;
+    NOTES.count = d.notes.length;
+    $('report').hidden = false;
+    reportLabel();
+  } catch (err) { /* a plain static host has no notes endpoint, so the button stays hidden */ }
+}
+function reportLabel() { $('report').textContent = NOTES.count ? `Report a problem (${NOTES.count})` : 'Report a problem'; }
+function pageTitle() { return document.querySelector('#main h1')?.textContent.trim() || 'Home'; }
+function openReport() {
+  const box = $('reportbox');
+  box.innerHTML = `<h4>Report a problem</h4><div class="muted">${esc(pageTitle())} &middot; chapter ${S.n}</div>
+    <textarea id="reporttext" rows="5" placeholder="What is wrong here, and what should it say?"></textarea>
+    <div class="reportrow"><span class="muted" id="reportmsg"></span><button data-report-cancel>Cancel</button><button class="primary" data-report-save>Save note</button></div>`;
+  box.hidden = false;
+  $('reporttext').focus();
+}
+async function saveReport() {
+  const text = $('reporttext').value.trim();
+  if (!text) return;
+  const note = {page: S.p || 'home', title: pageTitle(), chapter: S.n, url: location.hash, text};
+  $('reportmsg').textContent = 'Saving...';
+  try {
+    const r = await fetch('api/notes', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(note)});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    NOTES.count = d.count;
+    reportLabel();
+    $('reportbox').innerHTML = `<div class="muted">Saved. ${d.count} note${d.count === 1 ? '' : 's'} so far.</div>`;
+    setTimeout(() => { $('reportbox').hidden = true; }, 1500);
+  } catch (err) { $('reportmsg').textContent = `Not saved: ${err.message}`; }
+}
 
 function setN(n) {
   S.n = Math.min(Math.max(1, n), D.book.max);
@@ -2923,6 +3003,10 @@ function wire() {
     let el;
     if (act('[data-gback]')) store.set('graph-focus', '');
     if ((ev.button || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) && act('[href]')) return;
+    if (act('[data-report]')) return $('reportbox').hidden ? openReport() : ($('reportbox').hidden = true);
+    if (act('[data-report-cancel]')) return ($('reportbox').hidden = true);
+    if (act('[data-report-save]')) return saveReport();
+    if (act('[data-volend]')) { const v = volumeAt(S.n); if (v && !v.end) setN(v.to); return; }
     if (graphClick(ev, act) || storyClick(ev, act)) return;
     if ((el = act('.disc'))) return toggleDisc(el);
     if ((el = act('.ent'))) { ev.preventDefault(); return go({p: 'e:' + el.dataset.ent, tab: ''}); }
@@ -2966,6 +3050,8 @@ function wire() {
   window.addEventListener('resize', () => G.refit?.());
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && G.full) toggleFull(false); });
   document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && $('reportbox').hidden === false) return ($('reportbox').hidden = true);
+    if (ev.target.id === 'reporttext' && ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) return saveReport();
     if (graphKey(ev)) return;
     if (ev.target.matches('input,textarea')) return;
     if (ev.key === 'Escape' && G.full) return toggleFull(false);
@@ -2975,6 +3061,6 @@ function wire() {
   });
 }
 
-load().then(() => { readHash(); wire(); writeHash(); render(); }).catch(err => {
+load().then(() => { readHash(); wire(); volumeTicks(); writeHash(); render(); probeNotes(); }).catch(err => {
   $('main').innerHTML = `<p class="muted">Could not load data/wiki.json: ${esc(err.message)}. Serve this folder over HTTP rather than opening the file directly.</p>`;
 });

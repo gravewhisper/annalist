@@ -17,7 +17,7 @@ const context = {document, window: {addEventListener: noop, scrollTo: noop}, loc
   fetch: async () => ({json: async () => JSON.parse(readFileSync(wikiPath, 'utf8'))}), console, URLSearchParams,
   requestAnimationFrame: () => 0, cancelAnimationFrame: noop, performance, scrollX: 0, scrollY: 0, innerWidth: 1200};
 vm.createContext(context);
-vm.runInContext(readFileSync(app, 'utf8') + '\nglobalThis.__app = {S, G, D, renderEntity, renderMysteries, renderGraph, mainCharacter, shownNames, renderHome, renderChapter, renderVolume, counts, graphAt, qState, load, go, search, graphSearch, storySearch, readHash, REL_GROUPS, TYPE_GROUPS, predicate, questions: () => D.questions, ORBIT, fitView, labelSpots, outward, revealTiming, CAT_COLS};', context);
+vm.runInContext(readFileSync(app, 'utf8') + '\nglobalThis.__app = {S, G, D, volumeAt, renderEntity, renderMysteries, renderGraph, mainCharacter, shownNames, renderHome, renderChapter, renderVolume, counts, graphAt, qState, load, go, search, graphSearch, storySearch, readHash, REL_GROUPS, TYPE_GROUPS, predicate, questions: () => D.questions, ORBIT, fitView, labelSpots, outward, revealTiming, CAT_COLS};', context);
 await context.__app.load();
 await new Promise(r => setTimeout(r));
 
@@ -125,6 +125,7 @@ for (const view of views) {
     : id === 'navclick' ? navClick(focus, new URLSearchParams(query).get('to'))
     : id === 'phrases' ? Object.fromEntries(readFileSync(focus, 'utf8').split('\n').filter(Boolean).map(w => [w, a.predicate(w)]))
     : id === 'tables' ? {rel: a.REL_GROUPS, types: a.TYPE_GROUPS, sorts: a.CAT_COLS.map(c => c.key)}
+    : id === 'volumeat' ? a.volumeAt(+focus)
     : id === 'header' ? {brand: nodes.brand.textContent, title: document.title}
     : id === 'search' ? (document.getElementById('q').value = focus, a.search(), nodes.results.innerHTML)
     : id === 'gsearch' ? boxed(box => a.graphSearch({value: focus}, box, x => x))

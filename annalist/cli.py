@@ -17,6 +17,7 @@ from .link import cmd_link
 from .relate import cmd_relate
 from .resolve import cmd_resolve
 from .scorecard import cmd_eval
+from .serve import cmd_serve
 from .retype import cmd_retype
 from .newtypes import cmd_newtypes
 from .review import cmd_review
@@ -50,6 +51,11 @@ def main():
     p.add_argument("--model", help="backend model written to book.json")
     p.add_argument("--option", action="append", help="backend option KEY=VALUE written to book.json; repeat for more")
     p.set_defaults(func=cmd_build)
+
+    p = sub.add_parser("serve", description="Serve a built wiki on this computer and save the notes its report button sends to reader-notes.jsonl.")
+    p.add_argument("workdir")
+    p.add_argument("--port", type=int, default=8765)
+    p.set_defaults(func=cmd_serve)
 
     p = sub.add_parser("extract")
     p.add_argument("epub")
