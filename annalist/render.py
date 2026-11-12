@@ -14,7 +14,7 @@ from .names import display_names, name_key, slug
 from .pages import PageName, read_pages
 from .profile import page_profiles
 from .state import load_states, timeline_line, timeline_role, timeline_tag, UNRESOLVED
-from .status import current_status, spoken_appearances
+from .status import current_status, kb_appearances, spoken_appearances
 from .template import PROFILE_FIELDS, PROFILE_LISTS, SECTIONS
 from .text import chapter_text, mention_quote, verified_quotes
 from .tiers import tier_at, TIER_HEADINGS, TIER_ORDER
@@ -300,7 +300,7 @@ def capitalized(value):
 def status_cell(status, link):
     if status.basis == "erased_death":
         return f"Alive (died only in an erased timeline, {link(status.chapter)})"
-    if status.basis == "spoke":
+    if status.basis in ("spoke", "appeared"):
         cell = f"Alive (as of {link(status.chapter)}, inferred)"
         if status.erased_death:
             cell += f", died only in an erased timeline ({link(status.erased_death)})"
@@ -311,13 +311,13 @@ def status_cell(status, link):
     return cell
 
 
-def infobox_rows(profile, until, link, timelines, spoken):
+def infobox_rows(profile, until, link, timelines, spoken, appeared=()):
     rows = []
     fields = [(PROFILE_FIELDS[k], k, profile["fields"].get(k, [])) for k in PROFILE_FIELDS]
     fields += [(k.replace("_", " ").capitalize(), k, v) for k, v in profile["extra"].items()]
     for label, key, observations in fields:
         if key == "status":
-            status = current_status(observations, spoken, timelines, until)
+            status = current_status(observations, spoken, timelines, until, appeared)
             rows += [f"| **{label}** | {status_cell(status, link)} |"] if status else []
             continue
         shown = [o for o in visible(observations, until) if timeline_role(timelines.get(o.get("timeline", "main")), until) == "current"]
@@ -359,9 +359,9 @@ def arc_histories(workdir, kb, by_entity, arcs, pool, page):
     return histories
 
 
-def profile_sections(profile, written, until, link, timelines, spoken):
+def profile_sections(profile, written, until, link, timelines, spoken, appeared=()):
     lines = []
-    rows = infobox_rows(profile, until, link, timelines, spoken)
+    rows = infobox_rows(profile, until, link, timelines, spoken, appeared)
     if rows:
         lines += ["| | |", "|---|---|"] + rows + [""]
     for key, title in PROFILE_LISTS.items():
@@ -499,6 +499,7 @@ def cmd_render(args):
     known = known_names(kb.entities, names, until)
     shown = display_names({k: {**e, "written": known[k]} for k, e in kb.entities.items()})
     spoken = spoken_appearances(kb.facts + kb.relations, lambda name, _: kb.resolve(name))
+    appeared = kb_appearances(kb)
     bare = set(kb.bare_entities())
     paths, used = {}, set()
     for name, e in kb.entities.items():
@@ -568,7 +569,7 @@ def cmd_render(args):
                  + (f" Also known as: {', '.join(aka)}.*" if aka else "*"), "",
                  summaries.get(name) or e["summary"] or "No summary yet.", ""]
         if name in profiles:
-            lines += profile_sections(profiles[name], written.get(name, {}), until, cite, kb.timelines, spoken.get(name, []))
+            lines += profile_sections(profiles[name], written.get(name, {}), until, cite, kb.timelines, spoken.get(name, []), appeared.get(name, []))
         if histories.get(name):
             lines += ["## History", ""]
         for arc, text in histories.get(name, []):

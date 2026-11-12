@@ -14,7 +14,7 @@ from .pages import read_pages
 from .profile import page_profiles
 from .render import checkpoint_prompts, closed_arcs, history_prompts, kept_prompts, reader_parts, summary_prompt, WRITTEN, written_prompt
 from .state import load_states
-from .status import spoken_appearances
+from .status import named_characters, spoken_appearances, stated_appearances
 from .template import type_parents, Types
 from .text import mention_quote
 
@@ -45,13 +45,13 @@ def written_history(workdir, key, page, evidence):
     return history
 
 
-def export_profile(workdir, page, profile, spoke):
+def export_profile(workdir, page, profile, spoke, appeared):
     fields = {k: observations(v) for k, v in {**profile["fields"], **profile["extra"]}.items()}
     lists = {k: observations(v) for k, v in profile["lists"].items()}
     written = {spec.purpose: written_history(workdir, key, page, [o for o in profile["lists"].get(key, []) if o.get("quote_ok")])
                for key, spec in WRITTEN.items()}
     return {"fields": {k: v for k, v in fields.items() if v}, "lists": {k: v for k, v in lists.items() if v},
-            "spoke": [[c, tid] for c, tid in spoke], **written}
+            "spoke": [[c, tid] for c, tid in spoke], "appeared": [[c, tid] for c, tid in appeared], **written}
 
 
 def entity_summary(workdir, entity, facts, safe_chapter, timelines, last, page):
@@ -178,6 +178,8 @@ def build(workdir, theme):
     blurbs, texts, words, fact_page, rel_ends, names = pages.blurbs, pages.texts, pages.words, pages.fact_page, pages.rel_ends, pages.names
     timelines = kb.timelines
     spoken = spoken_appearances(facts + relations, lambda name, n: (c := registry.resolve(name)) and absorbed.page_for_name(c, name, n))
+    appeared = stated_appearances([(fact_page[f["id"]], f, "entity") for f in facts]
+                                  + [(page, r, end) for r, ends in zip(relations, rel_ends) for end, page in ends.items()], named_characters(kb.entities))
     titles = {c["index"]: c["title"] for c in read_json(workdir / "chapters.json", [])}
     chapters = [{"n": s["chapter"], "title": titles.get(s["chapter"], str(s["chapter"])),
                  "synopsis": str(s["extraction"].get("synopsis") or "").strip()} for s in states]
@@ -236,7 +238,7 @@ def build(workdir, theme):
             if running:
                 record["summaries"] = running
         if e["name"] in profiles:
-            record["profile"] = export_profile(workdir, page, profiles[e["name"]], spoken.get(e["name"], []))
+            record["profile"] = export_profile(workdir, page, profiles[e["name"]], spoken.get(e["name"], []), appeared.get(e["name"], []))
         if e["type"] == "character":
             history = arc_history(workdir, history_prompts(e, own, ties.get(e["name"], []), arcs, timelines, page), page)
             if history:
@@ -252,7 +254,7 @@ def build(workdir, theme):
             if kind == "character":
                 part["present"] = sorted(present.get(a["name"], ()))
             if a["name"] in profiles:
-                part["profile"] = export_profile(workdir, named, profiles[a["name"]], spoken.get(a["name"], []))
+                part["profile"] = export_profile(workdir, named, profiles[a["name"]], spoken.get(a["name"], []), appeared.get(a["name"], []))
             if a["name"] in kept:
                 part.update(kept_prose(workdir, kept[a["name"]], a, part, last, named))
             out_entities.append(part)

@@ -3,16 +3,16 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from epubtext import html_to_text, normalize, spine_documents
+from epubtext import book_chapters, normalize
 
 LICENSE_MARKER = "*** END OF THE PROJECT GUTENBERG"
 
 
 def chapter_texts(gold, epub_path):
-    docs = dict(spine_documents(epub_path))
+    docs = book_chapters(epub_path)
     texts = {}
     for ch in gold["chapters"]:
-        text = html_to_text(docs[ch["href"]])
+        text = docs[ch["href"]]
         texts[ch["index"]] = normalize(text.split(LICENSE_MARKER)[0])
     return texts
 

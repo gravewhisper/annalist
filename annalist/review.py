@@ -8,7 +8,7 @@ from .evidence import class_pattern, stems
 from .names import name_key, names_of
 from .ranks import rank_mentions
 from .state import load_states, timeline_role
-from .status import current_status, spoken_appearances
+from .status import current_status, kb_appearances, spoken_appearances
 from .survey import people_in_type, speakers
 from .template import INDIVIDUALS, UNCATEGORIZED
 from .text import chapter_text
@@ -42,6 +42,7 @@ def visible(observations, run):
 
 def empty_fields(run):
     spoken = spoken_appearances(run.kb.facts + run.kb.relations, lambda name, _: run.kb.resolve(name))
+    appeared = kb_appearances(run.kb)
     out = []
     for name in main_characters(run):
         profile = run.profiles.get(name)
@@ -49,7 +50,7 @@ def empty_fields(run):
             out.append({"character": name, "missing": ["profile"], "text": f"**{name}** has no profile"})
             continue
         missing = []
-        if not current_status(profile["fields"].get("status", []), spoken.get(name, []), run.kb.timelines, run.until):
+        if not current_status(profile["fields"].get("status", []), spoken.get(name, []), run.kb.timelines, run.until, appeared.get(name, [])):
             missing.append("status")
         missing += [k for k in run.book["extra_fields"] if not visible(profile["extra"].get(k, []), run)]
         if missing:

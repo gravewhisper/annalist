@@ -176,3 +176,10 @@ Kestrel
 Thornwick
 Hawk Warden
 Bramble Sage
+Bennet
+Bingley
+Darcy
+Netherfield
+Longbourn
+Pemberley
+Meryton
