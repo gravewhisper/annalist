@@ -103,3 +103,16 @@ class NewTypeCheckTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GeneralTypesOnlyTest(unittest.TestCase):
+    def test_a_book_that_keeps_to_the_general_types_gets_no_new_type_at_a_volume_end(self):
+        import json, tempfile
+        from argparse import Namespace
+        from pathlib import Path
+        from annalist.newtypes import cmd_newtypes
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "book.json").write_text(json.dumps({"power_types": {}}), encoding="utf-8")
+            Path(tmp, "volumes.json").write_text(json.dumps({"volumes": [{"name": "One", "from": 1, "to": 2}]}), encoding="utf-8")
+            cmd_newtypes(Namespace(workdir=tmp, to=2))
+            self.assertEqual(json.loads(Path(tmp, "newtypes.json").read_text()), {"volumes": []})

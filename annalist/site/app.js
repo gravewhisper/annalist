@@ -6,7 +6,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const label = key => cap(key.replace(/_/g, ' '));
-const catName = t => { const l = D.book.labels?.[t]; return l && l.chapter <= S.n ? l.text : cap(plural(t)); };
+const catName = t => { const l = D.book.labels?.[t]; return l && l.chapter <= S.n ? cap(l.text) : cap(plural(t)); };
 const plural = t => t === 'uncategorized' ? t : /[^aeiou]y$/.test(t) ? t.slice(0, -1) + 'ies' : /(s|x|ch|sh)$/.test(t) ? t + 'es' : t + 's';
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -2884,7 +2884,7 @@ function render() {
   $('n').value = S.n;
   $('nlab').textContent = S.n;
   $('ctitle').textContent = ctitle(S.n);
-  const vol = volumeAt(S.n), vb = $('vol');
+  const vol = D.volumes.length > 1 ? volumeAt(S.n) : null, vb = $('vol');
   vb.hidden = !vol;
   if (vol) {
     vb.textContent = vol.label;
@@ -3117,6 +3117,6 @@ function wire() {
   });
 }
 
-load().then(() => { readHash(); wire(); volumeTicks(); writeHash(); render(); probeNotes(); }).catch(err => {
+load().then(() => { readHash(); wire(); volumeTicks(); writeHash(); render(); if (D.book.review_tools) probeNotes(); }).catch(err => {
   $('main').innerHTML = `<p class="muted">Could not load data/wiki.json: ${esc(err.message)}. Serve this folder over HTTP rather than opening the file directly.</p>`;
 });

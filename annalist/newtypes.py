@@ -114,6 +114,10 @@ def decide(workdir, book, volume, earlier):
 def cmd_newtypes(args):
     workdir = Path(args.workdir).resolve()
     book = load_book(workdir)
+    if not book.get("power_types"):
+        write_json(workdir / NEWTYPES_FILE, {"volumes": []})
+        print("newtypes: the book keeps to the general types, so no volume end adds one")
+        return
     read = max((int(p.stem) for p in state_paths(workdir)), default=0)
     read = min(read, args.to) if getattr(args, "to", None) else read
     kept = {(v["name"], v["from"], v["to"]): v for v in volume_types(workdir)}

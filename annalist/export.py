@@ -318,6 +318,7 @@ def cmd_export(args):
         data = strip_quotes(data)
     data["book"]["text"] = not args.public
     if not args.public and review_tools(workdir):
+        data["book"]["review_tools"] = True
         data["checks"] = site_checks(workdir, data["entities"], data["facts"])
 
     if outdir.exists() and any(outdir.iterdir()):
