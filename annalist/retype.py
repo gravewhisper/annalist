@@ -7,7 +7,7 @@ from .families import wording_key
 from .files import write_json
 from .llm import cached_llm
 from .names import name_key
-from .ranks import stated_items, stated_steps
+from .ranks import common_words, rank_mentions, rank_names, ranked_decisions
 from .state import load_states, write_derived
 from .survey import speakers
 from .template import BASE_TYPES, ENTITY_TYPES, INDIVIDUALS, UNCATEGORIZED
@@ -135,12 +135,15 @@ def cmd_retype(args):
         return out
 
     spec = book.get("ladder") or {}
-    ranked = spec.get("group_type") and spec["step_type"] == rank_type(book)
-    steps = {**stated_steps(kb, spec, book["rank_word"]), **stated_items(kb, book["rank_word"])} if ranked else {}
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        decisions = counted + [d for batch in pool.map(decide, batches) for d in batch if d["name"] not in steps]
+        decisions = [d for batch in pool.map(decide, batches) for d in batch if d["name"] not in steps]
     decisions += [{"name": n, "from": kb.entities[n]["type"], "to": spec["step_type"], "source": "rank", "reason": f'The wiki records "{text}"'}
                   for n, text in steps.items()]
+    if spec.get("group_type") and spec["step_type"] == rank_type(book):
+        chapters = sorted(kb.synopses)
+        mentions = rank_names(kb, rank_mentions(workdir, chapters, book["rank_word"]), book["rank_word"], common_words(workdir, chapters))
+        decisions = ranked_decisions(kb, spec, book["rank_word"], mentions, decisions)
+    decisions = counted + decisions
     split = parts(kb, book, {d["name"]: d["to"] for d in decisions})
     decisions = [d for d in decisions if d["name"] not in split] + [
         {"name": n, "from": kb.entities[n]["type"], "to": to, "source": "part", "reason": text} for n, (to, text) in sorted(split.items())]

@@ -7,7 +7,7 @@ from .book import ladder_types, load_book, rank_type
 from .files import log, read_json, write_json
 from .llm import cached_llm
 from .names import function_word_name, name_key, name_pattern, names_of
-from .ranks import rank_mentions, rank_number
+from .ranks import group_key, rank_mentions, rank_number, text_ladders
 from .resolve import decide_pair, name_chapters, reveal_passages
 from .state import load_states, write_derived
 from .survey import unseen_names
@@ -276,8 +276,7 @@ def read_grouped(workdir, kb, spec, reply, word):
         name = str(raw.get("group") or "").strip() if isinstance(raw, dict) else ""
         if not name:
             continue
-        holder = kb.resolve(name, spec["group_type"])
-        steps = groups.setdefault(holder if holder and kb.entities[holder]["type"] == spec["group_type"] else name, {})
+        steps = groups.setdefault(group_key(kb, name) or name, {})
         for step in filter(None, (placed_step(workdir, kb, spec, s, last, word) for s in raw.get("steps") or [])):
             if step["entry"] not in steps or step["chapter"] < steps[step["entry"]]["chapter"]:
                 steps[step["entry"]] = step
@@ -422,6 +421,8 @@ def cmd_ladders(args):
         ladders = read(workdir, kb, spec, reply, word)
         if shape_of(spec) == "grouped":
             ladders = own_entry_steps(workdir, kb, spec, word, ladders)
+        if word and shape_of(spec) == "grouped":
+            ladders = text_ladders(workdir, kb, ladders, word)
         ladders = judged_same_ranks(workdir, kb, ladders)
     write_json(workdir / "ladders.json", ladders)
     write_derived(workdir, kb)

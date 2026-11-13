@@ -167,6 +167,34 @@ def part_name(part, seen):
                     sorted(aliases, key=lambda x: x["chapter"]))
 
 
+def group_titles(kb, names):
+    """A ladder group named after one of its ranks is titled with the group word, as "Rook School", the way the book's other groups are
+    written, and so is a group whose name carries its type in brackets, and every group once most groups' titles end in the group word.
+    A title that already ends in the group word keeps it, and a group's plain name stays an alias."""
+    if not kb.group_type:
+        return
+    word = kb.group_type.split()[-1]
+    groups = [k for k, e in kb.entities.items() if e["type"] == kb.group_type and k in names]
+    endings = Counter(n.split()[-1] for k in groups for n in [names[k].name] if len(n.split()) > 1 and name_key(n.split()[-1]) == name_key(word))
+    written = endings.most_common(1)[0][0] if endings else word
+    steps = {name_key(names[k].name) for k, e in kb.entities.items() if e["type"] == kb.step_type and k in names}
+    plain = []
+    for k in groups:
+        page = names[k]
+        bare = re.sub(rf"\s+\({re.escape(kb.group_type)}\)$", "", page.name)
+        if name_key(bare.split()[-1]) == name_key(word):
+            names[k] = replace(page, name=bare)
+        elif bare != page.name or name_key(bare) in steps:
+            names[k] = replace(page, name=f"{bare} {written}")
+        else:
+            plain.append(k)
+    if 2 * len(plain) < len(groups):
+        for k in plain:
+            page = names[k]
+            names[k] = replace(page, name=f"{page.name} {written}", aliases=sorted(page.aliases + [{"name": page.name, "chapter": page.chapter}],
+                                                                                    key=lambda a: a["chapter"]))
+
+
 @dataclass
 class Pages:
     facts: list
@@ -213,4 +241,5 @@ def read_pages(workdir, kb):
     for e in entities:
         names[e["name"]] = page_name(e, seen, blurbs, own_facts.get(e["name"], []), texts, words, registry, absorbed, shown_at.get(e["name"], []))
         names.update((a["name"], part_name(a, seen)) for a in e.get("absorbed", []))
+    group_titles(kb, names)
     return Pages(facts, relations, states, registry, absorbed, blurbs, texts, words, fact_page, rel_ends, names)

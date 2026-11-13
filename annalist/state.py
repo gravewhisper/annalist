@@ -159,8 +159,23 @@ class Knowledge:
     def resolve(self, name, etype=""):
         holder = self.index.get(name_key(name))
         if holder and self.splits(self.entities[holder]["type"], name_key(etype)):
-            return self.index.get(name_key(qualified(name, name_key(etype))))
+            return self.split_holder(name, name_key(etype))
         return holder
+
+    def split_holder(self, name, etype):
+        """The entry of a name that a step and a group share, for the given one of the two types: "X (group)", or a group written
+        "X <group word>"."""
+        key = self.index.get(name_key(qualified(name, etype)))
+        worded = self.index.get(name_key(f"{name} {etype.split()[-1]}")) if etype == self.group_type else None
+        return key or (worded if worded and self.entities[worded]["type"] == etype else None)
+
+    def worded_group(self, name, etype):
+        """The group "X (group)" that a group name written "X <group word>" stands for."""
+        word = f" {etype.split()[-1]}"
+        if etype != self.group_type or not name_key(name).endswith(word) or len(name.split()) < 2:
+            return None
+        key = self.index.get(name_key(qualified(name[:-len(word)], etype)))
+        return key if key and self.entities[key]["type"] == etype else None
 
     def splits(self, a, b):
         return a != b and {a, b} == self.ladder
@@ -178,7 +193,9 @@ class Knowledge:
         canonical = holder if holder and name_key(holder) == name_key(name) else None
         split = canonical is not None and self.splits(self.entities[canonical]["type"], etype)
         if split:
-            canonical = self.index.get(name_key(qualified(name, etype)))
+            canonical = self.split_holder(name, etype)
+        elif holder is None:
+            canonical = self.worded_group(name, etype)
         elif holder and canonical is None and not self.same_kind(self.entities[holder]["type"], etype):
             self.drop_alias(holder, name)
         keys = [name_key(k) for k in [name] + aliases]
@@ -557,7 +574,7 @@ class Knowledge:
 
     def ladder_step(self, s):
         key = self.resolve(s["entry"], self.step_type)
-        if key is None and s.get("new"):
+        if s.get("new") and (key is None or self.types.refines(self.step_type, self.entities[key]["type"])):
             key = self.upsert_entity({"name": s["entry"], "type": self.step_type}, s["chapter"])
         return key
 

@@ -8,8 +8,11 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
+from annalist.export import ladder_records
 from annalist.ladders import ladder_needed, same_rank_pairs
-from annalist.ranks import rank_mentions, stated_items, stated_steps
+from annalist.pages import Registry
+from annalist.ranks import (common_words, group_key, rank_mentions, rank_names, ranked_decisions, stated_items, stated_steps,
+                            text_ladders)
 from annalist.review import ranks_off_ladder
 from annalist.state import Knowledge
 from annalist.survey import book_problems
@@ -157,6 +160,26 @@ class NamedRanksBuildTest(unittest.TestCase):
         for name in ("Kestrel", "Thornwick"):
             self.assertEqual(self.ladder(name)[:2], [(name, 1, 6), ({"Kestrel": "Hawk Warden", "Thornwick": "Bramble Sage"}[name], 2, 6)])
             self.assertNotEqual(self.entries[(name, "circle")]["id"], self.entries[(name, "school")]["id"])
+
+    def test_a_school_named_after_its_first_circle_is_titled_with_the_group_word_as_the_book_writes_it(self):
+        schools = sorted(e["name"] for e in self.wiki["entities"] if e["type"] == "school")
+        self.assertIn("Gloam School", schools)
+        self.assertFalse([n for n in schools if "(" in n])
+
+    @unittest.skipIf(NODE is None, "node is not installed")
+    def test_a_page_title_never_repeats_its_type_and_same_type_namesakes_show_their_first_chapter(self):
+        wiki = json.loads(json.dumps(self.wiki))
+        school = next(e for e in wiki["entities"] if e["name"] == "Saltmere School")
+        wiki["entities"].append({**school, "id": "twin0001", "first": 4, "name_chapter": 4, "aliases": []})
+        circle = next(e for e in wiki["entities"] if e["name"] == "Tidewatcher")
+        wiki["entities"].append({**circle, "id": "twin0002", "type": "elixir", "aliases": []})
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "wiki.json"
+            path.write_text(json.dumps(wiki), encoding="utf-8")
+            pages = {k: re.sub(r"<[^>]+>", " ", v) for k, v in site_views(path, f"{school['id']}@5", f"{circle['id']}@5").items()}
+        self.assertIn(f"Saltmere School (ch {school['first']})", pages[f"{school['id']}@5"])
+        self.assertNotIn("Saltmere School (school)", pages[f"{school['id']}@5"])
+        self.assertIn("Tidewatcher (circle)", pages[f"{circle['id']}@5"])
 
     def test_an_unlisted_step_needs_a_quote_that_names_it_and_a_name_no_other_entry_holds(self):
         steps = {s["entry"] for l in self.book.json("ladders.json") for s in l["steps"]}
@@ -333,6 +356,126 @@ class RanksOffLadderTest(unittest.TestCase):
             run = SimpleNamespace(workdir=Path(tmp), kb=kb, until=1, book={"rank_word": "circle", "power_types": {}, "ladder": SPEC})
             found = ranks_off_ladder(run)
         self.assertEqual([(f["name"], f["form"]) for f in found], [("Ember Abbot", "Circle 4: Ember Abbot")])
+
+
+class JoinedGroupLaddersTest(unittest.TestCase):
+    def test_ladders_whose_groups_one_page_holds_are_one_ladder(self):
+        entities = [{"name": "Lantern School", "type": "school", "aliases": ["Marsh School"]},
+                    *({"name": n, "type": "circle", "aliases": []} for n in ("Lampwright", "Lamplighter", "Ashen Bell", "Bell Ringer"))]
+        ids = {e["name"]: e["name"] for e in entities}
+        ladders = [{"group": "Lantern School", "group_type": "school", "chapter": 2,
+                    "steps": [step("Lampwright", 1, 2, "q"), step("Ashen Bell", 3, 4, "q")]},
+                   {"group": "Marsh School", "group_type": "school", "chapter": 3,
+                    "steps": [step("Lamplighter", 2, 3, "q"), step("Bell Ringer", 3, 5, "q"), step("Lampwright", 1, 6, "q")]}]
+        records = ladder_records(ladders, Registry(entities), ids, "circle")
+        self.assertEqual(records, [{"group": "Lantern School", "chapter": 2, "steps": [
+            {"id": "Lampwright", "rank": 1, "chapter": 2}, {"id": "Lamplighter", "rank": 2, "chapter": 3},
+            {"id": "Ashen Bell", "rank": 3, "chapter": 4}, {"id": "Bell Ringer", "rank": 3, "chapter": 5}]}])
+
+
+TYPES = {"school": {"parent": "organization", "description": "a school"}, "circle": {"parent": "concept", "description": "a named rank"},
+         "elixir": {"parent": "artifact", "description": "a drink"}}
+
+
+def chapters(tmp, *texts):
+    (Path(tmp) / "chapters").mkdir()
+    for n, text in enumerate(texts, 1):
+        (Path(tmp) / "chapters" / f"{n:04d}.txt").write_text(text, encoding="utf-8")
+
+
+def circles_kb(entries, chapter_count=1):
+    kb = Knowledge(SPEC, power_types=TYPES)
+    for name, etype in entries:
+        kb.upsert_entity({"name": name, "type": etype}, 1)
+    kb.synopses = {n: "s" for n in range(1, chapter_count + 1)}
+    return kb
+
+
+class RankNamesTest(unittest.TestCase):
+    def names(self, text, entries=()):
+        with tempfile.TemporaryDirectory() as tmp:
+            chapters(tmp, text)
+            kb = circles_kb(entries)
+            return [(m["name"], m["form"]) for m in rank_names(kb, rank_mentions(tmp, [1], "circle"), "circle", common_words(tmp, [1]))]
+
+    def test_openers_holders_and_kinds_of_people_are_not_ranks(self):
+        text = ("Oh, Circle 2 again. However, Circle 3 is far. Maren Holt, a Circle 3, slept. Circle 4, a Mid-Circle, waits.\n"
+                "The High Circles, Circle 5, rule. Nobody spoke of Circle 6. \"Indeed! They never do.\" It was indeed so.\n"
+                "He was a Circle 1 Mage, she a Circle 2 Mage, and the abbot a Circle 4 Mage. Circle 3: Night Cantor.\n")
+        self.assertEqual(self.names(text), [("Night Cantor", "Circle 3: Night Cantor")])
+
+    def test_a_name_that_runs_on_past_a_known_rank_is_cut_to_it(self):
+        text = ("Circle 2 Wickbearer Holt came first. Circle 2 Wickbearers are rare. Circle 3 Night Cantor's elixir burns.\n"
+                "Circle 4 Ember Abbot of Hollow sang.\n")
+        self.assertEqual(self.names(text, [("Wickbearer", "circle"), ("Night Cantor", "circle"), ("Ember Abbot", "circle")]),
+                         [("Wickbearer", "Circle 2 Wickbearer Holt"), ("Wickbearer", "Circle 2 Wickbearers"),
+                          ("Night Cantor", "Circle 3 Night Cantor's"), ("Ember Abbot of Hollow", "Circle 4 Ember Abbot of Hollow")])
+
+    def test_a_mention_that_overlaps_the_one_before_is_dropped(self):
+        self.assertEqual(self.names("Circle 1 Gloam, Circle 2 Wickbearer.\n"), [("Gloam", "Circle 1 Gloam"), ("Wickbearer", "Circle 2 Wickbearer")])
+
+
+class TextLaddersTest(unittest.TestCase):
+    LADDERS = [{"group": "Lantern School", "group_type": "school", "chapter": 1,
+                "steps": [step("Lampwright", 1, 1, "q"), step("Lamplighter", 2, 1, "q")]},
+               {"group": "Gloam (school)", "group_type": "school", "chapter": 1,
+                "steps": [step("Gloam", 1, 1, "q"), step("Wickbearer", 2, 2, "q"), step("Night Cantor", 3, 1, "q")]}]
+    ENTRIES = [("Lantern School", "school"), ("Lampwright", "circle"), ("Lamplighter", "circle"), ("Gloam", "circle"), ("Gloam", "school"),
+               ("Wickbearer", "circle"), ("Night Cantor", "circle"), ("Candlebearer", "circle"), ("Bell Ringer", "concept"),
+               ("Mira", "character"), ("Saltmere School", "school"), ("Tidewatcher", "circle")]
+
+    def placed(self, *texts):
+        with tempfile.TemporaryDirectory() as tmp:
+            chapters(tmp, *texts)
+            kb = circles_kb(self.ENTRIES, len(texts))
+            ladders = text_ladders(tmp, kb, self.LADDERS, "circle")
+        before = {(l["group"], s["entry"]) for l in self.LADDERS for s in l["steps"]}
+        return [(l["group"], s["entry"], s["rank"], s["chapter"], s.get("new", False)) for l in ladders for s in l["steps"]
+                if (l["group"], s["entry"]) not in before]
+
+    def test_a_rank_whose_sentence_names_its_group_with_the_group_word_joins_that_group(self):
+        self.assertEqual(self.placed("They say Circle 3 Ashen Bell belongs to the Lantern School alone. Circle 4 Marsh Lantern is far.\n"
+                                     "Circle 4: Ember Abbot crowns the Gloam school.\n"),
+                         [("Lantern School", "Ashen Bell", 3, 1, True), ("Gloam (school)", "Ember Abbot", 4, 1, True)])
+
+    def test_a_rank_listed_next_to_ranks_of_one_group_at_their_numbers_joins_it(self):
+        self.assertEqual(self.placed("Hennet counted. Circle 3: Night Cantor. Circle 4: Ember Abbot. Circle 5: Bell Ringer.\n"),
+                         [("Gloam (school)", "Ember Abbot", 4, 1, True), ("Gloam (school)", "Bell Ringer", 5, 1, True)])
+
+    def test_a_list_mixing_groups_or_numbers_the_ladder_does_not_give_places_nothing(self):
+        self.assertEqual(self.placed("Circle 1 Lampwright, Circle 3 Night Cantor, and Circle 4 Ember Abbot.\n"
+                                     "Circle 3 Lamplighter, Circle 4 Marsh Lantern.\n"
+                                     "Circle 3 Night Cantor. Then, much later, after a long and windy night, came Circle 4 Ember Abbot.\n"), [])
+
+    def test_a_list_places_nothing_before_the_ladder_holds_its_ranks(self):
+        self.assertEqual(self.placed("Circle 2 Wickbearer, Circle 3 Ember Abbot.\n", "Circle 2 Wickbearer, Circle 4 Ember Abbot.\n"),
+                         [("Gloam (school)", "Ember Abbot", 4, 2, True)])
+
+    def test_another_name_for_a_listed_rank_joins_at_its_number(self):
+        self.assertEqual(self.placed("Circle 1 Gloam, Circle 2 Wickbearer with the old name Candlebearer, Circle 3 Night Cantor.\n"),
+                         [("Gloam (school)", "Candlebearer", 2, 1, False)])
+
+    def test_people_and_other_kinds_of_entry_are_never_placed(self):
+        self.assertEqual(self.placed("Circle 1 Gloam, Circle 2 Mira, Circle 3 Saltmere School.\n"), [])
+
+    def test_a_group_name_written_with_its_type_in_brackets_finds_the_group_written_with_the_group_word(self):
+        kb = circles_kb([("Gloam", "circle"), ("Gloam school", "school"), ("Lantern School", "school")])
+        self.assertEqual([group_key(kb, n) for n in ("Gloam (school)", "Gloam", "Lantern", "Lantern (school)")],
+                         ["Gloam school", "Gloam school", "Lantern School", "Lantern School"])
+
+
+class RankedDecisionsTest(unittest.TestCase):
+    def test_items_named_as_ranks_become_ranks_and_ranks_named_as_groups_become_groups(self):
+        kb = circles_kb([("Lantern School", "school"), ("Tidewatcher", "circle"), ("Tidewatcher elixir", "elixir"), ("Lamplighter", "elixir"),
+                         ("Ember Draught", "elixir"), ("Gloam", "elixir"), ("Hill school", "circle"), ("Marsh School", "school")])
+        kb.facts += [{"entity": "Marsh School", "claim": "Mira is a Circle 2 Marsh School student.", "quotes": ["q"], "chapter": 1}]
+        mentions = [{"chapter": 1, "name": n, "form": f"Circle 2 {n}"} for n in ("Lamplighter", "Gloam", "Tidewatcher elixir")]
+        llm = [{"name": "Gloam", "from": "elixir", "to": "school", "source": "llm", "reason": "a school"},
+               {"name": "Lamplighter", "from": "elixir", "to": "elixir", "source": "llm", "reason": "a brew"}]
+        self.assertEqual(ranked_decisions(kb, SPEC, "circle", mentions, llm), [
+            llm[0],
+            {"name": "Lamplighter", "from": "elixir", "to": "circle", "source": "rank", "reason": 'The text names "Circle 2 Lamplighter" in chapter 1'},
+            {"name": "Hill school", "from": "circle", "to": "school", "source": "rank", "reason": 'The name ends in "school"'}])
 
 
 class RankLadderSpecTest(unittest.TestCase):

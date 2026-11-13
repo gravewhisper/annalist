@@ -75,7 +75,10 @@ const nameAt = (e, c) => e.name_chapter <= c ? e.name : e.aliases.find(a => (a.s
 function displayName(e, among) {
   if (e.name_chapter > S.n) return nameAt(e, S.n) || e.name;
   if (among === e.type) return e.name;
-  return D.namesakes[e.name].some(id => id !== e.id && vis(D.byId[id])) ? `${e.name} (${e.type})` : e.name;
+  const others = D.namesakes[e.name].map(id => D.byId[id]).filter(o => o.id !== e.id && vis(o));
+  if (!others.length) return e.name;
+  if (others.some(o => o.type !== e.type) && !searchKey(e.name).endsWith(searchKey(e.type))) return `${e.name} (${e.type})`;
+  return `${e.name} (ch ${e.first})`;
 }
 const visNames = e => [...new Set([e.name_chapter <= S.n ? e.name : null, ...visAliases(e)].filter(Boolean))];
 const searchKey = s => s.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/['’ʼ`]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();

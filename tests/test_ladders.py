@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from annalist.files import read_jsonl, write_json
 from annalist.ladders import generate_ladder
+from annalist.pages import PageName, group_titles
 from annalist.state import Knowledge
 from tests.test_build import LATER_REPLIES, MiniBuild, plan_rows, ran, ROOT, site_views
 
@@ -112,30 +113,30 @@ class LadderBuildTest(unittest.TestCase):
         self.assertIsNone(calls[1]["error"])
 
     def test_a_group_and_a_step_with_the_same_name_are_two_entries_with_their_own_ids(self):
-        realm, sect = self.entries[("Ashwalker", "realm")], self.entries[("Ashwalker", "sect")]
+        realm, sect = self.entries[("Ashwalker", "realm")], self.entries[("Ashwalker Sect", "sect")]
         self.assertNotEqual(realm["id"], sect["id"])
         self.assertEqual((realm["first"], sect["first"]), (1, 2))
         claims = {f["entity"]: f["claim"] for f in self.wiki["facts"] if f["chapter"] == 2 and "fourteen students" in f["claim"]}
         self.assertEqual(list(claims), [sect["id"]])
 
-    def test_a_shared_name_is_qualified_by_type_only_once_both_entries_are_known(self):
-        realm, sect = self.id[("Ashwalker", "realm")], self.id[("Ashwalker", "sect")]
+    def test_a_group_named_after_its_first_step_is_titled_with_the_group_word_as_the_book_writes_it(self):
+        realm, sect = self.id[("Ashwalker", "realm")], self.id[("Ashwalker Sect", "sect")]
         pages = self.site(f"{realm}@1", f"{realm}@5", f"{sect}@5")
         self.assertEqual(self.heading(pages[f"{realm}@1"]), "Ashwalker")
-        self.assertEqual(self.heading(pages[f"{realm}@5"]), "Ashwalker (realm)")
-        self.assertEqual(self.heading(pages[f"{sect}@5"]), "Ashwalker (sect)")
+        self.assertEqual(self.heading(pages[f"{realm}@5"]), "Ashwalker")
+        self.assertEqual(self.heading(pages[f"{sect}@5"]), "Ashwalker Sect")
 
     def test_search_shows_a_shared_name_qualified_without_repeating_it(self):
         results = self.site("search:Ashwalker@5")["search:Ashwalker@5"]
-        self.assertIn("Ashwalker (realm)", results)
-        self.assertIn("Ashwalker (sect)", results)
-        self.assertNotIn("(Ashwalker)", results)
+        self.assertIn("<span>Ashwalker</span>", results)
+        self.assertIn("<span>Ashwalker Sect</span>", results)
+        self.assertNotIn("(", results)
 
     def test_a_shared_name_in_text_links_to_the_step_whichever_entry_comes_first(self):
         for wiki in (None, {**self.wiki, "entities": self.wiki["entities"][::-1]}):
             synopsis = re.search(r'<div class="ccard full">.*?<p>(.*?)</p>', self.site("chapter:2@5", wiki=wiki)["chapter:2@5"]).group(1)
             self.assertIn(f'data-ent="{self.id[("Ashwalker", "realm")]}"', synopsis)
-            self.assertNotIn(f'data-ent="{self.id[("Ashwalker", "sect")]}"', synopsis)
+            self.assertNotIn(f'data-ent="{self.id[("Ashwalker Sect", "sect")]}"', synopsis)
 
     def test_ladders_json_ranks_each_groups_verified_steps_with_chapter_and_quote(self):
         self.assertEqual(self.book.json("ladders.json"), [
@@ -154,12 +155,12 @@ class LadderBuildTest(unittest.TestCase):
     def test_wiki_json_carries_each_ladder_by_id_with_ranks_and_chapters(self):
         i = self.id
         self.assertEqual(self.wiki["ladders"], [
-            {"group": i[("Ashwalker", "sect")], "chapter": 2,
+            {"group": i[("Ashwalker Sect", "sect")], "chapter": 2,
              "steps": [{"id": i[("Ashwalker", "realm")], "rank": 1, "chapter": 2}, {"id": i[("Emberheart", "realm")], "rank": 2, "chapter": 3},
                        {"id": i[("Pyre Sovereign", "realm")], "rank": 3, "chapter": 4}]},
             {"group": i[("Glass Lantern Sect", "sect")], "chapter": 3, "steps": [{"id": i[("Clear Pane", "realm")], "rank": 1, "chapter": 3}]},
-            {"group": i[("Dusk Listener", "sect")], "chapter": 5, "steps": [{"id": i[("Dusk Listener", "realm")], "rank": 1, "chapter": 5}]},
-            {"group": i[("Vesper Hollow", "sect")], "chapter": 5, "steps": [{"id": i[("Dusk Listener", "realm")], "rank": 1, "chapter": 5}]},
+            {"group": i[("Dusk Listener Sect", "sect")], "chapter": 5, "steps": [{"id": i[("Dusk Listener", "realm")], "rank": 1, "chapter": 5}]},
+            {"group": i[("Vesper Hollow Sect", "sect")], "chapter": 5, "steps": [{"id": i[("Dusk Listener", "realm")], "rank": 1, "chapter": 5}]},
         ])
         self.assertEqual(self.wiki["book"]["ladder"], SPEC)
 
@@ -167,22 +168,22 @@ class LadderBuildTest(unittest.TestCase):
         name = {e["id"]: e["name"] for e in self.wiki["entities"]}
         links = sorted((r["chapter"], name[r["source"]], r["type"], name[r["target"]]) for r in self.wiki["relations"] if r["type"].startswith("realm "))
         self.assertEqual({r["family"] for r in self.wiki["relations"] if r["type"].startswith("realm ")}, {"kind"})
-        self.assertEqual(links, [(2, "Ashwalker", "realm 1 of", "Ashwalker"), (3, "Clear Pane", "realm 1 of", "Glass Lantern Sect"),
-                                 (3, "Emberheart", "realm 2 of", "Ashwalker"), (4, "Pyre Sovereign", "realm 3 of", "Ashwalker"),
-                                 (5, "Dusk Listener", "realm 1 of", "Dusk Listener"), (5, "Dusk Listener", "realm 1 of", "Vesper Hollow")])
+        self.assertEqual(links, [(2, "Ashwalker", "realm 1 of", "Ashwalker Sect"), (3, "Clear Pane", "realm 1 of", "Glass Lantern Sect"),
+                                 (3, "Emberheart", "realm 2 of", "Ashwalker Sect"), (4, "Pyre Sovereign", "realm 3 of", "Ashwalker Sect"),
+                                 (5, "Dusk Listener", "realm 1 of", "Dusk Listener Sect"), (5, "Dusk Listener", "realm 1 of", "Vesper Hollow Sect")])
 
     def test_a_group_the_evidence_names_but_no_entry_holds_becomes_an_entry_dated_at_its_evidence(self):
-        hollow = self.entries[("Vesper Hollow", "sect")]
+        hollow = self.entries[("Vesper Hollow Sect", "sect")]
         self.assertEqual(hollow["first"], 5)
         self.assertNotIn(("Vesper Hollow", "uncategorized"), self.entries)
         self.assertEqual(self.site(f"{hollow['id']}@4")[f"{hollow['id']}@4"].count("Not yet introduced"), 1)
 
     def test_a_group_the_ladder_stage_creates_under_a_steps_name_gets_its_own_entry(self):
-        realm, sect = self.entries[("Dusk Listener", "realm")], self.entries[("Dusk Listener", "sect")]
+        realm, sect = self.entries[("Dusk Listener", "realm")], self.entries[("Dusk Listener Sect", "sect")]
         self.assertNotEqual(realm["id"], sect["id"])
         self.assertEqual(sect["first"], 5)
         page = self.site(f"{sect['id']}@5")[f"{sect['id']}@5"]
-        self.assertEqual(self.heading(page), "Dusk Listener (sect)")
+        self.assertEqual(self.heading(page), "Dusk Listener Sect")
 
     def test_a_step_whose_quote_does_not_verify_stays_out_of_the_ladder(self):
         warden = self.id[("Prism Warden", "realm")]
@@ -195,15 +196,15 @@ class LadderBuildTest(unittest.TestCase):
         before, after = (re.sub(r"<[^>]+>", " ", pages[k]["html"]) for k in ("route:cat:sect@3", "route:cat:sect@5"))
         self.assertNotIn("Pyre Sovereign", before)
         self.assertNotIn("Vesper Hollow", before)
-        self.assertRegex(before, r"Ashwalker \(realm\).*Emberheart")
-        self.assertRegex(after, r"Ashwalker \(realm\).*Emberheart.*Pyre Sovereign")
+        self.assertRegex(before, r"Ashwalker Sect\s+Realm 1\s+Ashwalker\s.*Emberheart")
+        self.assertRegex(after, r"Ashwalker Sect\s+Realm 1\s+Ashwalker\s.*Emberheart.*Pyre Sovereign")
         self.assertRegex(after, r"Vesper Hollow.*Dusk Listener")
 
     @unittest.skipIf(NODE is None, "node is not installed")
     def test_the_group_page_shows_its_ladder(self):
-        sect = self.id[("Ashwalker", "sect")]
+        sect = self.id[("Ashwalker Sect", "sect")]
         page = re.sub(r"<[^>]+>", " ", self.site(f"{sect}@5")[f"{sect}@5"])
-        self.assertRegex(page, r"1\s+Ashwalker \(realm\).*2\s+Emberheart.*3\s+Pyre Sovereign")
+        self.assertRegex(page, r"1\s+Ashwalker\s.*2\s+Emberheart.*3\s+Pyre Sovereign")
 
     def test_the_markdown_wiki_titles_shared_names_by_type(self):
         index = (self.book.workdir / "wiki" / "index.md").read_text(encoding="utf-8")
@@ -232,6 +233,28 @@ class SameNameEntriesTest(unittest.TestCase):
 
     def test_without_a_ladder_one_name_stays_one_entry(self):
         self.assertEqual(list(self.kb(None).entities), ["Ashwalker"])
+
+    def test_a_group_written_with_the_group_word_and_one_named_like_its_step_are_one_entry(self):
+        for order in ([("Ashwalker", "realm"), ("Ashwalker sect", "sect"), ("Ashwalker", "sect")],
+                      [("Ashwalker", "realm"), ("Ashwalker", "sect"), ("Ashwalker sect", "sect")]):
+            kb = Knowledge(SPEC)
+            for n, (name, etype) in enumerate(order, 1):
+                kb.upsert_entity({"name": name, "type": etype}, n)
+            self.assertEqual(sorted((k, e["type"]) for k, e in kb.entities.items()),
+                             [("Ashwalker", "realm"), (order[1][0] if order[1][1] == "sect" and order[1][0] != "Ashwalker" else "Ashwalker (sect)", "sect")])
+            self.assertEqual(kb.resolve("Ashwalker", "sect"), kb.resolve("Ashwalker sect", "sect"))
+
+    def test_every_group_takes_the_group_word_once_most_groups_are_titled_with_it(self):
+        kb = Knowledge(SPEC)
+        for name, etype in (("Ashwalker", "realm"), ("Ashwalker", "sect"), ("Glass Lantern Sect", "sect"), ("Vesper Hollow", "sect"),
+                            ("Tide Sect", "sect"), ("Rook (sect)", "sect")):
+            kb.upsert_entity({"name": name, "type": etype}, 1)
+        names = {k: PageName(k, e.get("written", k), 1, 1, []) for k, e in kb.entities.items()}
+        group_titles(kb, names)
+        self.assertEqual(sorted(names[k].name for k, e in kb.entities.items() if e["type"] == "sect"),
+                         ["Ashwalker Sect", "Glass Lantern Sect", "Rook Sect", "Tide Sect", "Vesper Hollow Sect"])
+        self.assertEqual(names["Vesper Hollow"].aliases, [{"name": "Vesper Hollow", "chapter": 1}])
+        self.assertEqual(names["Ashwalker (sect)"].aliases, [])
 
     def test_types_outside_the_ladder_keep_sharing_one_entry(self):
         kb = self.kb(SPEC)

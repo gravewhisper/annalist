@@ -141,18 +141,21 @@ def step_record(s, eid):
     return {"id": eid, "rank": s["rank"], "chapter": s["chapter"], **stages}
 
 
-def ladder_records(ladders, registry, ids, step_type):
-    records = []
+def ladder_records(ladders, registry, ids, step_type, descending=False):
+    """One ladder per group page: ladders whose groups a merge or correction joins into one page are joined, rung by rung."""
+    records = {}
     for ladder in ladders:
         group = ladder["group"] and registry.resolve(ladder["group"], ladder["group_type"])
         if group or ladder["group"] is None:
-            steps = {}
+            record = records.setdefault(group and ids[group], {"group": group and ids[group], "chapter": ladder["chapter"], "steps": {}})
+            record["chapter"] = min(record["chapter"], ladder["chapter"])
+            steps = record["steps"]
             for s in ladder["steps"]:
                 eid = ids[registry.resolve(s["entry"], step_type) or s["entry"]]
                 if eid not in steps or s["chapter"] < steps[eid]["chapter"]:
                     steps[eid] = step_record(s, eid)
-            records.append({"group": group and ids[group], "chapter": ladder["chapter"], "steps": list(steps.values())})
-    return records
+    sign = -1 if descending else 1
+    return [{**r, "steps": sorted(r["steps"].values(), key=lambda s: sign * s["rank"])} for r in records.values()]
 
 
 def strip_quotes(value):
@@ -298,7 +301,8 @@ def build(workdir, theme):
                        **({} if r["quote_ok"] else {"unverified": True})}
                       for r, ends in zip(relations, rel_ends) if r["source"] in ids and r["target"] in ids],
         "questions": [question_record(q, tiers.get(q["id"], {})) for q in kb.questions.values()],
-        "ladders": ladder_records(kb.ladder_rows, registry, ids, (book.get("ladder") or {}).get("step_type")),
+        "ladders": ladder_records(kb.ladder_rows, registry, ids, (book.get("ladder") or {}).get("step_type"),
+                                  (book.get("ladder") or {}).get("direction") == "descending"),
         "volumes": sorted((v for v in (volume_record(read_json(p, {}), kb) for p in (workdir / "volumes").glob("*.json")) if v["from"] <= last),
                           key=lambda v: v["from"]),
     }
