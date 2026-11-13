@@ -599,3 +599,7 @@ svg.family .ftie.new{stroke:var(--accent)}
 .pres{list-style:none;margin:2px 0 4px;padding:0 0 0 10px;font-size:13px;line-height:1.45}
 .prole{color:var(--muted)}
 .pnode .disc{margin:2px 0 0 10px;font-size:13px}
+.checks .checkrow{display:flex;gap:12px;justify-content:space-between;align-items:center}
+.checkbtns{display:flex;gap:6px;flex:none}
+.checkbtns button{font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--line-strong);border-radius:var(--radius);padding:3px 10px;cursor:pointer}
+.checkbtns button:hover{border-color:var(--accent)}

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .book import added_types
+from .checks import site_checks
 from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .families import read_families, relation_family
 from .files import read_json
@@ -311,6 +312,8 @@ def cmd_export(args):
     if args.public and not data["book"]["public_domain"]:
         data = strip_quotes(data)
     data["book"]["text"] = not args.public
+    if not args.public:
+        data["checks"] = site_checks(workdir, data["entities"], data["facts"])
 
     if outdir.exists() and any(outdir.iterdir()):
         if not (outdir / "data" / "wiki.json").exists():

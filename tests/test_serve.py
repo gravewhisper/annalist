@@ -59,6 +59,14 @@ class ServeNotesTest(unittest.TestCase):
         self.assertEqual(call(self.base + "/elsewhere", b"{}")[0], 404)
         self.assertFalse((self.workdir / NOTES_FILE).exists())
 
+    def test_a_note_may_answer_a_check_with_a_known_verdict(self):
+        base = {"page": "e:abc", "title": "Wren", "chapter": 4, "url": "", "text": "Looks right"}
+        self.assertEqual(self.post({**base, "check": "c1", "verdict": "right"})[0], 201)
+        self.assertEqual(self.post({**base, "check": "c2", "verdict": "maybe"})[0], 400)
+        self.assertEqual(self.post({**base, "check": 7, "verdict": "wrong"})[0], 400)
+        notes = json.loads(call(self.base + "/api/notes")[1])["notes"]
+        self.assertEqual([(n["check"], n["verdict"]) for n in notes], [("c1", "right")])
+
     def test_serving_needs_a_built_site(self):
         with tempfile.TemporaryDirectory() as empty, self.assertRaises(SystemExit):
             make_server(empty, port=0)

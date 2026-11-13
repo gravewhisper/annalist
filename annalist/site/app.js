@@ -324,6 +324,7 @@ function renderSide(c) {
   const vols = D.volumes.filter(v => v.from <= S.n);
   const item = (go, text, n) => `<a ${goTo(go)} class="${S.p === go ? 'on' : ''}">${esc(text)}${n != null ? ` <span>${n}</span>` : ''}</a>`;
   $('side').innerHTML = `<h4>Navigate</h4>${item('home', 'Home')}${item('chapters', 'Chapters', S.n)}${item('mysteries', 'Mysteries', qs.filter(x => x === 'open' || x === 'partial').length)}${item('graph', 'Graph')}`
+    + (D.checks?.length ? item('checks', 'Needs checking', openChecks().length) : '')
     + (vols.length ? `<h4>Volumes</h4>${vols.map(v => item('v:' + v.id, v.name)).join('')}` : '')
     + `<h4>Categories</h4>${types.map(t => item('cat:' + t, catName(t), c[t])).join('')}`;
 }
@@ -2878,7 +2879,7 @@ function render() {
   const [kind, arg] = S.p.split(/:(.*)/s);
   const pages = {
     e: () => renderEntity(arg), cat: () => renderCat(D.book.added?.[arg] > S.n ? D.parents[arg] : arg), mysteries: renderMysteries, chapters: renderChapters,
-    ch: () => renderChapter(arg), v: () => renderVolume(arg), graph: () => renderGraph(arg),
+    ch: () => renderChapter(arg), v: () => renderVolume(arg), graph: () => renderGraph(arg), checks: renderChecks,
   };
   const old = $('graph-view');
   $('main').innerHTML = (pages[kind] || (() => renderHome(c)))();
@@ -2920,13 +2921,42 @@ function volumeTicks() {
   $('n').setAttribute('list', 'volticks');
 }
 
-const NOTES = {count: 0};
+const NOTES = {count: 0, answered: new Set(), pending: null};
+const CHECK_KINDS = {shared_name: 'Names two pages both claim', dead_alive: 'Dead, then alive with no explanation',
+  description_title: 'Important pages still titled by a description', many_names: 'Pages holding many names', merge: 'Merges the judge was unsure of'};
+const openChecks = () => (D.checks || []).filter(c => c.chapter <= S.n && vis(D.byId[c.entity]) && !NOTES.answered.has(c.id));
+function renderChecks() {
+  const rows = openChecks();
+  const answered = (D.checks || []).filter(c => NOTES.answered.has(c.id)).length;
+  const groups = Object.keys(CHECK_KINDS).map(k => [k, rows.filter(c => c.kind === k)]).filter(([, g]) => g.length);
+  const row = c => `<li class="checkrow"><div>${entLink(c.entity)} <span class="muted">${esc(c.reason)}</span> ${chLink(c.chapter)}</div>
+    <div class="checkbtns"><button data-check-right="${c.id}">Looks right</button><button data-check-wrong="${c.id}">Wrong</button></div></li>`;
+  return `<h1>Needs checking</h1><div class="subtitle">Pages the build is least sure of, up to chapter ${S.n}. Answer one and it leaves this list; your answer is saved with your notes.${answered ? ` ${answered} answered so far.` : ''}</div>`
+    + (NOTES.on ? '' : '<div class="note">Start the wiki with <code>annalist serve</code> to save answers.</div>')
+    + (groups.length ? groups.map(([k, g]) => `<h2>${esc(CHECK_KINDS[k])} <span class="muted">(${g.length})</span></h2><ul class="list checks">${g.map(row).join('')}</ul>`).join('')
+      : '<p class="muted">Nothing left to check up to this chapter.</p>');
+}
+async function answerCheck(id, verdict, text) {
+  const c = D.checks.find(x => x.id === id), e = D.byId[c.entity];
+  const r = await fetch('api/notes', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({page: 'e:' + c.entity, title: displayName(e), chapter: S.n, url: '#' + hashFor({p: 'e:' + c.entity, tab: '', m: ''}),
+      text: text || `Looks right: ${c.reason}`, check: id, verdict})});
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || r.status);
+  NOTES.count = d.count;
+  NOTES.answered.add(id);
+  reportLabel();
+  render();
+}
 async function probeNotes() {
   try {
     const r = await fetch('api/notes', {cache: 'no-store'});
     const d = r.ok ? await r.json() : null;
     if (!Array.isArray(d?.notes)) return;
     NOTES.count = d.notes.length;
+    NOTES.on = true;
+    for (const n of d.notes) if (n.check) NOTES.answered.add(n.check);
+    if (S.p === 'checks') render();
     $('report').hidden = false;
     reportLabel();
   } catch (err) { /* a plain static host has no notes endpoint, so the button stays hidden */ }
@@ -2939,6 +2969,7 @@ function openReport() {
     <textarea id="reporttext" rows="5" placeholder="What is wrong here, and what should it say?"></textarea>
     <div class="reportrow"><span class="muted" id="reportmsg"></span><button data-report-cancel>Cancel</button><button class="primary" data-report-save>Save note</button></div>`;
   box.hidden = false;
+  if (NOTES.pending) $('reporttext').value = `Wrong: ${D.checks.find(x => x.id === NOTES.pending).reason}\n`;
   $('reporttext').focus();
 }
 async function saveReport() {
@@ -2946,6 +2977,12 @@ async function saveReport() {
   if (!text) return;
   const note = {page: S.p || 'home', title: pageTitle(), chapter: S.n, url: location.hash, text};
   $('reportmsg').textContent = 'Saving...';
+  if (NOTES.pending) {
+    const id = NOTES.pending;
+    try { await answerCheck(id, 'wrong', text); NOTES.pending = null; $('reportbox').hidden = true; }
+    catch (err) { $('reportmsg').textContent = `Not saved: ${err.message}`; }
+    return;
+  }
   try {
     const r = await fetch('api/notes', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(note)});
     const d = await r.json();
@@ -3003,8 +3040,10 @@ function wire() {
     let el;
     if (act('[data-gback]')) store.set('graph-focus', '');
     if ((ev.button || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) && act('[href]')) return;
-    if (act('[data-report]')) return $('reportbox').hidden ? openReport() : ($('reportbox').hidden = true);
-    if (act('[data-report-cancel]')) return ($('reportbox').hidden = true);
+    if ((el = act('[data-check-right]'))) return answerCheck(el.dataset.checkRight, 'right').catch(err => alert(`Not saved: ${err.message}`));
+    if ((el = act('[data-check-wrong]'))) { NOTES.pending = el.dataset.checkWrong; return openReport(); }
+    if (act('[data-report]')) { NOTES.pending = null; return $('reportbox').hidden ? openReport() : ($('reportbox').hidden = true); }
+    if (act('[data-report-cancel]')) { NOTES.pending = null; return ($('reportbox').hidden = true); }
     if (act('[data-report-save]')) return saveReport();
     if (act('[data-volend]')) { const v = volumeAt(S.n); if (v && !v.end) setN(v.to); return; }
     if (graphClick(ev, act) || storyClick(ev, act)) return;

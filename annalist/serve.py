@@ -8,6 +8,7 @@ NOTES_FILE = "reader-notes.jsonl"
 NOTES_PATH = "/api/notes"
 MAX_BODY = 64_000
 FIELDS = {"page": str, "title": str, "chapter": int, "url": str, "text": str}
+OPTIONAL = {"check": None, "verdict": ("right", "wrong")}
 
 
 def read_notes(workdir):
@@ -33,6 +34,11 @@ def parse_note(body):
         note[key] = value.strip() if kind is str else value
     if not note["text"]:
         raise ValueError("text is empty")
+    for key, allowed in OPTIONAL.items():
+        if key in data:
+            if data[key] not in allowed if allowed else not isinstance(data[key], str):
+                raise ValueError(f"{key} is not allowed: {data[key]!r}")
+            note[key] = data[key]
     return note
 
 
