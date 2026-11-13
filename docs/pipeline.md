@@ -3,11 +3,11 @@
 `annalist build` runs these stages in order. `STAGES` in `annalist/build.py` defines them. Each stage also exists as its own subcommand, such as `python3 -m annalist relate runs/book`.
 
 1. `extract` splits the epub into chapter text files and writes `chapters.json`, `source.json`, and `volumes.json`.
-2. `book` writes `book.json`: the power system, the power types, extra character fields, the timeline kind, and the power ladder shape.
+2. `book` writes `book.json`: the power system, the power types, extra character fields, the timeline kind, and the power ladder shape. It rejects a power type whose examples name a part of an example, such as "the X Order and its Y Watch".
 3. `read` reads each chapter in order and writes `state/NNNN.json` with that chapter's entries, facts, relations, and open questions.
 4. `timelines` labels which timeline each chapter happens in. It is skipped when `book.json` says the story is linear.
 5. `wordings` splits relation wordings from older runs into a predicate and a detail.
-6. `retype` checks the type each entry is filed under. An entry filed under the ladder's group type that a fact or relation states is a numbered or ordered rank, such as "X is Circle 2 of Y", moves to the rank type, unless the wiki also gives it ranks of its own. So does an entry of an item type named after ranks (the type of "X elixir" when X is a rank or group) that a fact or relation states is a group's numbered or ordered rank, such as "The Circle 2 elixir of Y is X", unless its own name ends in the item word.
+6. `retype` checks the type each entry is filed under. An entry filed under the ladder's group type that a fact or relation states is a numbered or ordered rank, such as "X is Circle 2 of Y", moves to the rank type, unless the wiki also gives it ranks of its own. So does an entry of an item type named after ranks (the type of "X elixir" when X is a rank or group) that a fact or relation states is a group's numbered or ordered rank, such as "The Circle 2 elixir of Y is X", unless its own name ends in the item word. An entry of a book type for organizations or places that a relation states is a part of another entry of the same type, such as "X | patrol team of | Y" or "X | branch of | Y", moves to the general type, since a branch, office, or team of an order is not itself an order. The model is told the same for parts no relation names.
 7. `discover` adds entries for names that recur in the text but that `read` never listed.
 8. `resolve` merges entries that are one person, place, or thing under different names, including identities the book reveals later.
 9. `relate` adds relations that each chapter shows between entries it names close together.

@@ -174,5 +174,56 @@ class BookTypeFitTest(unittest.TestCase):
         self.assertEqual(self.kb.entities["Veiled Hand"]["type"], "secret society")
 
 
+ORDER_CHAPTERS = {
+    1: ("The Kiln",
+        "The Kiln Order kept its fires in the hills. Its patrol team, the Ember Watch, walked the roads at night, and its office "
+        "in the harbour, the Harbour See, kept the ledgers.\n"),
+}
+
+ORDER_EXTRACTIONS = {
+    1: {"entities": [entry("Kiln Order", "order", "An order that keeps sacred fires in the hills."),
+                     entry("Ember Watch", "order", "The Kiln Order's patrol team."),
+                     entry("Harbour See", "order", "The Kiln Order's office in the harbour, which keeps the ledgers.")],
+        "facts": [fact("Kiln Order", "The Kiln Order keeps its fires in the hills.", "The Kiln Order kept its fires in the hills.")]},
+}
+
+ORDER_RELATIONS = [{"source": "Ember Watch", "type": "patrol team of", "target": "Kiln Order", "quotes": ["Its patrol team, the Ember Watch"],
+                    "asserted_by": "narrator", "status": "belief"}]
+
+ORDER_BOOK = {"title": "Kiln", "backend": {"name": "fake", "script": "script.json"}, "power_system": "", "timeline_kind": "linear",
+              "power_types": {"order": {"parent": "organization",
+                                        "description": "a sacred order that keeps fires, such as the Kiln Order and its Ember Watch"}}}
+
+ORDER_REPLIES = [
+    {"purpose": "retype", "contains": "never one of its parts", "reply": retype_reply(["order", "organization", "order"])},
+    {"purpose": "retype", "reply": retype_reply(["order", "order", "order"])},
+]
+
+
+class PartOfAKindTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.kiln = Run(ORDER_CHAPTERS, ORDER_EXTRACTIONS, ORDER_BOOK, ORDER_REPLIES)
+        state = cls.kiln.workdir / "state" / "0001.json"
+        saved = json.loads(state.read_text(encoding="utf-8"))
+        saved["extraction"]["relations"] = ORDER_RELATIONS
+        state.write_text(json.dumps(saved), encoding="utf-8")
+        cls.kiln.run("retype", str(cls.kiln.workdir), "--jobs", "1")
+        cls.kb = load_states(cls.kiln.workdir)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.kiln.close()
+
+    def test_a_team_stated_to_be_part_of_an_order_is_not_itself_an_order_whatever_the_model_says(self):
+        self.assertEqual(self.kb.entities["Ember Watch"]["type"], "organization")
+
+    def test_an_office_of_an_order_is_not_itself_an_order(self):
+        self.assertEqual(self.kb.entities["Harbour See"]["type"], "organization")
+
+    def test_the_whole_order_keeps_its_type(self):
+        self.assertEqual(self.kb.entities["Kiln Order"]["type"], "order")
+
+
 if __name__ == "__main__":
     unittest.main()
