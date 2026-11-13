@@ -31,7 +31,7 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
     pairs = {}
 
     def add(a, b, rule, evidence=None):
-        if a == b:
+        if a == b or kb.kept_apart(a, b):
             return
         key = tuple(sorted((a, b)))
         entry = pairs.setdefault(key, {"rules": [], "evidence": []})
@@ -105,6 +105,8 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
                 if b != a and any(initials(y) == letters.group(0).replace(".", "").replace(" ", "").lower()
                                   for y in names_of(kb.entities[b])):
                     add(a, b, f"initials: '{e['name']}'")
+    for a, b, rule in claimed_pairs(kb):
+        add(a, b, rule)
     for a, b in resemblances(kb, by_entity, people):
         add(a, b, "resemblance")
         pairs[tuple(sorted((a, b)))].setdefault("subject", (a, b))
@@ -138,6 +140,14 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
         if not entry["evidence"]:
             entry["evidence"] = co_mentions(workdir, kb.entities[a], kb.entities[b], max_chapter, radius)
     return pairs
+
+
+def claimed_pairs(kb):
+    for a, e in kb.entities.items():
+        for c in e.get("claims", []):
+            b = kb.resolve(c["name"])
+            if b and b != a and kb.same_kind(e["type"], kb.entities[b]["type"]):
+                yield a, b, f"alias-claimed: '{c['name']}' in ch{c['chapter']}"
 
 
 RESEMBLE = re.compile(r"\b(?:resembl\w*|looks? (?:just |exactly )?like|identical to|same\b[^.;]{0,60}?\bas)\s+", re.I)
@@ -422,6 +432,11 @@ LISTED = """
 The two names are listed together in one passage. Titles that share an epithet and are addressed in one prayer or incantation name one being when the text treats the addressee as one, for example when it speaks of whom the prayer is for. Separate steps of one ritual are not by themselves separate beings."""
 
 
+CLAIMED = """
+
+One chapter's reader listed a name of one entry as another name of the other, which alone is weak evidence. A persona or false name that a character goes by is that character. But one who takes over, controls, or inhabits another being (a possessed host, a puppet or marionette) or impersonates another real person is not that other, and neither is one who meets, recognizes, or is mistaken for them."""
+
+
 POSSESSIVE_END = re.compile(r"['’]s$")
 
 
@@ -441,7 +456,8 @@ def entity_card(kb, name, facts, other):
 def decide_pair(workdir, kb, by_entity, attached, a, b, info):
     evidence = "\n".join(f"- ch{p['chapter']}: \"{p['text']}\"" for p in info["evidence"]) or "(none)"
     shared = shared_type(kb, a, b)
-    listed = LISTED if any(r.startswith("listed-together") for r in info["rules"]) else ""
+    listed = (LISTED if any(r.startswith("listed-together") for r in info["rules"]) else "") + \
+        (CLAIMED if any(r.startswith("alias-claimed") for r in info["rules"]) else "")
     reply = cached_llm(workdir, "resolve", RESOLVE_PROMPT.format(
         type=shared or "person or thing", evidence=evidence, listing=listed,
         a=entity_card(kb, a, by_entity.get(a, []), b), b=entity_card(kb, b, by_entity.get(b, []), a)))

@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from .files import read_json, state_paths
 from .names import name_key, parse_aliases, written_summary
 from .text import chapter_text, verified_quotes
-from .titles import page_title, revealed_name
+from .titles import common_name, page_title, revealed_name
 
 
 def mentions(names, text):
@@ -38,7 +38,8 @@ class Registry:
 class Absorbed:
     def __init__(self, entities):
         self.entries = {a["name"]: {**a, "into": e["name"]} for e in entities for a in e.get("absorbed", [])}
-        self.owner = {(a["into"], name_key(n)): a for a in self.entries.values() for n in [a["name"]] + a["aliases"]}
+        self.owner = {(a["into"], name_key(n)): a for a in self.entries.values() for n in a["aliases"]}
+        self.owner.update({(a["into"], name_key(a["name"])): a for a in self.entries.values()})
 
     def page(self, canonical, filed, chapter):
         a = self.entries.get(filed)
@@ -150,8 +151,11 @@ def page_name(e, seen, blurbs, own_facts, texts, words, registry, absorbed, show
     real = None
     if e["type"] == "character" and shown_name == e["name"]:
         real = revealed_name(e["name"], [a for a in aliases if a["name"] in own_names], words)
+    if real is None and e["type"] == "character":
+        best = common_name(shown_name, [a["name"] for a in aliases if a["name"] in own_names], texts, words, bool(e.get("absorbed")))
+        real = next((a for a in aliases if a["name"] == best), None)
     if real:
-        aliases = [a for a in aliases if a["name"] != real["name"]] + [{"name": e["name"], "chapter": name_seen}]
+        aliases = [a for a in aliases if a["name"] != real["name"]] + [{"name": shown_name, "chapter": name_seen}]
         shown_name, name_seen = real["name"], real["chapter"]
     page = PageName(e["name"], shown_name, name_seen, first, sorted(aliases, key=lambda a: (a["chapter"], a["name"] != e["name"])))
     return page.titled(e["title"]) if e.get("title") else page
