@@ -183,6 +183,23 @@ class ImpliedAnswerTest(unittest.TestCase):
             book.close()
 
 
+class NeverFollowedUpTest(unittest.TestCase):
+    def test_an_unclear_question_the_story_never_came_back_to_is_a_loose_end(self):
+        script = ending_script()
+        reply = copy.deepcopy(ENDING_REPLY)
+        reply["results"][2] = {"id": "Q0002-02", "answered": False, "verdict": "unclear", "quotes": [], "reason": "Nothing more is said of the lights."}
+        script["replies"] = [r for r in script["replies"] if r["purpose"] != "ending"] + [{"purpose": "ending", "reply": reply}]
+        book = MiniBuild(script, book=COMPLETE)
+        try:
+            book.build()
+            self.assertEqual(book.json("ending.json")["questions"]["Q0002-02"]["verdict"], "unclear")
+            found = sections((book.workdir / "wiki" / "open-questions.md").read_text(encoding="utf-8"))
+            self.assertEqual(sorted(found["Loose ends"]), ["Q0002-02", "Q0003-05"])
+            self.assertNotIn("Q0002-02", found["Open mysteries"])
+        finally:
+            book.close()
+
+
 class FailedItemTest(unittest.TestCase):
     def test_a_failed_reread_reruns_only_that_question_on_the_next_build(self):
         book = MiniBuild(reread_says(ODILE, {"verdict": "maybe"}), book=COMPLETE)

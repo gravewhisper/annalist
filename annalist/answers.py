@@ -13,18 +13,18 @@ from .sweep import fingerprint, judge_answer
 from .text import chapter_text, check_quote, locate_quote
 
 
-ANSWERS_PROMPT = """A reader is partway through a novel that goes on after chapter {to}, the last chapter of {name}. Below are questions they noted while reading that were still open at that point. Each comes with the passage that raised it, any leads found so far, and passages from chapters up to {to} that may bear on it, each with its chapter's synopsis. The passages include the rest of the chapter that raised the question. Judge each question on its own passages: some are answered in them, some only narrowed down, some left for later.
+ANSWERS_PROMPT = """A reader is partway through a novel that goes on after chapter {to}, the last chapter of {name}. Below are questions they noted while reading that were still open at that point. Each comes with the passage that raised it, any leads found so far, and passages from chapters up to {to} that may bear on it, each with its chapter's synopsis. The passages include the rest of the chapter that raised the question, and may include a few from the chapters before it. Judge each question on its own passages: some are answered in them, some only narrowed down, some left for later.
 
 {items}
 
 For each question, report what its passages show, if anything:
 - "answer": a passage whose own text answers the core of the question. Give its "chapter", a "quote" from it, and "answer", one or two sentences answering the question from that passage and earlier text only. It answers the core when it names who or what the question asks for, or when a character reaches a firm conclusion that the story then treats as settled; when the passages together leave only one reading, quote the passage that completes it. A synopsis alone is not enough; a passage that repeats, deepens, or only hints at the mystery is not an answer. When several passages answer it, choose the earliest.
-- "lead": a passage, earlier than the answer if there is one, that narrows the question down without answering it. Give its "chapter", a "quote" from it, and "text", one sentence saying what it suggests, keeping the text's own hedging. Leave it out when it only repeats the setup or a lead already listed.
+- "lead": a passage, earlier than the answer if there is one, that narrows the question down without answering it. It may come from before the question was raised, such as an earlier scene that shows the person or thing the question asks about. Give its "chapter", a "quote" from it, and "text", one sentence saying what it suggests, keeping the text's own hedging. Leave it out when it only repeats the setup or a lead already listed.
 - "premise": the question takes for granted something the text shows is not so, such as a person, object or event that the passages show does not exist or did not happen. A question asking whether someone is real, or who fills a role, rests on a false premise when the text shows that no one fills that role, for example because it is a cover story or an invented name; report that as premise, not answer. Give "explanation", one or two sentences, and "quotes" that show it. Only when the text shows the assumption false, never because the text is silent about it.
 
 Reply with one JSON object: {{"results": [{{"id": "...", "answer": {{"chapter": n, "quote": "...", "answer": "..."}} or null, "lead": {{"chapter": n, "quote": "...", "text": "..."}} or null, "premise": {{"explanation": "...", "quotes": [{{"chapter": n, "quote": "..."}}]}} or null}}]}}, one entry per question.
 Rules:
-- answer, lead and premise state only what the text up to their chapter shows. Never use a name, event, or detail from a later passage or from outside the novel.
+- answer, lead and premise state only what the text up to their chapter shows, or up to the chapter that raised the question for a passage from before it. Never use a name, event, or detail from a later passage or from outside the novel.
 - every quote is one contiguous span of one or two sentences copied exactly, character for character, from a passage of that chapter, at most 300 characters. No ellipses, no paraphrase. This is checked by machine.
 """
 
@@ -50,6 +50,7 @@ Does the evidence itself show that what the question takes for granted is false?
 
 SETTLED = ("answered", "premise-false")
 MAX_SWAPPED_CHAPTERS = 2
+PROMPT_STAMP = fingerprint(ANSWERS_PROMPT)
 
 
 def verdict_basis(v, q):
@@ -68,7 +69,8 @@ def answers_item(q, passages, synopses):
     lines += [f"Lead from chapter {l['chapter']}: {l['text']}" for l in q["leads"]]
     lines.append("Passages:")
     for p in passages:
-        lines.append(f"[chapter {p['chapter']}] Synopsis: {synopses.get(p['chapter'], '')}")
+        before = ", before the question was raised" if p.get("before") else ""
+        lines.append(f"[chapter {p['chapter']}{before}] Synopsis: {synopses.get(p['chapter'], '')}")
         lines += [f"<passage chapter=\"{p['chapter']}\">\n{t}\n</passage>" for t in p["texts"]]
     return "\n".join(lines)
 
@@ -89,8 +91,8 @@ def checked_lead(workdir, q, raw, last):
     except (TypeError, ValueError):
         return None
     text, quote = str(raw.get("text") or "").strip(), str(raw.get("quote") or "").strip()
-    if text and quote and q["chapter"] <= n <= last and check_quote(str(workdir), n, quote)["ok"]:
-        return {"chapter": n, "text": text, "quote": quote}
+    if text and quote and 1 <= n <= last and check_quote(str(workdir), n, quote)["ok"]:
+        return {"chapter": n, "text": text, "quote": quote, **({"shown": q["chapter"]} if n < q["chapter"] else {})}
     return None
 
 
@@ -154,22 +156,42 @@ def eligible(workdir, to):
                   key=lambda v: v["to"])
 
 
-def pending(workdir, kb, v, old):
+def last_judged(before, qid):
+    for b in sorted(before, key=lambda b: -b["to"]):
+        d = b["questions"].get(qid)
+        if d:
+            return b["to"] if d.get("verdict") == "unanswered" and d.get("prompt") == PROMPT_STAMP else None
+    return None
+
+
+def came_back(q, since, chapters):
+    return (any(n > since for n in chapters) or any(l["chapter"] > since and l.get("by") != "answers" for l in q["leads"])
+            or any(a["chapter"] > since for a in q.get("again", [])))
+
+
+def pending(workdir, kb, v, old, before):
     finder = Finder(workdir, kb)
     opened = kb.open_questions()
     asked = {q["id"] for q in opened}
     keep = {k: d for k, d in old.items() if k not in asked and d.get("verdict") in SETTLED}
-    work = []
+    work, carried = [], 0
     for q in opened:
         if q["id"] in keep:
             continue
-        passages = rest_of_chapter(workdir, q, finder.candidates(q, chapters=10, after=True, full=5))
         stamp = verdict_basis(v, q)
+        since = last_judged(before, q["id"])
+        passages = rest_of_chapter(workdir, q, finder.candidates(q, chapters=10, after=True, full=5))
+        if since is not None and not came_back(q, since, [p["chapter"] for p in passages]):
+            keep[q["id"]] = {"source": "carried", "verdict": "unanswered", "since": since, "basis": stamp, "prompt": PROMPT_STAMP}
+            carried += 1
+            continue
+        if since is None:
+            passages = finder.earlier(q) + passages
         if q["id"] in old and reusable(old[q["id"]], stamp, [p["chapter"] for p in passages]):
             keep[q["id"]] = old[q["id"]]
         else:
             work.append((q, passages, stamp))
-    return keep, work
+    return keep, work, carried
 
 
 def ask(workdir, kb, v, batch):
@@ -180,7 +202,8 @@ def ask(workdir, kb, v, batch):
         log(workdir, f"  answers batch {batch[0][0]['id']}: {exc}")
         return {q["id"]: {"source": "llm", "verdict": "error", "reason": str(exc)} for q, _, _ in batch}
     results = {str(r.get("id")): r for r in reply.get("results") or [] if isinstance(r, dict)}
-    return {q["id"]: {**decide(workdir, kb, q, results.get(q["id"], {}), [p["chapter"] for p in passages], v["to"]), "basis": stamp}
+    return {q["id"]: {**decide(workdir, kb, q, results.get(q["id"], {}), [p["chapter"] for p in passages], v["to"]), "basis": stamp,
+                      "prompt": PROMPT_STAMP}
             for q, passages, stamp in batch}
 
 
@@ -196,14 +219,14 @@ def cmd_answers(args):
     asked = 0
     for v in volumes:
         key = str(v["to"])
-        kb = load_states(workdir, until=v["to"], answers_before=v["to"], corrections=(QUESTIONS,))
+        kb = load_states(workdir, until=v["to"], answers_before=v["to"], corrections=(QUESTIONS,), only_mysteries=True)
         earlier = boundaries[key]["questions"]
-        keep, work = pending(workdir, kb, v, earlier)
+        keep, work, carried = pending(workdir, kb, v, earlier, [boundaries[str(u["to"])] for u in volumes if u["to"] < v["to"]])
         boundaries[key] = {"name": v["name"], "to": v["to"], "questions": keep}
         write_json(path, {"boundaries": boundaries})
         batches = [work[i:i + args.batch] for i in range(0, len(work), args.batch)]
         log(workdir, f"answers: {len(work)} of {len(kb.open_questions())} questions open at the end of {v['name']} (ch {v['to']}) "
-                     f"to ask in {len(batches)} batches")
+                     f"to ask in {len(batches)} batches; {carried} kept from an earlier volume end, as no chapter since came back to them")
 
         def record(batch):
             decided = ask(workdir, kb, v, batch)

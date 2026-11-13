@@ -27,6 +27,15 @@ Reply with one JSON object: {{"labels": [{{"id": "...", "scope": "series" or "ar
 """
 
 
+MYSTERY_PROMPT = """Below are questions a reader noted while reading a novel, each with the passage that raised it. Decide for each whether it is a mystery: something the story keeps hidden or unexplained that a reader would want answered later, such as who someone is, what something is, what really happened, or a hidden reason or plan.
+It is not a mystery when it only asks what a character will say, tell, or do next, how someone will react, or how a scene will play out, even when what they will tell is a secret, or when it asks the reason for a passing gesture, courtesy, or mood, such as a bow, a farewell, or a smile, when nothing in the passage points to a hidden reason. When unsure, answer true. Judge only from the question and its passage. Never use outside knowledge of this novel.
+
+{items}
+
+Reply with one JSON object: {{"questions": [{{"id": "...", "mystery": true or false}}]}}, one entry per question.
+"""
+
+
 def tier_at(tier, n):
     if tier.get("series_at") is not None and tier["series_at"] <= n:
         return "series"
@@ -49,6 +58,17 @@ def tier_labels(workdir, questions, jobs, batch=40):
                 if isinstance(row, dict) and row.get("scope") in TIER_ORDER:
                     labels[str(row.get("id"))] = row["scope"]
     return labels
+
+
+def mystery_checks(workdir, questions, jobs, batch=40):
+    def check(chunk):
+        items = "\n\n".join(f"ID {q['id']}\nQuestion: {q['question']}\nPassage: \"{q.get('quote', '')}\"" for q in chunk)
+        reply = cached_llm(workdir, "mystery", MYSTERY_PROMPT.format(items=items))
+        return [row for row in reply.get("questions") or [] if isinstance(row, dict) and isinstance(row.get("mystery"), bool)]
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        rows = [row for chunk in pool.map(check, [questions[i:i + batch] for i in range(0, len(questions), batch)]) for row in chunk]
+    wanted = {q["id"] for q in questions}
+    return {str(row["id"]): row["mystery"] for row in rows if str(row.get("id")) in wanted}
 
 
 def tier_signals(corpus, kb, q, fact_chapters, patterns):
@@ -108,18 +128,25 @@ def cmd_tiers(args):
     labels = {k: v["label"] for k, v in old.items() if v.get("label") in TIER_ORDER}
     todo = [q for q in kb.questions.values() if q["id"] not in labels]
     labels.update(tier_labels(workdir, todo, args.jobs))
+    mystery = {k: v["mystery"] for k, v in old.items() if isinstance(v.get("mystery"), bool)}
+    mystery.update(mystery_checks(workdir, [q for q in kb.questions.values() if q["id"] not in mystery], args.jobs))
     tiers = {}
     for q in kb.questions.values():
+        checked = {"mystery": mystery[q["id"]]} if q["id"] in mystery else {}
         if q["id"] not in labels:
+            if checked:
+                tiers[q["id"]] = checked
             continue
         signals = tier_signals(corpus, kb, q, fact_chapters, patterns)
         tiers[q["id"]] = {"label": labels[q["id"]], **promotions(signals, q["chapter"], labels[q["id"]], rule), "source": "rule",
                           "signals": {"recurring": signals["recurring"], "attempts": signals["attempts"],
-                                      "entities": signals["entities"], "entity_facts": len(signals["entity_facts"])}}
+                                      "entities": signals["entities"], "entity_facts": len(signals["entity_facts"])}, **checked}
     write_json(path, {"rule": rule, "questions": tiers})
     counts = {}
     for q in kb.open_questions():
         t = tier_at(tiers.get(q["id"], {}), corpus.last)
         counts[t] = counts.get(t, 0) + 1
-    print(f"tiered {len(tiers)} questions ({len(kb.questions) - len(tiers)} unlabeled); "
+    labeled = sum(1 for t in tiers.values() if "label" in t)
+    print(f"tiered {labeled} questions ({len(kb.questions) - labeled} unlabeled, "
+          f"{sum(1 for t in tiers.values() if t.get('mystery') is False)} not mysteries); "
           f"open at chapter {corpus.last}: {counts}")

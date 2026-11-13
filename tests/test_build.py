@@ -45,6 +45,7 @@ LATER_REPLIES = {
     "answers": {"results": []},
     "premise": {"verdict": "reject", "reason": "The quotes do not show the assumption is false."},
     "tiers": {"labels": []},
+    "mystery": {"questions": []},
     "profile": {"age": [{"value": "nineteen", "chapter": 1, "quotes": [PROFILE_QUOTE], "asserted_by": "narrator"}]},
     "profile-support": {"verdicts": [{"id": "O1", "verdict": "supported"}]},
     "profile-field": {"observations": []},

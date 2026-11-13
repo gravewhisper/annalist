@@ -50,6 +50,7 @@ RATES = {
     "summary": Rate(input_tokens=401.95, output_tokens=88.56, wall_s=1.1207),
     "support": Rate(input_tokens=922.46, output_tokens=285.76, wall_s=2.4106),
     "sweep": Rate(input_tokens=2827.37, output_tokens=186.52, wall_s=1.4525),
+    "mystery": Rate(input_tokens=75.32, output_tokens=10.0, wall_s=0.1123),
     "tiers": Rate(input_tokens=75.32, output_tokens=15.23, wall_s=0.1123),
     "timelines": Rate(input_tokens=3525.82, output_tokens=212.46, wall_s=2.1874),
     "volume": Rate(input_tokens=149.07, output_tokens=4.15, wall_s=0.039),

@@ -110,7 +110,8 @@ def first_mention(texts, record):
 
 def question_record(q, tier):
     record = {"id": q["id"], "chapter": q["chapter"], "question": q["question"], "quote": q.get("quote", ""), **timeline(q),
-              "leads": [{"chapter": l["chapter"], "text": l["text"], "quote": l["quote"]} for l in q["leads"]],
+              "leads": [{"chapter": l["chapter"], "text": l["text"], "quote": l["quote"], **({"shown": l["shown"]} if "shown" in l else {})}
+                        for l in q["leads"]],
               "tier": {"arc": tier.get("arc_at"), "series": tier.get("series_at")}}
     if q["status"] == "resolved":
         record["resolved"] = {"chapter": q["resolved_chapter"], "shown": q.get("resolved_shown", q["resolved_chapter"]), "answer": q.get("answer", ""),
@@ -183,7 +184,7 @@ def stamp_assets(outdir):
 def build(workdir, theme):
     book = {**read_json(workdir / "book.json", {}), **theme}
     title = book.get("title") or workdir.name
-    kb = load_states(workdir, ladders=True, corrections=EVERY_CORRECTION)
+    kb = load_states(workdir, ladders=True, corrections=EVERY_CORRECTION, only_mysteries=True)
     entities = list(kb.entities.values())
     pages = read_pages(workdir, kb)
     facts, relations, states, registry, absorbed = pages.facts, pages.relations, pages.states, pages.registry, pages.absorbed

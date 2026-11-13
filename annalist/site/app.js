@@ -157,7 +157,7 @@ function lede(e) {
 const TIERS = {series: 'Series mysteries', arc: 'Arc mysteries', cliffhanger: 'Cliffhangers'};
 const tierOf = q => q.tier?.series != null && q.tier.series <= S.n ? 'series' : q.tier?.arc != null && q.tier.arc <= S.n ? 'arc' : 'cliffhanger';
 
-const ENDINGS = {'left-open': 'Left open by the ending', unclear: 'Unclear whether the ending means to leave this open', 'dropped-thread': 'Never followed up'};
+const ENDINGS = {'left-open': 'Left open by the ending', unclear: 'Not answered by the end', 'dropped-thread': 'Never followed up'};
 const endOf = q => q.ending && q.ending.chapter <= S.n ? q.ending.verdict : null;
 const solved = q => q.resolved && until([q.resolved]).length > 0;
 const atEnd = q => (q.resolved?.at_end && solved(q)) || endOf(q) === 'answered-implicitly';

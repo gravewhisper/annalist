@@ -35,6 +35,14 @@ def unfinished(decision):
     return decision.get("verdict") == "error" or (decision.get("verdict") == "answered-implicitly" and "reread" not in decision)
 
 
+def followed_up(q, decision):
+    attempt = decision.get("attempt") or {}
+    later = [l["chapter"] for l in q["leads"]] + [r["chapter"] for r in q["rejected"]] + [a["chapter"] for a in q.get("again", [])]
+    later += [r["chapter"] for r in (decision.get("implied") or {}).get("quotes", [])]
+    later += [attempt["chapter"]] if attempt.get("quote_ok") and isinstance(attempt.get("chapter"), int) else []
+    return any(n > q["chapter"] for n in later)
+
+
 def parse_sourcing(raw):
     quotes = raw.get("quotes") if isinstance(raw.get("quotes"), list) else [raw.get("quotes")]
     status = raw.get("status") if raw.get("status") in ("stated", "implied", "belief") else "stated"
@@ -476,7 +484,8 @@ class Knowledge:
         for qid, d in decisions.items():
             q = self.questions.get(qid)
             if q and q["status"] in UNRESOLVED and d["verdict"] in ENDING_VERDICTS and not unfinished(d):
-                q["ending"] = {"verdict": d["verdict"], "chapter": last,
+                verdict = "dropped-thread" if d["verdict"] == "unclear" and not followed_up(q, d) else d["verdict"]
+                q["ending"] = {"verdict": verdict, "chapter": last,
                                **{k: d[k] for k in ("answer", "quotes", "reason") if d.get(k)}}
 
     def apply_retypes(self, decisions):
@@ -582,7 +591,7 @@ class Knowledge:
 
 def answer_events(decision):
     if decision.get("lead"):
-        yield decision["lead"]["chapter"], "lead", {**decision["lead"], "by": "answers"}
+        yield decision["lead"].get("shown", decision["lead"]["chapter"]), "lead", {**decision["lead"], "by": "answers"}
     if decision.get("verdict") == "answered":
         yield decision["answer"]["chapter"], "answer", {**decision["answer"], "by": "answers"}
     if decision.get("verdict") == "premise-false":
@@ -609,7 +618,7 @@ FILLED = {"relate.json": "RF", "link.json": "RL"}
 
 
 def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FILLED), discovered=True, answers_before=None, ladders=False,
-                repeats=True, corrections=(), added=True):
+                repeats=True, corrections=(), added=True, only_mysteries=False):
     book = read_json(Path(workdir) / "book.json", {})
     kb = Knowledge(book.get("ladder"), read_wordings(workdir), book.get("power_types") or ())
     kb.corrections = load_corrections(workdir) if corrections else None
@@ -635,6 +644,10 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
                 kb.upsert_entity(e, state["chapter"])
     if ending["last"] is not None and max(kb.synopses, default=0) >= ending["last"]:
         kb.apply_ending(ending["questions"], ending["last"])
+    if only_mysteries:
+        for qid, tier in read_json(Path(workdir) / "tiers.json", {"questions": {}})["questions"].items():
+            if tier.get("mystery") is False:
+                kb.questions.pop(qid, None)
     if retypes:
         kb.apply_retypes(read_json(Path(workdir) / "types.json", {"entities": []})["entities"])
     if merges:

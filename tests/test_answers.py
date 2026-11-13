@@ -168,21 +168,24 @@ KEY_QUOTE = "And in the narrow column at the edge of the page: Master's key draw
 
 
 class LaterPassageTest(unittest.TestCase):
-    def test_a_volume_pass_shows_the_chapters_after_a_question_and_not_the_ones_before_it(self):
+    def test_a_volume_pass_shows_the_chapters_after_a_question_and_marks_the_ones_before_it(self):
         script = answers_script()
         for row in script["replies"]:
             if row["purpose"] == "extract" and row["chapter"] == 4:
                 row["reply"] = copy.deepcopy(row["reply"])
                 row["reply"]["questions_raised"].append(KEY)
-        script["replies"].insert(0, {"purpose": "answers", "contains": f'{KEY["quote"]}"\nPassages:\n[chapter 4]', "reply": {"results": [
-            {"id": "Q0004-01", "answer": {"chapter": 5, "quote": KEY_QUOTE, "answer": "The master's key was drawn at six o'clock by S. Oake."}}]}})
+        script["replies"].insert(0, {"purpose": "answers", "contains": f'{KEY["quote"]}"\nPassages:\n[chapter 1, before the question was raised]',
+                                     "reply": {"results": [{"id": "Q0004-01", "answer": {
+                                         "chapter": 5, "quote": KEY_QUOTE, "answer": "The master's key was drawn at six o'clock by S. Oake."}}]}})
         book = MiniBuild(script)
         try:
             book.build()
             q = questions(book)["Q0004-01"]
             self.assertEqual(q["question"], KEY["question"])
             self.assertEqual((q["status"], q.get("resolved_chapter")), ("resolved", 5))
-            self.assertEqual(book.json("answers.json")["boundaries"]["5"]["questions"]["Q0004-01"]["candidates"], [4, 5])
+            candidates = book.json("answers.json")["boundaries"]["5"]["questions"]["Q0004-01"]["candidates"]
+            self.assertEqual(candidates[-2:], [4, 5])
+            self.assertTrue(candidates[:-2] and all(n < 4 for n in candidates[:-2]))
         finally:
             book.close()
 
@@ -208,6 +211,28 @@ BRAM = {"question": "Will Bram get the key from Ines, as he demands?",
 BRAM_QUOTE = "He stood for a moment with the brass key in his hand, breathing hard."
 
 
+class NotAMysteryTest(unittest.TestCase):
+    def test_a_question_only_about_what_a_character_will_do_next_is_not_a_mystery(self):
+        script = answers_script()
+        for row in script["replies"]:
+            if row["purpose"] == "extract" and row["chapter"] == 4:
+                row["reply"] = copy.deepcopy(row["reply"])
+                row["reply"]["questions_raised"].append(BRAM)
+        script["replies"].insert(0, {"purpose": "mystery", "contains": BRAM["question"], "reply": {"questions": [
+            {"id": "Q0004-01", "mystery": False}, {"id": "Q0002-02", "mystery": True}]}})
+        book = MiniBuild(script)
+        try:
+            book.build(*VOLUMES)
+            self.assertIs(book.json("tiers.json")["questions"]["Q0004-01"]["mystery"], False)
+            self.assertNotIn("Q0004-01", book.json("answers.json")["boundaries"]["5"]["questions"])
+            wiki = json.loads((book.workdir / "site" / "data" / "wiki.json").read_text(encoding="utf-8"))
+            self.assertNotIn("Q0004-01", [q["id"] for q in wiki["questions"]])
+            self.assertIn("Q0002-02", [q["id"] for q in wiki["questions"]])
+            self.assertNotIn(BRAM["question"], render(book, 5))
+        finally:
+            book.close()
+
+
 RECOGNISED = "Livia knew Tomas for her father the moment he walked into her archive."
 
 
@@ -230,6 +255,54 @@ class StaleVerdictTest(unittest.TestCase):
             book.build(*VOLUMES)
             self.assertEqual(book.json("answers.json")["boundaries"]["5"]["questions"]["Q0003-02"]["answer"]["answer"], RECOGNISED)
             self.assertEqual(questions(book)["Q0003-02"]["status"], "resolved")
+        finally:
+            book.close()
+
+
+WICK = {"question": "Who pinched out the wick while the reservoir was full?",
+        "quote": "The wick of the great lamp had been pinched out and the reservoir was full."}
+
+
+def raised(script, chapter, question):
+    for row in script["replies"]:
+        if row["purpose"] == "extract" and row["chapter"] == chapter:
+            row["reply"] = copy.deepcopy(row["reply"])
+            row["reply"]["questions_raised"].append(question)
+    return script
+
+
+class LaterVolumeTest(unittest.TestCase):
+    def test_a_question_no_later_chapter_comes_back_to_keeps_its_verdict_without_an_ask(self):
+        book = MiniBuild(raised(answers_script(), 2, WICK))
+        try:
+            book.build(*VOLUMES)
+            boundaries = book.json("answers.json")["boundaries"]
+            self.assertEqual(boundaries["3"]["questions"]["Q0002-03"]["source"], "llm")
+            self.assertEqual({k: boundaries["5"]["questions"]["Q0002-03"][k] for k in ("source", "verdict", "since")},
+                             {"source": "carried", "verdict": "unanswered", "since": 3})
+            self.assertEqual(boundaries["5"]["questions"]["Q0002-02"]["source"], "llm")
+            calls = len(book.calls())
+            book.edit_code("answers.py", "\ndef cmd_answers(", "\nRULES = 2\n\n\ndef cmd_answers(")
+            book.build(*VOLUMES)
+            self.assertEqual(len(book.calls()), calls)
+            self.assertEqual(book.json("answers.json")["boundaries"], boundaries)
+        finally:
+            book.close()
+
+    def test_a_clue_from_before_a_question_is_a_lead_shown_from_the_question_on(self):
+        script = raised(answers_script(), 4, KEY)
+        script["replies"].insert(0, {"purpose": "answers", "contains": f'Question: {KEY["question"]}', "reply": {"results": [
+            {"id": "Q0004-01", "lead": {"chapter": 3, "quote": LEAD_QUOTE, "text": LEAD_TEXT}}]}})
+        book = MiniBuild(script)
+        try:
+            book.build()
+            lead = book.json("answers.json")["boundaries"]["5"]["questions"]["Q0004-01"]["lead"]
+            self.assertEqual((lead["chapter"], lead["shown"]), (3, 4))
+            out = site(book, "states@3", "states@4", "mysteries@4?m=partial")
+            self.assertIsNone(out["states@3"]["Q0004-01"])
+            self.assertEqual(out["states@4"]["Q0004-01"], "partial")
+            self.assertIn(LEAD_QUOTE, out["mysteries@4?m=partial"].split("about the key to the lamp room")[1])
+            self.assertEqual(questions(book)["Q0004-01"]["leads"][0]["chapter"], 3)
         finally:
             book.close()
 
