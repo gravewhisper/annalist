@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .book import load_book, rank_type
+from .families import wording_key
 from .files import write_json
 from .llm import cached_llm
 from .names import name_key
@@ -20,10 +21,30 @@ Decide for each entry whether it is one specific individual: a named or uniquely
 
 A type listed as a kind of a general type fits an entry only when the type's name and its description both cover it. Give an entry that such a type does not fit the general type it is a kind of, or another type that fits.
 
+A branch, office, district, team, squad, or other part of a group or place is not itself of that group's or place's kind: a type for one kind of organization or place fits only a whole one of that kind, never one of its parts, even when the type's description names such a part as an example. Give a part the general type it is a kind of.
+
 {items}
 
 Reply with one JSON object: {{"items": [{{"id": "...", "type": "character, deity, or a type from the list", "reason": "one short sentence"}}]}}, one entry per item.
 """
+
+
+PART_OF = re.compile(r"\b(?:part|branch|team|squad|unit|division|subdivision|office|chapter|wing|cell|department|section|subsidiary"
+                     r"|outpost|member|district|quarter)s?\s+(?:of|in|within)$|^belongs? to$")
+WHOLES = ("organization", "place")
+
+
+def parts(kb, book, decided):
+    """Entries of a book type for organizations or places stated to be a part of another entry of the same type, with their general type."""
+    kind = lambda n: decided.get(n, kb.entities[n]["type"])
+    whole = {t for t, spec in book["power_types"].items() if spec.get("parent") in WHOLES}
+    found = {}
+    for r in kb.relations:
+        s, t = r["source"], r["target"]
+        if (s in kb.entities and t in kb.entities and s != t and kind(s) in whole and kind(s) == kind(t)
+                and PART_OF.search(wording_key(r["type"]))):
+            found.setdefault(s, (book["power_types"][kind(s)]["parent"], f'The wiki records "{s} {r["type"]} {t}"'))
+    return found
 
 
 KIND_SHARE = 3
@@ -120,6 +141,9 @@ def cmd_retype(args):
         decisions = counted + [d for batch in pool.map(decide, batches) for d in batch if d["name"] not in steps]
     decisions += [{"name": n, "from": kb.entities[n]["type"], "to": spec["step_type"], "source": "rank", "reason": f'The wiki records "{text}"'}
                   for n, text in steps.items()]
+    split = parts(kb, book, {d["name"]: d["to"] for d in decisions})
+    decisions = [d for d in decisions if d["name"] not in split] + [
+        {"name": n, "from": kb.entities[n]["type"], "to": to, "source": "part", "reason": text} for n, (to, text) in sorted(split.items())]
     write_json(path, {"entities": decisions})
     for d in decisions:
         verdict = f"{d['from']} -> {d['to']}" if d["to"] != d["from"] else f"keep {d['from']}"

@@ -72,8 +72,9 @@ const vis = e => !!e && e.first <= S.n && live(e.id) === e.id;
 const pageIds = id => [id, ...(D.parts[id] || []).filter(p => live(p) === id)];
 const visAliases = e => until(e.aliases).map(a => a.name);
 const nameAt = (e, c) => e.name_chapter <= c ? e.name : e.aliases.find(a => (a.shown ?? a.chapter) <= c)?.name;
-function displayName(e) {
+function displayName(e, among) {
   if (e.name_chapter > S.n) return nameAt(e, S.n) || e.name;
+  if (among === e.type) return e.name;
   return D.namesakes[e.name].some(id => id !== e.id && vis(D.byId[id])) ? `${e.name} (${e.type})` : e.name;
 }
 const visNames = e => [...new Set([e.name_chapter <= S.n ? e.name : null, ...visAliases(e)].filter(Boolean))];
@@ -257,10 +258,10 @@ function predicate(wording) {
 }
 
 const chapterRefs = text => text.replace(/\(ch ?(\d+)\)/g, (m, n) => +n <= S.n ? `(<a ${goTo(`ch:${n}`)}>ch ${n}</a>)` : m);
-const entLink = id => {
+const entLink = (id, among) => {
   id = live(id);
   const e = D.byId[id];
-  return `<a class="ent" data-ent="${id}" href="#${hashFor({p: 'e:' + id, tab: ''})}">${esc(displayName(e))}</a>`;
+  return `<a class="ent" data-ent="${id}" href="#${hashFor({p: 'e:' + id, tab: ''})}">${esc(displayName(e, among))}</a>`;
 };
 const chLink = n => `<a ${goTo(`ch:${n}`)} class="chip">Ch ${n}</a>`;
 const ctitle = n => (D.ch[n]?.title || '').replace(/^\d+\s*[:.]?\s*/, '');
@@ -334,9 +335,9 @@ function chapterCard(c, full) {
   return `<div class="ccard ${full ? 'full' : ''}"><div>${chLink(c.n)}${text}</div><h3><a ${goTo(`ch:${c.n}`)}>${esc(ctitle(c.n))}</a></h3><p>${linkify(c.synopsis, null, c.n)}</p></div>`;
 }
 
-function entRow(e, extra) {
+function entRow(e, extra, among) {
   const l = lede(e);
-  return `<li><span class="ch">Ch ${e.first}</span>${entLink(e.id)}<span class="badge">${esc(e.type)}</span>${extra || ''}<span class="sum">${esc(l.text)}</span></li>`;
+  return `<li><span class="ch">Ch ${e.first}</span>${entLink(e.id, among)}<span class="badge">${esc(e.type)}</span>${extra || ''}<span class="sum">${esc(l.text)}</span></li>`;
 }
 
 const FEATURE = {pool: 12, leads: 6};
@@ -411,9 +412,9 @@ const fieldCell = (e, key) => {
 const countCell = (n, html = n) => n ? {sort: n, html} : null;
 const linkCell = id => id && {sort: displayName(D.byId[id]), html: entLink(id)};
 function nameCell(e) {
-  const name = displayName(e), aka = visAliases(e).filter(a => a !== name);
+  const name = displayName(e, e.type), aka = visAliases(e).filter(a => a !== name);
   const more = aka.length > CAT.aliases ? ` +${aka.length - CAT.aliases}` : '';
-  return {sort: name, html: entLink(e.id) + (aka.length ? `<span class="al">${aka.slice(0, CAT.aliases).map(esc).join(', ')}${more}</span>` : '')};
+  return {sort: name, html: entLink(e.id, e.type) + (aka.length ? `<span class="al">${aka.slice(0, CAT.aliases).map(esc).join(', ')}${more}</span>` : '')};
 }
 const CAT_COLS = [
   {key: 'name', label: () => 'Name', of: nameCell},
@@ -473,10 +474,10 @@ function azBar(rows) {
 }
 
 function renderCat(type) {
-  const byName = (a, b) => displayName(a).localeCompare(displayName(b));
+  const byName = (a, b) => displayName(a, type).localeCompare(displayName(b, type));
   const es = D.entities.filter(e => full(e) && e.type === type).sort(byName);
   const minors = D.entities.filter(e => minor(e) && e.type === type).sort((a, b) => a.mention.chapter - b.mention.chapter || byName(a, b));
-  const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`)).join('')}</ul>`;
+  const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`, type)).join('')}</ul>`;
   const c = counts();
   const subs = D.typeOrder.filter(t => D.parents[t] === type && c[t]);
   const asList = S.tab === 'list';
@@ -497,8 +498,8 @@ function renderCat(type) {
   return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(catName(type))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
   ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(catName(t))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
   ${es.length ? `<div class="ctools">${tools}</div>` : ''}${named}${es.some(unnamedAt) ? `<h2>Unnamed figures</h2>${unnamed}` : ''}
-  ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
-  ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
+  ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group, type)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
+  ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e, type))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
 }
 
 const PER_TIMELINE = new Set(['status', 'affiliation', 'marital_status', 'occupation', 'residence']);
@@ -784,16 +785,31 @@ function renderVolume(id) {
   ${powers.length ? `<h2>World introduced</h2><ul class="list">${powers.map(e => entRow(e)).join('')}</ul>` : ''}`;
 }
 
-const FAMILIES = {kin: 'Family', romance: 'Romance', alliance: 'Allies', teaching: 'Teaching', faith: 'Faith', service: 'Service', membership: 'Membership', hostility: 'Hostility', investigation: 'Investigation', place: 'Places', ownership: 'Belongings', kind: 'Kinds and ranks', other: 'Other'};
 const REL_GROUPS = [
-  {key: 'close', label: 'Close', fams: ['kin', 'romance']},
-  {key: 'allies', label: 'Allies', fams: ['alliance', 'service', 'teaching']},
-  {key: 'conflict', label: 'Conflict', fams: ['hostility', 'investigation']},
-  {key: 'belong', label: 'Belonging', fams: ['membership', 'faith']},
-  {key: 'things', label: 'Things & places', fams: ['ownership', 'place', 'kind', 'other']},
+  {key: 'kin', label: 'Family', says: 'blood or legal family: parent, child, sibling, cousin, heir'},
+  {key: 'romance', label: 'Romance', says: 'marriage, courtship, love, a lover or former partner'},
+  {key: 'alliance', label: 'Allies', says: 'friend, ally, colleague, companion, helper, acquaintance'},
+  {key: 'teaching', label: 'Teaching', says: 'mentor and student, teacher, apprentice'},
+  {key: 'service', label: 'Service', says: 'employer and employee, servant, agent, commander and subordinate'},
+  {key: 'hostility', label: 'Hostility', says: 'enemy, rival, attacker, killer, captor'},
+  {key: 'investigation', label: 'Investigation', says: 'one suspects, questions, follows, or spies on the other'},
+  {key: 'membership', label: 'Membership', says: 'member, leader, or founder of a group'},
+  {key: 'faith', label: 'Faith', says: 'worship, belief in a deity, clergy of a church'},
+  {key: 'place', label: 'Places', says: 'where someone or something is, lives, or goes'},
+  {key: 'ownership', label: 'Belongings', says: 'owning, holding, making, or using a thing'},
+  {key: 'kind', label: 'Kinds and ranks', says: 'a kind, rank, stage, or other name of something'},
+  {key: 'other', label: 'Other', says: 'a tie of no kind above'},
+].map(g => ({...g, fams: [g.key]}));
+const SECTORS = [
+  {key: 'close', fams: ['kin', 'romance']},
+  {key: 'allies', fams: ['alliance', 'service', 'teaching']},
+  {key: 'conflict', fams: ['hostility', 'investigation']},
+  {key: 'belong', fams: ['membership', 'faith']},
+  {key: 'things', fams: ['ownership', 'place', 'kind', 'other']},
 ];
-const GROUP_OF = Object.fromEntries(REL_GROUPS.flatMap(g => g.fams.map(f => [f, g.key])));
-const groupOf = fam => GROUP_OF[fam] || 'things';
+const SECTOR_OF = Object.fromEntries(SECTORS.flatMap(s => s.fams.map(f => [f, s.key])));
+const groupOf = fam => REL_GROUPS.some(g => g.key === fam) ? fam : 'other';
+const sectorFor = fam => SECTOR_OF[groupOf(fam)];
 const swatch = group => `<i class="swatch" style="background:var(--r-${group})"></i>`;
 function pairGroup(rows) {
   const count = {}, last = {};
@@ -803,8 +819,8 @@ function pairGroup(rows) {
     count[g] = (count[g] || 0) + r.chapters.length;
     last[g] = Math.max(last[g] || 0, ...r.chapters);
   }
-  if (count.close) return 'close';
-  return Object.keys(count).sort((x, y) => count[y] - count[x] || last[y] - last[x])[0] || 'things';
+  const close = Object.keys(count).filter(g => sectorFor(g) === 'close');
+  return (close.length ? close : Object.keys(count)).sort((x, y) => count[y] - count[x] || last[y] - last[x])[0] || 'other';
 }
 function kindNow(rows) {
   const told = rows.filter(r => r.family !== 'other'), now = told.filter(r => r.role === 'current');
@@ -1036,7 +1052,7 @@ function egoAt(focus) {
   const closed = groups.filter(g => !G.open.has(g.key));
   const ids = [focus, ...shown], keep = new Set(ids);
   const edges = rows.filter(r => keep.has(r.source) && keep.has(r.target));
-  const lay = orbitLayout(focus, shown, closed, id => kindNow(toFocus.get(id)), orgs);
+  const lay = orbitLayout(focus, shown, closed, id => sectorFor(kindNow(toFocus.get(id))), orgs);
   const nodes = ids.map(id => ({id, label: displayName(D.byId[id]), type: D.byId[id].type, focus: id === focus, ...fate(id), ...lay.at.get(id)}));
   return withReveals({view: 'characters', focus, nodes, edges, links: linksOf(edges), bubbles: lay.bubbles, bands: lay.bands,
     more: Math.min(STEP, closed.reduce((s, g) => s + g.members.length, 0))}, besideRadially);
@@ -1087,9 +1103,9 @@ function orbitLayout(focus, shown, bubbles, sectorOf, orgs) {
   const mainSector = g => {
     const n = {};
     for (const id of g.members) n[sectorOf(id)] = (n[sectorOf(id)] || 0) + 1;
-    return REL_GROUPS.map(s => s.key).sort((x, y) => (n[y] || 0) - (n[x] || 0))[0];
+    return SECTORS.map(s => s.key).sort((x, y) => (n[y] || 0) - (n[x] || 0))[0];
   };
-  const sectors = REL_GROUPS.map(({key}) => ({key, ids: shown.filter(id => sectorOf(id) === key).sort(order), bubbles: bubbles.filter(g => mainSector(g) === key)}));
+  const sectors = SECTORS.map(({key}) => ({key, ids: shown.filter(id => sectorOf(id) === key).sort(order), bubbles: bubbles.filter(g => mainSector(g) === key)}));
   const slots = s => s.ids.length + s.bubbles.length;
   spreadSectors(sectors, slots);
   const used = sectors.filter(slots);
@@ -1164,12 +1180,12 @@ function wholeLayout(focus, ids, links, orgs) {
   const {hop, via} = hopsFrom(focus, links);
   const others = ids.filter(id => id !== focus), reached = others.filter(id => hop.has(id));
   const sectorOf = new Map();
-  for (const id of [...reached].sort((a, b) => hop.get(a) - hop.get(b))) sectorOf.set(id, hop.get(id) === 1 ? via.get(id).link.group : sectorOf.get(via.get(id).from));
+  for (const id of [...reached].sort((a, b) => hop.get(a) - hop.get(b))) sectorOf.set(id, hop.get(id) === 1 ? sectorFor(via.get(id).link.group) : sectorOf.get(via.get(id).from));
   const faction = factionsOf(others, orgs, focus);
   const kind = id => TYPE_GROUPS.findIndex(g => groupTypes(g).includes(D.byId[id].type));
   const at = new Map([[focus, {x: 0, y: 0}]]), sway = new Map(), runs = [];
   const order = (a, b) => kind(a) - kind(b) || !faction.get(a) - !faction.get(b) || cmp(faction.get(a), faction.get(b)) || (sway.get(via.get(a)?.from) || 0) - (sway.get(via.get(b)?.from) || 0) || D.byId[a].first - D.byId[b].first || cmp(a, b);
-  const sectors = REL_GROUPS.map(({key}) => ({key, n: reached.filter(id => sectorOf.get(id) === key).length}));
+  const sectors = SECTORS.map(({key}) => ({key, n: reached.filter(id => sectorOf.get(id) === key).length}));
   spreadSectors(sectors, s => s.n);
   let radius = WHOLE.first;
   const ring = (arcs, h) => {
@@ -1372,7 +1388,6 @@ function renderGraph(arg) {
   for (const r of edgesAt()) if (G.erased || r.role !== 'erased') famCount[r.family] = (famCount[r.family] || 0) + 1;
   const erasedN = edgesAt().filter(r => r.role === 'erased').length;
   const typeChips = visTypes.map(([t, c]) => `<a data-gt="${esc(t)}" class="${types.has(t) ? 'on' : ''}" role="switch" aria-checked="${types.has(t)}"><i class="dot" style="background:${typeColor(t)}"></i>${esc(catName(t))} ${c}</a>`).join('');
-  const famChips = Object.keys(FAMILIES).filter(f => famCount[f]).map(f => `<a data-gfam="${f}" class="${G.hideFams.has(f) ? '' : 'on'}" role="switch" aria-checked="${!G.hideFams.has(f)}">${swatch(groupOf(f))}${FAMILIES[f]} ${famCount[f]}</a>`).join('');
   const whole = m.view === 'all', path = m.view === 'path';
   const bar = graphTabs(m.view) + freshNote({entry: m.nodes.filter(nd => nd.fresh).length, tie: m.links.filter(l => l.fresh).length});
   const entries = m.nodes.filter(nd => !nd.ghost).length;
@@ -1391,8 +1406,8 @@ function renderGraph(arg) {
   const finder = path ? pathPicker(m) : `<div class="searchwrap"><input id="gq" type="search" placeholder="Centre on an entry" autocomplete="off" aria-label="Centre on an entry"><div class="results" id="gqres" role="listbox"></div></div>`;
   return `<div class="crumbs"><a ${goTo('home')}>Home</a></div><h1>Graph</h1>${bar}${path ? `<p class="pathsum" aria-live="polite">${subtitle}</p>` : `<div class="subtitle">${subtitle}</div>`}
   <div class="gstage${m.nodes.length || G.full ? ' drawn' : ''}"><aside class="gpanel" aria-label="Legend and filters"><div class="gfilters"><div class="gctl">${finder}${toggles}</div>
-  ${groupedControls(types, famCount, c)}<details class="gmoref"${G.moreOpen ? ' open' : ''}><summary>More filters</summary><div class="pills gchips">${typeChips}</div><div class="pills gchips">${famChips}</div></details></div>
-  ${!path && m.nodes.length ? card : ''}<p class="muted glegend">${path ? 'The first chain is drawn bold. Show limits which kinds of entry a chain may pass through. ' : whole ? 'Each ring is one more step from the centre, and each slice follows the kind of tie that leads there. Entries with no path to the centre sit in the outer band. Names beyond the main entries appear as you zoom in or hover. Select an entry to centre the graph on it. ' : 'Close ties sit at the top, then allies, conflict, belonging, and things and places clockwise. The strongest ties sit nearest the centre, and a faint band joins members of one group. Select an entry to centre the graph on it, or tap it once on a touch screen to preview it; double-click, press O, or use Open page to read its page. '}Hover a line for the exact relations. Dashed lines are suspicions, dotted lines flashbacks.${m.links.some(l => l.same) ? ' A grey dashed line joins a name to the person it is revealed to be in this chapter.' : ''} Drag to pan, pinch or scroll to zoom.</p></aside><div class="gdraw">${body}</div></div>${routes}`;
+  ${groupedControls(types, famCount, c)}<details class="gmoref"${G.moreOpen ? ' open' : ''}><summary>More filters</summary><div class="pills gchips">${typeChips}</div></details></div>
+  ${!path && m.nodes.length ? card : ''}<p class="muted glegend">${path ? 'The first chain is drawn bold. Show limits which kinds of entry a chain may pass through. ' : whole ? 'Each ring is one more step from the centre, and each slice follows the kind of tie that leads there. Entries with no path to the centre sit in the outer band. Names beyond the main entries appear as you zoom in or hover. Select an entry to centre the graph on it. ' : 'Family and romance sit at the top, then allies, service, and teaching, then hostility and investigation, then membership and faith, and things and places clockwise. The strongest ties sit nearest the centre, and a faint band joins members of one group. Select an entry to centre the graph on it, or tap it once on a touch screen to preview it; double-click, press O, or use Open page to read its page. '}Each line colour is one kind of tie, named under Lines; hover a name there for what it covers, or hover a line for the exact relations. Dashed lines are suspicions, dotted lines flashbacks.${m.links.some(l => l.same) ? ' A grey dashed line joins a name to the person it is revealed to be in this chapter.' : ''} Drag to pan, pinch or scroll to zoom.</p></aside><div class="gdraw">${body}</div></div>${routes}`;
 }
 
 function backToDefault(focus) {
@@ -1468,7 +1483,7 @@ function groupedControls(types, famCount, c) {
   }).join('');
   const rels = REL_GROUPS.filter(g => g.fams.some(f => famCount[f])).map(g => {
     const cls = state(g.fams, f => !G.hideFams.has(f));
-    return `<a data-ggr="${g.key}" class="${cls}" role="switch" aria-checked="${cls === 'on'}">${swatch(g.key)}${esc(g.label)}</a>`;
+    return `<a data-ggr="${g.key}" class="${cls}" role="switch" aria-checked="${cls === 'on'}" title="${esc(cap(g.says))}">${swatch(g.key)}${esc(g.label)}<small>${famCount[g.key]}</small></a>`;
   }).join('');
   return `<div class="gquiet"><span class="gq-lab">Show</span>${ents}<span class="gq-sep"></span><span class="gq-lab">Lines</span>${rels}</div>`;
 }
@@ -2389,7 +2404,7 @@ function factionsAt(arg) {
   for (const r of edgesAt()) {
     if (r.role === 'erased' || r.status === 'belief') continue;
     const [a, b] = [isOrg(r.source), isOrg(r.target)];
-    if (a && b && groupOf(r.family) !== 'things') said.push({a: r.source, b: r.target, label: r.label, detail: r.detail, group: groupOf(r.family), chapter: firstOf(r), last: Math.max(...r.chapters)});
+    if (a && b && sectorFor(r.family) !== 'things') said.push({a: r.source, b: r.target, label: r.label, detail: r.detail, group: groupOf(r.family), chapter: firstOf(r), last: Math.max(...r.chapters)});
     else if (a !== b && MEMBER_FAMS.has(r.family) && isPerson(a ? r.target : r.source)) join(a ? r.source : r.target, a ? r.target : r.source, r.label, firstOf(r));
   }
   const named = D.entities.filter(e => vis(e) && orgs.has(e.type)).flatMap(e => visNames(e).map(n => [n, e.id]));
@@ -3062,7 +3077,6 @@ function wire() {
     }
     if ((el = act('[data-az]'))) { ev.preventDefault(); if (!$('az-' + el.dataset.az)) go({sort: 'name'}); return jump('az-' + el.dataset.az); }
     if ((el = act('[data-gt]'))) return toggleIn(shownTypes(G.model.view), el.dataset.gt);
-    if ((el = act('[data-gfam]'))) return toggleIn(G.hideFams, el.dataset.gfam);
     if ((el = act('[data-ggt]'))) { const set = shownTypes(G.model.view); return toggleGroup(groupTypes(TYPE_GROUPS.find(g => g.key === el.dataset.ggt)), t => set.has(t), (t, on) => on ? set.add(t) : set.delete(t)); }
     if ((el = act('[data-ggr]'))) return toggleGroup(REL_GROUPS.find(g => g.key === el.dataset.ggr).fams, f => !G.hideFams.has(f), (f, on) => on ? G.hideFams.delete(f) : G.hideFams.add(f));
     if ((el = act('.gmoref summary'))) { G.moreOpen = !el.parentElement.open; return; }

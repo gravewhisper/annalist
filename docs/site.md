@@ -2,7 +2,7 @@
 
 The slider in the site header sets the chapter you are on. The site has a home page, chapter pages with synopses, volume pages, a Mysteries page, a category page for each type, and a page for each entry with its profile, facts, relations, and mysteries. A book type's category page sits under its parent's page in the breadcrumbs, and the parent's page lists it under Subcategories once it has an entry. The Factions and Places tabs count a book type of organization or place as one. A category is named by its label in the book's words, from the first chapter that writes it. A type added at a volume end appears only from that volume's last chapter, and the entries it holds show under their old category before then.
 
-A category page shows its entries as a table. Select a column heading to sort by it and select it again to reverse the order. The sort stays in the address while the slider moves. Each type gets the columns its entries have data for: characters show status, affiliation, occupation, first and last seen, and the chapters they are present in; organizations show their members; places show the place they lie in and the people there; ladder steps show their group and rank. The List switch shows each entry's summary instead, and minor mentions stay listed under the table.
+A category page shows its entries as a table. Select a column heading to sort by it and select it again to reverse the order. The sort stays in the address while the slider moves. Each type gets the columns its entries have data for: characters show status, affiliation, occupation, first and last seen, and the chapters they are present in; organizations show their members; places show the place they lie in and the people there; ladder steps show their group and rank. The List switch shows each entry's summary instead, and minor mentions stay listed under the table. Elsewhere an entry whose name another shown entry shares carries its type in brackets, such as "Spark (path)"; its own category page lists it by the bare name, since every entry there has that type.
 
 The search box matches the names and aliases known by the slider's chapter. It groups the matches by type, puts the group with the best match first, and shows each entry's first chapter. Enter opens the best match. Every search box on the site, including the graph's, uses the same fuzzy matcher. It ignores case, accents, and punctuation, so "dantes" finds "Dantès" and "oneil" finds "O'Neil". It ranks matches in this order:
 
@@ -27,6 +27,8 @@ The Graph page has these tabs:
 - Factions, Power ladder, Family, and Places appear only when the book has data for them.
 
 A Whole book switch next to the tabs shows every entry type at once.
+
+Each line colour stands for one kind of tie from the `families` stage, such as family, romance, allies, or hostility, and no two kinds share a colour. The Lines legend names each colour, says what it covers on hover, and hides or shows that kind. A wording with exactly one rule signal in `annalist/families.py` takes that kind, and the stage drops a reading an older build stored for it; only the rest are read by the model.
 
 The site never shows anything from a chapter past the slider. Annalist enforces this in four places:
 

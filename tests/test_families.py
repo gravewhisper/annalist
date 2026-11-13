@@ -1,3 +1,4 @@
+import json
 import unittest
 
 from annalist.families import relation_family
@@ -82,6 +83,11 @@ class RuleFamilyTest(unittest.TestCase):
         self.assertEqual(relation_family(NEWS, readings, "artifact"), "other")
         self.assertEqual(relation_family(NEWS, readings), "other")
 
+    def test_admiring_someone_is_alliance_not_romance(self):
+        for wording in ("admirer of", "admires", "admired", "formerly admired"):
+            self.assertEqual(relation_family(wording), "alliance", wording)
+        self.assertEqual(relation_family("hopes to find the fleet admiral through"), "other")
+
 
 class ThirdPartyTest(unittest.TestCase):
     def test_a_belief_about_two_other_entries_is_filed_on_them_and_held_by_the_believer(self):
@@ -147,6 +153,19 @@ class FamiliesMiniTest(unittest.TestCase):
         rows = self.shown("Ines Varro", "Tomas Hale")
         self.assertEqual([(r["type"], r["family"], r["status"], r["by"]) for r in rows if "courtship" in r["type"]],
                          [("secret courtship with", "romance", "belief", "Odile Marr")])
+
+    def test_rerunning_the_stage_drops_a_stored_reading_of_a_wording_the_rules_now_settle(self):
+        path = self.book.workdir / "families.json"
+        kept = path.read_text(encoding="utf-8")
+        try:
+            stale = {**self.book.json("families.json")["readings"], "admirer of [character]": "romance"}
+            path.write_text(json.dumps({"readings": stale}), encoding="utf-8")
+            self.book.run_annalist("families", str(self.book.workdir))
+            readings = self.book.json("families.json")["readings"]
+            self.assertNotIn("admirer of [character]", readings)
+            self.assertIn(f"{NEWS} [character]", readings)
+        finally:
+            path.write_text(kept, encoding="utf-8")
 
     def test_every_relation_says_who_asserts_it(self):
         self.assertTrue(all("by" in r for r in self.wiki["relations"]))

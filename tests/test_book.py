@@ -157,6 +157,16 @@ class BookGenerationTest(unittest.TestCase):
         self.assertIsNone(book_problems(society("a society that keeps its members hidden, such as a cellar club, a dock cabal, "
                                                 "or a night choir"), Knowledge()))
 
+    def test_a_type_that_names_a_part_of_an_example_as_an_example_is_rejected(self):
+        def order(description):
+            return {**GOOD, "power_types": [{"type": "order", "parent": "organization", "description": description}]}
+        self.assertIn('power type "order" gives a part of one of its examples as an example',
+                      book_problems(order("a sacred order that keeps fires, such as the Kiln Order and its Ember Watch"), Knowledge()))
+        self.assertIn('power type "order" gives a part of one of its examples as an example',
+                      book_problems(order("a sacred order, such as the Kiln Order with its harbour Ember Watch"), Knowledge()))
+        self.assertIsNone(book_problems(order("a sacred order that keeps fires and its own guards, such as the Kiln Order"), Knowledge()))
+        self.assertIsNone(book_problems(order("a sacred order, such as the Kiln Order and the Ash Order"), Knowledge()))
+
     def test_a_novel_without_powers_is_asked_what_its_fan_wiki_tracks_and_keeps_that_field(self):
         ordinary = {"power_system": "Characters are ranked by the titles of the harbour gentry.", "power_types": [],
                     "extra_fields": [{"name": "title", "description": "the character's title as the text gives it",

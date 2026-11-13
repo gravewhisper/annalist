@@ -82,7 +82,7 @@ def checkpoint_prompts(entity, facts, timelines, page, first=3):
     return prompts
 
 
-HISTORY_PROMPT = """Write one section of the History of "{name}", a character in a novel, for a fan wiki: what this character did and what happened to them during the story arc "{arc}" (chapters {start} to {end}). Use ONLY the facts and relations below, which come from those chapters. One paragraph of two to five sentences of plain past-tense prose, in story order. Cite the chapter of each claim inline as (ch N). Keep what characters merely believe or suspect clearly marked as belief. Do not add anything from outside knowledge.
+HISTORY_PROMPT = """Write one section of the History of "{name}", a character in a novel, for a fan wiki: what this character did and what happened to them during the story arc "{arc}" (chapters {start} to {end}), and what those chapters reveal about their past and their feelings. Use ONLY the facts and relations below, which come from those chapters. One paragraph of two to six sentences of plain past-tense prose, in story order. Keep each fact or relation that tells the character's past before these chapters, such as their family, upbringing, or how they came to their power or role, and each feeling or love for someone that one states: tell it where the chapter that reveals it falls, in the words of the facts. Cite the chapter of each claim inline as (ch N). Keep what characters merely believe or suspect clearly marked as belief. Do not add anything from outside knowledge.
 
 Known aliases: {aliases}
 

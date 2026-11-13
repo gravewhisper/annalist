@@ -131,6 +131,19 @@ class HistoryPromptTest(unittest.TestCase):
         self.assertIn("Ada Quill sister of Hob Wick", prompt)
         self.assertEqual([w for w in ("north", "Lamp Thief", "robbed", "married") if w in prompt], [])
 
+    def test_an_arc_prompt_asks_to_keep_a_past_and_a_feeling_the_arc_reveals(self):
+        entity = {"name": "Ada Quill", "type": "character", "aliases": []}
+        facts = [fact(k, 1, f"Ada mended net {k}.") for k in range(4)]
+        facts += [fact(7, 2, "Ada lost her brothers to the sea at twelve and took up their boat."),
+                  fact(8, 2, "Ada never told the lighthouse keeper that she loved him.")]
+        [(_, prompt)] = history_prompts(entity, facts, [], [{"name": "Nets", "start": 1, "end": 2}], {},
+                                        PageName("Ada Quill", "Ada Quill", 1, 1, []))
+        self.assertIn("lost her brothers to the sea at twelve", prompt)
+        self.assertIn("never told the lighthouse keeper that she loved him", prompt)
+        self.assertIn("Keep each fact or relation that tells the character's past before these chapters", prompt)
+        self.assertIn("and each feeling or love for someone that one states", prompt)
+        self.assertIn("in the words of the facts", prompt)
+
 
 if __name__ == "__main__":
     unittest.main()

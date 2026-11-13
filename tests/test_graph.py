@@ -261,6 +261,8 @@ class GraphTest(unittest.TestCase):
     def test_every_family_and_entity_type_the_pipeline_gives_sits_in_exactly_one_group_with_a_colour_in_both_themes(self):
         tables = self.site("tables@1")["tables@1"]
         self.assertEqual(sorted(f for g in tables["rel"] for f in g["fams"]), sorted(NAMES))
+        self.assertEqual([g["fams"] for g in tables["rel"]], [[g["key"]] for g in tables["rel"]], "a line colour must stand for one kind of tie")
+        self.assertEqual(len({g["label"] for g in tables["rel"]}), len(tables["rel"]))
         listed = [t for g in tables["types"] for t in g["types"]]
         self.assertEqual(len(listed), len(set(listed)))
         self.assertLessEqual(set(ENTITY_TYPES) | {UNCATEGORIZED}, set(listed))
@@ -280,8 +282,8 @@ class GraphTest(unittest.TestCase):
                       for head, rows in re.findall(r"<h4>(.*?)</h4><ul class=\"clist\">(.*?)</ul>", re.search(r'<div class="egobox">.*', v, re.S).group(0))}
                   for k, v in pages.items()}
         self.assertNotIn("Brannoc Abbey", str(groups[f"{livia}@3"]))
-        self.assertIn("Livia Hale is an archivist of Brannoc Abbey since ch 3", groups[f"{livia}@4"]["Allies"])
-        self.assertIn("Livia Hale is an archivist of Brannoc Abbey since ch 3", groups[f"{abbey}@4"]["Allies"])
+        self.assertIn("Livia Hale is an archivist of Brannoc Abbey since ch 3", groups[f"{livia}@4"]["Service"])
+        self.assertIn("Livia Hale is an archivist of Brannoc Abbey since ch 3", groups[f"{abbey}@4"]["Service"])
         for page in groups.values():
             for line in sum(page.values(), []):
                 self.assertNotIn("Brannoc Abbey is an archivist of Livia Hale", line)
@@ -623,11 +625,11 @@ class GroupedGraphTest(unittest.TestCase):
         self.assertNotIn("aside", cls)
 
     def test_the_latest_kind_of_tie_colours_the_line_and_family_wins_a_tie_within_one_chapter(self):
-        self.assertEqual(self.line(self.graph(n=1)["html"], "Ada", "Bea")[0][1], "close")
+        self.assertEqual(self.line(self.graph(n=1)["html"], "Ada", "Bea")[0][1], "kin")
         html = self.graph()["html"]
-        self.assertEqual(self.line(html, "Ada", "Bea")[0][1], "allies")
-        self.assertEqual(self.line(html, "Ada", "Cy")[0][1], "allies")
-        self.assertEqual(self.line(html, "Bea", "Cy")[0][1], "close")
+        self.assertEqual(self.line(html, "Ada", "Bea")[0][1], "alliance")
+        self.assertEqual(self.line(html, "Ada", "Cy")[0][1], "alliance")
+        self.assertEqual(self.line(html, "Bea", "Cy")[0][1], "kin")
 
     def flipped(self, *views):
         wiki = json.loads(self.path.read_text(encoding="utf-8"))
@@ -644,8 +646,8 @@ class GroupedGraphTest(unittest.TestCase):
         views = {n: f"graph:{self.ada}@{n}" for n in range(3, 7)}
         out = self.flipped(*views.values())
         colour = {(n, b): self.line(out[v]["html"], "Ada", b)[0][1] for n, v in views.items() for b in ("Extra 1", "Extra 2")}
-        self.assertEqual([colour[(n, "Extra 1")] for n in range(3, 7)], ["allies", "conflict", "conflict", "allies"])
-        self.assertEqual([colour[(n, "Extra 2")] for n in range(3, 7)], ["allies", "allies", "close", "close"])
+        self.assertEqual([colour[(n, "Extra 1")] for n in range(3, 7)], ["alliance", "hostility", "hostility", "alliance"])
+        self.assertEqual([colour[(n, "Extra 2")] for n in range(3, 7)], ["alliance", "alliance", "romance", "romance"])
 
     def test_hovering_a_line_lists_its_kinds_in_chapter_order_up_to_the_chapter_shown(self):
         views = {n: f"graph:{self.ada}@{n}" for n in (3, 4, 5, 6)}
@@ -656,13 +658,23 @@ class GroupedGraphTest(unittest.TestCase):
         self.assertTrue(title[5].endswith("\nch 1 knows · ch 2 helps · ch 4 fights"), title[5])
         self.assertTrue(title[6].endswith("\nch 1 knows · ch 2 helps · ch 4 fights · ch 6 forgives"), title[6])
 
+    def test_the_line_legend_names_each_colour_once_with_what_it_means_and_its_count(self):
+        html = self.graph()["html"]
+        legend = re.findall(r'<a data-ggr="(\w+)"[^>]*title="([^"]+)"><i class="swatch" style="background:var\(--r-(\w+)\)"></i>([^<]+)<small>(\d+)</small></a>', html)
+        self.assertTrue(legend)
+        self.assertEqual([key for key, _, colour, *_ in legend], [colour for _, _, colour, *_ in legend])
+        self.assertEqual(len({label for *_, label, _ in legend}), len(legend))
+        said = {key: (meaning, label) for key, meaning, _, label, _ in legend}
+        self.assertEqual(said["kin"][0].split(":")[0], "Blood or legal family")
+        self.assertNotIn("data-gfam", html)
+
     def test_a_line_group_chip_hides_its_kinds_and_keeps_the_rest_of_the_pair(self):
-        steps = self.site(f"route:graph:{self.ada}@3", "click:ggr=conflict@3")
-        html = steps["click:ggr=conflict@3"]["html"]
-        self.assertEqual(self.chips(html, "ggr")["conflict"][0], "")
+        steps = self.site(f"route:graph:{self.ada}@3", "click:ggr=hostility@3")
+        html = steps["click:ggr=hostility@3"]["html"]
+        self.assertEqual(self.chips(html, "ggr")["hostility"][0], "")
         [(_, group, title)] = self.line(html, "Ada", "Bea")
         self.assertNotIn("rival of", title)
-        self.assertEqual(group, "allies")
+        self.assertEqual(group, "alliance")
 
     def test_a_suspicion_on_a_pair_with_stated_ties_names_who_suspects_it_and_leaves_the_line_solid(self):
         [(cls, group, title)] = self.line(self.graph(n=6)["html"], "Ada", "Cy")
@@ -915,10 +927,10 @@ class ConnectionsListTest(unittest.TestCase):
 
     def test_each_partner_sits_in_one_section_by_its_strongest_kind_with_family_first(self):
         found = {k: [self.partner(li).split(" ")[0] for li in rows] for k, rows in self.sections(self.page(6)).items()}
-        self.assertEqual(list(found), ["Close", "Allies", "Belonging", "Things & places"])
-        self.assertEqual(found["Close"], ["Bea"])
+        self.assertEqual(list(found), ["Family", "Allies", "Membership", "Places", "Belongings", "Kinds and ranks", "Other"])
+        self.assertEqual(found["Family"], ["Bea"])
         self.assertEqual(sorted(found["Allies"]), ["Cy", "Dee", "Extra", "Extra", "Extra"])
-        self.assertEqual(sorted(found["Things & places"]), ["Blade", "Port", "Rite", "Way"])
+        self.assertEqual(sorted(sum((found[k] for k in ("Places", "Belongings", "Kinds and ranks", "Other")), [])), ["Blade", "Port", "Rite", "Way"])
 
     def test_a_row_names_its_entry_with_a_link_and_reads_the_role_in_its_own_direction_since_its_first_chapter(self):
         box = self.page(6)
@@ -932,13 +944,13 @@ class ConnectionsListTest(unittest.TestCase):
         at4, at6 = self.row(self.page(4), "Cy"), self.row(self.page(6), "Cy")
         self.assertEqual(self.marks(at4), [1])
         self.assertEqual(self.marks(at6), [1, 5])
-        self.assertIn('data-ch="5" style="left:83.3%;--c:var(--r-conflict)"', at6)
-        self.assertIn("from ch 1, then conflict ch 5", html_lib.unescape(at6))
+        self.assertIn('data-ch="5" style="left:83.3%;--c:var(--r-investigation)"', at6)
+        self.assertIn("from ch 1, then investigation ch 5", html_lib.unescape(at6))
 
     def test_the_bar_is_coloured_in_segments_by_the_kind_of_tie_each_stretch_of_chapters(self):
         segments = lambda li: re.findall(r'<b[^>]*style="left:([\d.]+)%;right:([\d.]+)%;--c:var\(--r-(\w+)\)"', li)
-        self.assertEqual(segments(self.row(self.page(4), "Cy")), [("25", "0", "allies")])
-        self.assertEqual(segments(self.row(self.page(6), "Cy")), [("16.7", "16.7", "allies"), ("83.3", "0", "conflict")])
+        self.assertEqual(segments(self.row(self.page(4), "Cy")), [("25", "0", "alliance")])
+        self.assertEqual(segments(self.row(self.page(6), "Cy")), [("16.7", "16.7", "alliance"), ("83.3", "0", "investigation")])
 
     def test_bar_marks_never_pass_the_chapter_shown_and_stay_few(self):
         wiki = json.loads(json.dumps(self.wiki))
@@ -1110,14 +1122,14 @@ class ConnectionsPanelTest(unittest.TestCase):
 
     def test_spokes_carry_their_kind_and_a_belief_is_dashed(self):
         leonard, klein = self.nodes()[self.id["Leonard Mitchell"]], self.nodes()[self.id["Klein Moretti"]]
-        self.assertIn("var(--r-conflict)", leonard)
+        self.assertIn("var(--r-hostility)", leonard)
         self.assertIn("belief", re.search(r'<path class="([^"]*spoke[^"]*)"', leonard).group(1).split())
         self.assertNotIn("belief", re.search(r'<path class="([^"]*spoke[^"]*)"', klein).group(1).split())
 
     def test_the_legend_lists_only_the_kinds_drawn(self):
         legend = re.search(r'<div class="egolegend">(.*?)</div>', self.page, re.S).group(1)
         kinds = [html_lib.unescape(k).strip() for k in re.findall(r"</i>([^<]+)", legend)]
-        self.assertEqual(kinds, ["Close", "Allies", "Conflict", "Belonging", "Things & places", "Suspected"])
+        self.assertEqual(kinds, ["Family", "Allies", "Teaching", "Service", "Hostility", "Membership", "Faith", "Belongings", "Suspected"])
 
     def test_an_entry_with_three_connections_lists_them_without_a_drawing(self):
         page = self.out[f"{self.id['Small Fry']}@10"]

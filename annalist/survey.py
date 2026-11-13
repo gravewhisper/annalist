@@ -61,6 +61,14 @@ def second_kind(description):
     return bool(SECOND_KIND.search(EXAMPLES.split(description, 1)[0]) or CATCH_ALL.search(description))
 
 
+PART_EXAMPLE = re.compile(r"\b(?:and|with|or) (?:its|their) (?:\w+ )*?[A-Z]")
+
+
+def part_example(description):
+    parts = EXAMPLES.split(description, 1)
+    return len(parts) > 1 and bool(PART_EXAMPLE.search(parts[1]))
+
+
 def people_in_type(kb, power_type, spoke=None):
     spoke = speakers(kb) if spoke is None else spoke
     members = sorted(n for n, e in kb.entities.items() if e["type"] == power_type)
@@ -119,6 +127,9 @@ def book_problems(reply, kb, material=None, novel=None):
         if second_kind(str(t.get("description") or "")):
             problems.append(f'power type "{key}" is described as more than one kind of thing ("{t.get("description")}"), so it would take '
                             f"in entries its name does not cover; describe only the kind its name says.")
+        if part_example(str(t.get("description") or "")):
+            problems.append(f'power type "{key}" gives a part of one of its examples as an example ("{t.get("description")}"), so it would '
+                            f"take in branches, offices, and teams that are not themselves of this kind; give only whole ones as examples.")
     specs = {}
     for f in reply.get("extra_fields") or []:
         if isinstance(f, dict) and str(f.get("name") or "").strip():
