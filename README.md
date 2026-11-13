@@ -56,7 +56,7 @@ Useful flags: `--to 50` reads only the first 50 chapters (a later build reads ju
 
 The same web novel from scratch is estimated at about $52 and just over 2 hours. With the default `claude` backend on a Claude subscription, calls count toward your plan's usage limits instead of a bill, and a long novel can use a large share of the weekly limit.
 
-On *The Hound of the Baskervilles*, the wiki passes 127 of 135 checks against a hand-written answer key (`annalist eval`).
+On *The Hound of the Baskervilles*, the wiki passes 126 of 135 checks against a hand-written answer key (`annalist eval`).
 
 ### Book length
 
