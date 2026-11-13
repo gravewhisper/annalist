@@ -100,3 +100,27 @@ def page_title(name, aliases, own_texts, texts, share=0.1):
     title = max((f for f in regular if f == title or spelling_variant(f, title)), key=lambda f: len(seen[f]), default=title)
     first = {f: min(seen[f]) for f in family if seen[f]}
     return title, first
+
+
+def core_part(name, words):
+    return max((p for p in name_parts(name) if full_part(p, words)), key=lambda p: words[p], default=None)
+
+
+def common_name(shown, names, texts, words, merged, lead=3):
+    personal = [n for n in names if personal_name(n, words) and core_part(n, words)]
+    named = personal_name(shown, words)
+    if not personal or (named and not merged):
+        return None
+    seen = uses(set(personal) | {shown}, texts)
+    groups = {}
+    for n in personal:
+        groups.setdefault(core_part(n, words), []).append(n)
+
+    def total(core):
+        return sum(len(seen[n]) for n in groups.get(core, []))
+    core = max(groups, key=total)
+    own = core_part(shown, words)
+    if named and (core in name_parts(shown) or total(core) < lead * (len(seen[shown]) + total(own))):
+        return None
+    regular = [n for n in groups[core] if len(set(seen[n])) >= 2] or groups[core]
+    return max(regular, key=lambda n: (len(name_stems(n)), len(seen[n])))
