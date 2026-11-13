@@ -82,6 +82,14 @@ class RuleFamilyTest(unittest.TestCase):
         self.assertEqual(relation_family(NEWS, readings, "artifact"), "other")
         self.assertEqual(relation_family(NEWS, readings), "other")
 
+    def test_admiring_someone_is_alliance_not_romance_even_over_an_earlier_reading(self):
+        for wording in ("admirer of", "admires", "admired", "formerly admired"):
+            self.assertEqual(relation_family(wording, {f"{wording} [character]": "romance"}, "character"), "alliance", wording)
+        self.assertEqual(relation_family("hopes to find the fleet admiral through"), "other")
+
+    def test_a_wording_with_one_rule_signal_follows_the_rule_over_a_stored_reading(self):
+        self.assertEqual(relation_family("lover of", {"lover of [character]": "alliance"}, "character"), "romance")
+
 
 class ThirdPartyTest(unittest.TestCase):
     def test_a_belief_about_two_other_entries_is_filed_on_them_and_held_by_the_believer(self):

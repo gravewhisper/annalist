@@ -108,8 +108,8 @@ class FactionsTest(unittest.TestCase):
         out = self.site("graph:factions@1", "graph:factions@3")
         self.assertEqual(out["graph:factions@1"]["model"]["ties"], [])
         ties = [(self.name[t["a"]], t["label"], self.name[t["b"]], t["group"]) for t in out["graph:factions@3"]["model"]["ties"]]
-        self.assertEqual(ties, [("Night Watch", "hostile to", "Grey Guild", "conflict"), ("Harbour League", "part of", "Grey Guild", "belong")])
-        self.assertIn("var(--r-conflict)", out["graph:factions@3"]["html"])
+        self.assertEqual(ties, [("Night Watch", "hostile to", "Grey Guild", "hostility"), ("Harbour League", "part of", "Grey Guild", "membership")])
+        self.assertIn("var(--r-hostility)", out["graph:factions@3"]["html"])
 
     def test_selecting_a_group_brings_it_first_and_keeps_only_its_ties(self):
         guild = self.id["Night Watch"]

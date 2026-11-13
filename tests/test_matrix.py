@@ -88,7 +88,7 @@ class MatrixTest(unittest.TestCase):
         self.assertNotIn(("Bex", "Eda"), self.cells(5))
         self.assertNotIn("duels", self.view(5)["html"])
         self.assertNotIn("betrays", self.view(4)["html"])
-        self.assertEqual(self.cells(6)[("Bex", "Eda")]["kind"], "conflict")
+        self.assertEqual(self.cells(6)[("Bex", "Eda")]["kind"], "hostility")
 
     def test_the_order_is_the_same_however_the_chapters_were_visited_and_keeps_tight_groups_together(self):
         again = site_views(self.path, "graph:matrix@3", "graph:matrix@6?limit=5", "graph:matrix@6")
@@ -117,15 +117,15 @@ class MatrixTest(unittest.TestCase):
 
     def test_a_cell_takes_the_colour_of_the_latest_kind_of_tie_by_the_chapter(self):
         self.assertNotIn(("Ash", "Dov"), self.cells(1))
-        self.assertEqual([self.cells(n)[("Ash", "Dov")]["kind"] for n in (2, 3, 4, 5, 6)], ["allies", "allies", "allies", "conflict", "conflict"])
-        self.assertEqual(self.cells(6)[("Dov", "Eda")]["kind"], "close")
-        self.assertEqual(self.cells(6)[("Ash", "Bex")]["kind"], "allies")
-        self.assertIn("var(--r-conflict)", self.cells(5)[("Ash", "Dov")]["style"])
+        self.assertEqual([self.cells(n)[("Ash", "Dov")]["kind"] for n in (2, 3, 4, 5, 6)], ["alliance", "alliance", "alliance", "hostility", "hostility"])
+        self.assertEqual(self.cells(6)[("Dov", "Eda")]["kind"], "kin")
+        self.assertEqual(self.cells(6)[("Ash", "Bex")]["kind"], "alliance")
+        self.assertIn("var(--r-hostility)", self.cells(5)[("Ash", "Dov")]["style"])
 
     def test_hovering_a_cell_names_both_characters_the_kind_now_and_the_history_up_to_the_chapter(self):
         at4, at5 = self.cells(4)[("Ash", "Dov")]["aria-label"], self.cells(5)[("Ash", "Dov")]["aria-label"]
         self.assertTrue(at4.startswith("Ash and Dov, Allies"), at4)
-        self.assertTrue(at5.startswith("Ash and Dov, Conflict"), at5)
+        self.assertTrue(at5.startswith("Ash and Dov, Hostility"), at5)
         self.assertIn("ch 2 trusts · ch 5 betrays", at5)
         self.assertNotIn("betrays", at4)
 
@@ -134,7 +134,7 @@ class MatrixTest(unittest.TestCase):
         self.assertEqual({frozenset(k) for k, c in at4.items() if c["new"]}, {frozenset(("Ash", "Lux"))})
         self.assertIn("new this chapter", self.view(4)["html"])
         self.assertFalse(any(c["new"] for c in self.cells(5).values()))
-        self.assertTrue(self.cells(5)[("Ash", "Dov")]["kind"] == "conflict" and not self.cells(5)[("Ash", "Dov")]["new"])
+        self.assertTrue(self.cells(5)[("Ash", "Dov")]["kind"] == "hostility" and not self.cells(5)[("Ash", "Dov")]["new"])
 
     def test_a_dead_character_is_marked_with_a_dagger_from_the_chapter_of_their_death(self):
         fen = self.id["Fen"]

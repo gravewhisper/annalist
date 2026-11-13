@@ -38,7 +38,7 @@ FAMILIES = (
                  r"|host|travels with|lives with|consult\w*|client|rescuer|rescued|saved|helped|helps?|assist(?:s|ed)?|aids?"
                  r"|protect\w*|guard\w*|collaborat\w*|associate|loyal\w*|follower|supporter|supports|sworn|pledged|trusts?"
                  r"|trusted|accompan\w*|corresponds?|correspondent|letter|wrote to|sends|meets?|met|visitor of|neighbou?r"
-                 r"|trades?|admires?|respects?|owes|indebted|benefactor|patron|sponsor\w*|backs|backed|gave|gives|offers?"
+                 r"|trades?|admir(?:es?|ed|ers?|ing|ation)|respects?|owes|indebted|benefactor|patron|sponsor\w*|backs|backed|gave|gives|offers?"
                  r"|invited"),
     ("place", r"located|lives?|lived|living|resid\w*|tenant|home|dwell\w*|stays?|staying|lodged|headquarters|near|found in"
               r"|died in|practises in|farmed in|inhabit\w*|occup\w*|born in|visits?|visited|originat\w*|capital of|borders?"
@@ -121,6 +121,8 @@ def reading_key(key, target_type):
 
 def relation_family(rtype, readings=None, target_type=None):
     key = wording_key(rtype)
+    if len(signals(key)) == 1:
+        return rule_family(key)
     return (readings or {}).get(reading_key(key, target_type)) or rule_family(key)
 
 
@@ -148,7 +150,7 @@ def cmd_families(args):
     workdir = Path(args.workdir).resolve()
     kb = load_states(workdir)
     write_derived(workdir, kb)
-    readings = {k: v for k, v in read_families(workdir).items() if k.endswith("]")}
+    readings = {k: v for k, v in read_families(workdir).items() if k.endswith("]") and len(signals(k[:k.rindex(" [")])) != 1}
     types = {e["name"]: kb.types.kind(e["type"]) for e in read_json(workdir / "entities.json", [])}
     ends = {}
     for r in read_jsonl(workdir / "relations.jsonl"):

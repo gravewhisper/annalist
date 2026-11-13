@@ -28,6 +28,8 @@ The Graph page has these tabs:
 
 A Whole book switch next to the tabs shows every entry type at once.
 
+Each line colour stands for one kind of tie from the `families` stage, such as family, romance, allies, or hostility, and no two kinds share a colour. The Lines legend names each colour, says what it covers on hover, and hides or shows that kind. A wording with exactly one rule signal in `annalist/families.py` always takes that kind; only the rest are read by the model.
+
 The site never shows anything from a chapter past the slider. Annalist enforces this in four places:
 
 - Every entry, alias, fact, relation, question, and answer records the chapter where the book first shows it. The site hides each one until the slider reaches that chapter. An entry that appears later shows "Not yet introduced".
