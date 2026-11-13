@@ -6,7 +6,7 @@ from .book import load_book
 from .files import read_json, write_atomic, write_json
 from .evidence import class_pattern, stems
 from .names import name_key, names_of
-from .ranks import rank_mentions
+from .ranks import common_words, rank_mentions, rank_names
 from .state import load_states, timeline_role
 from .status import current_status, spoken_appearances
 from .survey import people_in_type, speakers
@@ -218,7 +218,8 @@ def ranks_off_ladder(run):
             key = run.kb.resolve(s["entry"], (run.book.get("ladder") or {}).get("step_type") or "")
             placed |= {name_key(n) for n in [s["entry"]] + (names_of(run.kb.entities[key]) if key else [])}
     out, seen = [], set()
-    for m in rank_mentions(run.workdir, sorted(run.kb.synopses), word):
+    chapters = sorted(run.kb.synopses)
+    for m in rank_names(run.kb, rank_mentions(run.workdir, chapters, word), word, common_words(run.workdir, chapters), placed):
         key = run.kb.resolve(m["name"])
         if name_key(m["name"]) in placed | seen | set(run.book["power_types"]) or (key and run.kb.types.kind(run.kb.entities[key]["type"]) in HOLDERS):
             continue
