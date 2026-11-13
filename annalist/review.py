@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .book import added_types, load_book
-from .files import read_json, write_atomic, write_json
+from .files import read_json, state_paths, write_atomic, write_json
 from .evidence import class_pattern, stems
 from .names import name_key, names_of
 from .ranks import rank_mentions
@@ -261,7 +261,7 @@ CHECKS = (
 
 def load_run(workdir):
     kb = load_states(workdir)
-    states = [read_json(p, {}) for p in sorted((workdir / "state").glob("[0-9][0-9][0-9][0-9].json"))]
+    states = [read_json(p, {}) for p in state_paths(workdir)]
     return Run(workdir, kb, load_states(workdir, merges=False, retypes=False), load_book(workdir),
                read_json(workdir / "profiles.json", {"characters": {}})["characters"], states, max(kb.synopses, default=0))
 

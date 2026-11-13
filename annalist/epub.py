@@ -4,12 +4,12 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from html.parser import HTMLParser
 from pathlib import Path
 
 from .boundaries import detect_volumes
-from .files import read_json, write_atomic, write_json
+from .files import last_chapter, read_json, state_paths, write_atomic, write_json
 
 
 OPF_NS = {"opf": "http://www.idpf.org/2007/opf"}
@@ -314,15 +314,19 @@ def cmd_extract(args):
     for href, words in book.skipped:
         print(f"skip {href} ({words} words)")
     previous = read_json(workdir / "chapters.json", None)
-    read = {int(f.stem) for f in (workdir / "state").glob("[0-9][0-9][0-9][0-9].json")}
+    read = {int(f.stem) for f in state_paths(workdir)}
     if previous is not None and read and chapter_shape(c for c in previous if c["index"] in read) != chapter_shape(c for c in book.chapters if c["index"] in read):
         sys.exit(f"{args.epub} extracts to different chapters than {workdir / 'chapters.json'}, which the read state was built "
                  "from; use a new workdir for this epub")
+    volumes = detect_volumes(book, getattr(args, "volumes", None))
+    end = last_chapter(workdir)
+    if end is not None:
+        book = replace(book, chapters=book.chapters[:end], texts=book.texts[:end])
+        volumes = {**volumes, "volumes": [{**v, "to": min(v["to"], end)} for v in volumes["volumes"] if v["from"] <= end]}
     for chapter, text in zip(book.chapters, book.texts):
         write_atomic(workdir / "chapters" / f"{chapter['index']:04d}.txt", text)
     write_json(workdir / "chapters.json", book.chapters)
     write_json(workdir / "source.json", book.source)
-    volumes = detect_volumes(book, getattr(args, "volumes", None))
     write_json(workdir / "volumes.json", volumes)
     print(f"extracted {len(book.chapters)} chapters, {sum(c['words'] for c in book.chapters)} words; "
           f"{len(volumes['volumes'])} volume{'s' if len(volumes['volumes']) != 1 else ''} ({volumes['source']})")

@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from .book import load_book
-from .files import log, read_json, write_json
+from .files import log, read_json, state_paths, write_json
 from .llm import llm, LLMError, LLMUnavailable
 from .names import name_key
 from .state import Knowledge, load_states, parse_sourcing, TIMELINE_KINDS, timeline_line, write_derived
@@ -109,7 +109,7 @@ def cmd_timelines(args):
         sys.exit("book.json timeline_kind is linear, so every item stays on main; set it to loop or flashback to label timelines")
     kb = Knowledge(book["ladder"])
     kb.leads = read_json(workdir / "leads.json", {"leads": {}})["leads"]
-    for path in sorted((workdir / "state").glob("[0-9][0-9][0-9][0-9].json")):
+    for path in state_paths(workdir):
         state = json.loads(path.read_text(encoding="utf-8"))
         if state["chapter"] >= (args.start or 10 ** 9) or "timelines" not in state:
             try:

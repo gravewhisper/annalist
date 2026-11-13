@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .corpus import stems
-from .files import read_json
+from .files import read_json, state_paths
 from .llm import cached_llm, LLMError
 from .names import FUNCTION_WORDS, is_stub, LEADING_WORDS, name_key, name_pattern, name_words, NameIndex, names_of, ROLE_WORDS, short_names
 from .text import chapter_text, locate_quote, text_window
@@ -58,7 +58,7 @@ Reply with one JSON object: {{"candidate": "the named character's name exactly a
 
 def appearances(workdir, kb):
     seen = {}
-    for path in sorted((Path(workdir) / "state").glob("[0-9][0-9][0-9][0-9].json")):
+    for path in state_paths(workdir):
         state = read_json(path, {})
         out = state["extraction"]
         named = [r.get("name") for r in out.get("entities") or [] if isinstance(r, dict)]

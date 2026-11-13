@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .backends import ANTHROPIC_ALIASES, ANTHROPIC_PRICES, ConfigError
-from .files import read_json, read_jsonl
+from .files import read_json, read_jsonl, state_paths
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ RATES = {
 
 def words_read(workdir):
     workdir = Path(workdir)
-    read = {int(p.stem) for p in (workdir / "state").glob("[0-9][0-9][0-9][0-9].json")}
+    read = {int(p.stem) for p in state_paths(workdir)}
     return sum(c["words"] for c in read_json(workdir / "chapters.json", []) if c["index"] in read)
 
 

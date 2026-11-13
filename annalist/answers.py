@@ -6,7 +6,7 @@ from pathlib import Path
 from .audit import reread_context
 from .corrections import QUESTIONS
 from .ending import checked_quotes, Finder
-from .files import log, read_json, write_json
+from .files import log, read_json, state_paths, write_json
 from .llm import cached_llm, LLMError, spent_since
 from .state import load_states, write_derived
 from .sweep import fingerprint, judge_answer
@@ -149,7 +149,7 @@ def kept_lead(entry, old):
 
 
 def eligible(workdir, to):
-    last = to or sum(1 for _ in (Path(workdir) / "state").glob("[0-9][0-9][0-9][0-9].json"))
+    last = to or len(state_paths(workdir))
     return sorted((v for v in read_json(Path(workdir) / "volumes.json", {"volumes": []})["volumes"] if v["to"] <= last),
                   key=lambda v: v["to"])
 

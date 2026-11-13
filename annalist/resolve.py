@@ -4,7 +4,7 @@ from itertools import combinations, product
 from pathlib import Path
 
 from .discover import NAME
-from .files import read_json, write_json
+from .files import read_json, state_paths, write_json
 from .llm import cached_llm, LLMError
 from .identify import identify_descriptors
 from .names import (content_words, FUNCTION_WORDS, is_stub, NameIndex, parse_aliases, name_key, name_pattern, name_stems, name_tokens,
@@ -586,7 +586,7 @@ def fact_passages(workdir, kb, by_entity, named, a, b, radius=1000, limit=6):
 
 def name_chapters(workdir, kb):
     attached = {}
-    for path in sorted((Path(workdir) / "state").glob("[0-9][0-9][0-9][0-9].json")):
+    for path in state_paths(workdir):
         state = read_json(path, {})
         for rec in state["extraction"].get("entities") or []:
             holder = kb.resolve(str(rec.get("name") or "")) if isinstance(rec, dict) else None

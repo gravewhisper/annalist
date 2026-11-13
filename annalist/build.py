@@ -192,7 +192,7 @@ TYPED = ("types.json", "newtypes.json")
 STAGES = (
     Stage("extract", lambda run: cmd_extract(Namespace(epub=str(run.epub), workdir=str(run.workdir), min_words=MIN_WORDS,
                                                        volumes=run.args.volumes)),
-          outputs=lambda run: ["chapters.json", "source.json", "volumes.json"], code=("epub",)),
+          ("book.json#last_chapter",), outputs=lambda run: ["chapters.json", "source.json", "volumes.json"], code=("epub",)),
     Stage("book", run_book, purposes=("book", "ladder-spec"), done=book_done),
     Stage("read", lambda run: cmd_read(Namespace(workdir=str(run.workdir), start=1, end=run.last)),
           purposes=("extract", "support", "reread", "timelines"), done=all_read, chain=True),

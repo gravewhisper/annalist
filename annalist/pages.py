@@ -3,7 +3,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass, replace
 
-from .files import read_json
+from .files import read_json, state_paths
 from .names import name_key, parse_aliases, written_summary
 from .text import chapter_text, verified_quotes
 from .titles import page_title, revealed_name
@@ -15,7 +15,7 @@ def mentions(names, text):
 
 
 def read_states(workdir):
-    for path in sorted((workdir / "state").glob("[0-9][0-9][0-9][0-9].json")):
+    for path in state_paths(workdir):
         yield json.loads(path.read_text(encoding="utf-8"))
 
 

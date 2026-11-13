@@ -17,6 +17,7 @@ The `book` stage writes `book.json`. It and `corrections.json` are the only file
   - A grouped ladder has named groups that each rank their own steps, such as schools with circles: `group_type`, `step_type`, `rank`, `direction`, and `note`.
   - A shared ladder is one series of steps that everyone climbs, such as cultivation realms: `"shape": "shared"`, `step_type`, `rank`, `direction`, and `note`. The `ladders` stage also lists each step's sub-stages in order, such as numbered layers or early, middle and late. Groups such as sects stay ordinary power types.
 - `complete` marks the book as finished. Only then does the `ending` stage run.
+- `last_chapter` names the story's last chapter. Chapters after it, such as side stories or extras that follow the main story, are left out of the wiki: `extract` drops them and cuts the volumes there, and no stage loads their read state. With `complete` set, the `ending` stage judges the questions still open at this chapter. Changing it reruns `extract` and every stage after it.
 - `backend` and `models` choose the backend and the per-step models.
 - `public_domain` lets `export --public` keep quotes.
 - `theme` sets the site's fonts and colours.

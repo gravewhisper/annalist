@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .book import added_types, ladder_types, type_moves
 from .corrections import correct_pages, known_from, load_corrections, PAGES, PROOFREAD, PROOFREAD_FILE, QUESTIONS, settle_questions, with_proofread
-from .files import read_json, read_jsonl, write_json, write_jsonl
+from .files import read_json, read_jsonl, state_paths, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
 from .ranks import joined_ladders, stated_ladders
 from .template import INDIVIDUALS, type_parents, Types
@@ -589,8 +589,7 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
     discovered_at = {}
     for e in read_json(Path(workdir) / "discover.json", {"entities": []})["entities"] if discovered else []:
         discovered_at.setdefault(e["chapter"], []).append(e)
-    paths = sorted((Path(workdir) / "state").glob("[0-9][0-9][0-9][0-9].json"))
-    for path in paths:
+    for path in state_paths(workdir):
         state = json.loads(path.read_text(encoding="utf-8"))
         if until is not None and state["chapter"] > until:
             break

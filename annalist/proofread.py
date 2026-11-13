@@ -9,7 +9,7 @@ from pathlib import Path
 from .backends import load_settings
 from .corrections import absorbed_part, blockers, claims, find_question, profile_group, PROOFREAD_FILE
 from .families import read_families, relation_family
-from .files import log, read_json, write_json
+from .files import log, read_json, state_paths, write_json
 from .llm import BudgetSpent, cached_llm, cached_reply, spent_since
 from .names import name_key
 from .profile import page_profiles
@@ -410,7 +410,7 @@ def proposals(reply):
 
 
 def finished_volumes(workdir, to):
-    read = {int(p.stem) for p in (Path(workdir) / "state").glob("[0-9][0-9][0-9][0-9].json")}
+    read = {int(p.stem) for p in state_paths(workdir)}
     last = to or max(read, default=0)
     return [v for v in read_json(Path(workdir) / "volumes.json", {"volumes": []})["volumes"]
             if v["to"] <= last and set(range(v["from"], v["to"] + 1)) <= read]

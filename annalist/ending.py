@@ -9,7 +9,7 @@ from .audit import reread
 from .book import load_book
 from .corpus import Corpus, match_score, question_terms, stems
 from .corrections import QUESTIONS
-from .files import log, read_json, write_json
+from .files import log, read_json, state_paths, write_json
 from .llm import cached_llm, LLMError, spent_since
 from .names import name_pattern, names_of
 from .state import ENDING_VERDICTS, load_states, unfinished, write_derived
@@ -192,7 +192,7 @@ def confirm_implied(workdir, q, d):
 
 def cmd_ending(args):
     workdir = Path(args.workdir).resolve()
-    read = sum(1 for _ in (workdir / "state").glob("[0-9][0-9][0-9][0-9].json"))
+    read = len(state_paths(workdir))
     refusal = ending_status(workdir, read, len(read_json(workdir / "chapters.json", [])))
     if refusal:
         sys.exit(f"annalist ending: {refusal}; the end-of-book pass runs only on a complete book read to its last chapter")

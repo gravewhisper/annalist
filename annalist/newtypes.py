@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from .book import load_book, NEWTYPES_FILE, volume_types
-from .files import read_json, write_json
+from .files import read_json, state_paths, write_json
 from .llm import cached_llm, LLMError
 from .names import name_key, names_of
 from .state import load_states
@@ -114,7 +114,7 @@ def decide(workdir, book, volume, earlier):
 def cmd_newtypes(args):
     workdir = Path(args.workdir).resolve()
     book = load_book(workdir)
-    read = max((int(p.stem) for p in (workdir / "state").glob("[0-9][0-9][0-9][0-9].json")), default=0)
+    read = max((int(p.stem) for p in state_paths(workdir)), default=0)
     read = min(read, args.to) if getattr(args, "to", None) else read
     kept = {(v["name"], v["from"], v["to"]): v for v in volume_types(workdir)}
     done = []

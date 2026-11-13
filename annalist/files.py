@@ -45,3 +45,14 @@ def log(workdir, message):
 def read_json(path, default):
     path = Path(path)
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else default
+
+
+def last_chapter(workdir):
+    """The chapter book.json names as the story's last, or None; chapters after it, such as side stories, stay out of the wiki."""
+    end = read_json(Path(workdir) / "book.json", {}).get("last_chapter")
+    return end if isinstance(end, int) and not isinstance(end, bool) and end > 0 else None
+
+
+def state_paths(workdir):
+    end = last_chapter(workdir)
+    return [p for p in sorted((Path(workdir) / "state").glob("[0-9][0-9][0-9][0-9].json")) if end is None or int(p.stem) <= end]

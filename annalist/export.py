@@ -298,7 +298,7 @@ def build(workdir, theme):
                       for r, ends in zip(relations, rel_ends) if r["source"] in ids and r["target"] in ids],
         "questions": [question_record(q, tiers.get(q["id"], {})) for q in kb.questions.values()],
         "ladders": ladder_records(kb.ladder_rows, registry, ids, (book.get("ladder") or {}).get("step_type")),
-        "volumes": sorted((volume_record(read_json(p, {}), kb) for p in (workdir / "volumes").glob("*.json")),
+        "volumes": sorted((v for v in (volume_record(read_json(p, {}), kb) for p in (workdir / "volumes").glob("*.json")) if v["from"] <= last),
                           key=lambda v: v["from"]),
     }
 

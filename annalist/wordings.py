@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from .files import log, read_json, write_json
+from .files import log, read_json, state_paths, write_json
 from .llm import llm
 from .names import function_word_name, name_key
 
@@ -109,7 +109,7 @@ def worded(rel, wordings):
 
 
 def legacy_wordings(workdir):
-    rows = [r for path in sorted((workdir / "state").glob("[0-9][0-9][0-9][0-9].json"))
+    rows = [r for path in state_paths(workdir)
             for r in read_json(path, {})["extraction"].get("relations") or []]
     for name in FILLED:
         rows += [r for c in read_json(workdir / name, {"chapters": {}})["chapters"].values() for r in c["relations"]]
