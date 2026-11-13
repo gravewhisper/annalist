@@ -165,7 +165,7 @@ def chapter_refs(numbers, lo, hi, link):
     return ", ".join(link(n) for n in valid)
 
 
-UNCLEAR_NOTE = " *(unclear whether the story means to leave this open)*"
+UNCLEAR_NOTE = " *(not answered by the end)*"
 
 
 def ending_groups(opens):

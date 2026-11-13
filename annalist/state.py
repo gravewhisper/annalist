@@ -34,6 +34,14 @@ def unfinished(decision):
     return decision.get("verdict") == "error" or (decision.get("verdict") == "answered-implicitly" and "reread" not in decision)
 
 
+def followed_up(q, decision):
+    attempt = decision.get("attempt") or {}
+    later = [l["chapter"] for l in q["leads"]] + [r["chapter"] for r in q["rejected"]] + [a["chapter"] for a in q.get("again", [])]
+    later += [r["chapter"] for r in (decision.get("implied") or {}).get("quotes", [])]
+    later += [attempt["chapter"]] if attempt.get("quote_ok") and isinstance(attempt.get("chapter"), int) else []
+    return any(n > q["chapter"] for n in later)
+
+
 def parse_sourcing(raw):
     quotes = raw.get("quotes") if isinstance(raw.get("quotes"), list) else [raw.get("quotes")]
     status = raw.get("status") if raw.get("status") in ("stated", "implied", "belief") else "stated"
@@ -442,7 +450,8 @@ class Knowledge:
         for qid, d in decisions.items():
             q = self.questions.get(qid)
             if q and q["status"] in UNRESOLVED and d["verdict"] in ENDING_VERDICTS and not unfinished(d):
-                q["ending"] = {"verdict": d["verdict"], "chapter": last,
+                verdict = "dropped-thread" if d["verdict"] == "unclear" and not followed_up(q, d) else d["verdict"]
+                q["ending"] = {"verdict": verdict, "chapter": last,
                                **{k: d[k] for k in ("answer", "quotes", "reason") if d.get(k)}}
 
     def apply_retypes(self, decisions):
