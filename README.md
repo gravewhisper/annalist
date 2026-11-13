@@ -62,7 +62,7 @@ On *The Hound of the Baskervilles*, the wiki passes 127 of 135 checks against a 
 
 Annalist works best on novels up to a few hundred chapters. The genre benchmark (six classics plus a cultivation web novel) covers books of that size, and a wiki for one costs a few dollars.
 
-Very long web novels work, but expect more cost and more mistakes to correct. This has been tried on one book only, *Lord of the Mysteries* (1,394 chapters, 2.7 million words): a full read and build cost about $590 and 15 hours. Characters with many disguises or identities were the hardest part. One wrong alias spread across hundreds of chapters, and the reader still needed several rounds of corrections. Set `last_chapter` in `book.json` to leave out side stories that follow the main story ([book.json](docs/book-json.md)).
+Very long web novels work, but expect more cost and more mistakes to correct. This has been tried on one book only, *Lord of the Mysteries* (1,394 chapters, 2.7 million words). Characters with many disguises or identities were the hardest part. One wrong alias spread across hundreds of chapters, and the reader still needed several rounds of corrections. Set `last_chapter` in `book.json` to leave out side stories that follow the main story ([book.json](docs/book-json.md)).
 
 ## Backends
 
