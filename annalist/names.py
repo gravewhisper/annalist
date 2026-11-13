@@ -50,7 +50,8 @@ def parse_aliases(raw):
 def display_names(entities):
     written = {k: e.get("written", e["name"]) for k, e in entities.items()}
     shared = Counter(map(name_key, written.values()))
-    return {k: f"{w} ({entities[k]['type']})" if shared[name_key(w)] > 1 else w for k, w in written.items()}
+    return {k: f"{w} ({entities[k]['type']})" if shared[name_key(w)] > 1 and not f" {name_key(w)}".endswith(f" {entities[k]['type']}") else w
+            for k, w in written.items()}
 
 
 def slug(text):
