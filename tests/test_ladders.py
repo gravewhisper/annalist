@@ -206,10 +206,10 @@ class LadderBuildTest(unittest.TestCase):
         page = re.sub(r"<[^>]+>", " ", self.site(f"{sect}@5")[f"{sect}@5"])
         self.assertRegex(page, r"1\s+Ashwalker\s.*2\s+Emberheart.*3\s+Pyre Sovereign")
 
-    def test_the_markdown_wiki_titles_shared_names_by_type(self):
+    def test_a_sect_named_after_its_first_realm_takes_the_group_word_so_the_two_titles_differ(self):
         index = (self.book.workdir / "wiki" / "index.md").read_text(encoding="utf-8")
-        self.assertIn("[Ashwalker (realm)]", index)
-        self.assertIn("[Ashwalker (sect)]", index)
+        self.assertIn("[Ashwalker](realm/ashwalker.md)", index)
+        self.assertIn("[Ashwalker Sect](sect/ashwalker-sect.md)", index)
 
     def test_a_second_build_finds_the_ladder_current(self):
         second = self.book.build()

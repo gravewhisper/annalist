@@ -158,8 +158,8 @@ class NamedRanksBuildTest(unittest.TestCase):
         self.assertEqual(thornwick["steps"][0]["entry"], "Thornwick")
         self.assertIn("Circle 1: Thornwick", thornwick["steps"][0]["quote"])
         for name in ("Kestrel", "Thornwick"):
-            self.assertEqual(self.ladder(name)[:2], [(name, 1, 6), ({"Kestrel": "Hawk Warden", "Thornwick": "Bramble Sage"}[name], 2, 6)])
-            self.assertNotEqual(self.entries[(name, "circle")]["id"], self.entries[(name, "school")]["id"])
+            self.assertEqual(self.ladder(f"{name} School")[:2], [(name, 1, 6), ({"Kestrel": "Hawk Warden", "Thornwick": "Bramble Sage"}[name], 2, 6)])
+            self.assertNotEqual(self.entries[(name, "circle")]["id"], self.entries[(f"{name} School", "school")]["id"])
 
     def test_a_school_named_after_its_first_circle_is_titled_with_the_group_word_as_the_book_writes_it(self):
         schools = sorted(e["name"] for e in self.wiki["entities"] if e["type"] == "school")
