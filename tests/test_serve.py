@@ -27,6 +27,7 @@ class ServeNotesTest(unittest.TestCase):
         self.workdir = Path(self.tmp.name)
         (self.workdir / "site").mkdir()
         (self.workdir / "site" / "index.html").write_text("<!doctype html><title>Wiki</title>", encoding="utf-8")
+        (self.workdir / "book.json").write_text(json.dumps({"review_tools": True}), encoding="utf-8")
         self.server = make_server(self.workdir, port=0)
         self.base = f"http://127.0.0.1:{self.server.server_address[1]}"
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
@@ -66,6 +67,20 @@ class ServeNotesTest(unittest.TestCase):
         self.assertEqual(self.post({**base, "check": 7, "verdict": "wrong"})[0], 400)
         notes = json.loads(call(self.base + "/api/notes")[1])["notes"]
         self.assertEqual([(n["check"], n["verdict"]) for n in notes], [("c1", "right")])
+
+    def test_notes_are_off_unless_book_json_turns_the_review_tools_on(self):
+        (self.workdir / "book.json").write_text(json.dumps({"title": "Wiki"}), encoding="utf-8")
+        server = make_server(self.workdir, port=0)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            base = f"http://127.0.0.1:{server.server_address[1]}"
+            self.assertEqual(call(base + "/")[0], 200)
+            self.assertEqual(call(base + "/api/notes")[0], 404)
+            self.assertEqual(call(base + "/api/notes", json.dumps({"page": "home", "chapter": 1, "text": "x"}).encode())[0], 404)
+            self.assertFalse((self.workdir / NOTES_FILE).exists())
+        finally:
+            server.shutdown()
+            server.server_close()
 
     def test_serving_needs_a_built_site(self):
         with tempfile.TemporaryDirectory() as empty, self.assertRaises(SystemExit):

@@ -4,6 +4,8 @@ import time
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+from .files import review_tools
+
 NOTES_FILE = "reader-notes.jsonl"
 NOTES_PATH = "/api/notes"
 MAX_BODY = 64_000
@@ -44,6 +46,7 @@ def parse_note(body):
 
 class NotesHandler(SimpleHTTPRequestHandler):
     workdir = None
+    notes = False
     lock = threading.Lock()
 
     def reply(self, status, payload):
@@ -57,11 +60,13 @@ class NotesHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.split("?")[0] == NOTES_PATH:
+            if not self.notes:
+                return self.reply(404, {"error": "review tools are off; set review_tools in book.json"})
             return self.reply(200, {"notes": read_notes(self.workdir)})
         return super().do_GET()
 
     def do_POST(self):
-        if self.path.split("?")[0] != NOTES_PATH:
+        if self.path.split("?")[0] != NOTES_PATH or not self.notes:
             return self.reply(404, {"error": "not found"})
         length = int(self.headers.get("Content-Length") or 0)
         if not 0 < length <= MAX_BODY:
@@ -86,7 +91,7 @@ def make_server(workdir, port=8765, host="127.0.0.1"):
     site = workdir / "site"
     if not (site / "index.html").exists():
         raise SystemExit(f"annalist serve: no site at {site}; run the export stage first")
-    handler = type("Handler", (NotesHandler,), {"workdir": workdir,
+    handler = type("Handler", (NotesHandler,), {"workdir": workdir, "notes": review_tools(workdir),
                                                 "__init__": lambda self, *a, **k: NotesHandler.__init__(self, *a, directory=str(site), **k)})
     return ThreadingHTTPServer((host, port), handler)
 
@@ -94,7 +99,8 @@ def make_server(workdir, port=8765, host="127.0.0.1"):
 def cmd_serve(args):
     server = make_server(args.workdir, args.port)
     print(f"serving {Path(args.workdir).resolve() / 'site'} at http://127.0.0.1:{server.server_address[1]}/")
-    print(f"notes from the report button go to {Path(args.workdir).resolve() / NOTES_FILE}")
+    if server.RequestHandlerClass.notes:
+        print(f"notes from the report button go to {Path(args.workdir).resolve() / NOTES_FILE}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

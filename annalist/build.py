@@ -265,7 +265,7 @@ STAGES = (
 
 
 UNSTAMPED_BOOK_KEYS = ("backend", "models")
-DISPLAY_BOOK_KEYS = ("title", "theme")
+DISPLAY_BOOK_KEYS = ("title", "theme", "review_tools")
 
 
 def file_digest(path):

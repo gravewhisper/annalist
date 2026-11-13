@@ -291,6 +291,15 @@ class CodeChangeTest(unittest.TestCase):
         header = site_views(self.book.workdir / "site" / "data" / "wiki.json", "header@1")["header@1"]
         self.assertEqual(header["brand"], "The Salt Ledger, Revised")
 
+    def test_the_review_tools_are_off_until_book_json_turns_them_on_and_then_only_export_reruns(self):
+        self.assertNotIn("checks", self.book.json("site/data/wiki.json"))
+        book = {**self.book.json("book.json"), "review_tools": True}
+        (self.book.workdir / "book.json").write_text(json.dumps(book), encoding="utf-8")
+        rebuilt = self.book.build()
+        self.assertEqual(ran(rebuilt.stdout), ["export"])
+        self.assertIsInstance(self.book.json("site/data/wiki.json")["checks"], list)
+        self.assertEqual(len(self.book.calls()), self.calls)
+
     def test_a_theme_kept_for_the_books_title_styles_the_site_without_a_theme_flag(self):
         self.assertEqual(self.book.json("site/data/wiki.json")["book"]["theme"], {})
         self.book.edit_code("themes/lotm.json", '"title": "Lord of the Mysteries"', '"title": "The Salt Ledger"')

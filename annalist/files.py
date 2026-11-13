@@ -47,6 +47,11 @@ def read_json(path, default):
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else default
 
 
+def review_tools(workdir):
+    """Whether book.json turns on the reader's review tools: the report button and the Needs checking page. Off by default."""
+    return read_json(Path(workdir) / "book.json", {}).get("review_tools") is True
+
+
 def last_chapter(workdir):
     """The chapter book.json names as the story's last, or None; chapters after it, such as side stories, stay out of the wiki."""
     end = read_json(Path(workdir) / "book.json", {}).get("last_chapter")

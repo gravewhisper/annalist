@@ -9,7 +9,7 @@ from .book import added_types
 from .checks import site_checks
 from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .families import read_families, relation_family
-from .files import read_json
+from .files import read_json, review_tools
 from .llm import cached_reply
 from .names import is_stub, name_key
 from .pages import read_pages
@@ -312,7 +312,7 @@ def cmd_export(args):
     if args.public and not data["book"]["public_domain"]:
         data = strip_quotes(data)
     data["book"]["text"] = not args.public
-    if not args.public:
+    if not args.public and review_tools(workdir):
         data["checks"] = site_checks(workdir, data["entities"], data["facts"])
 
     if outdir.exists() and any(outdir.iterdir()):
