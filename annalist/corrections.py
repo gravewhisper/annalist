@@ -65,6 +65,15 @@ def load_corrections(workdir, name=READER_FILE):
                        dropped=dropped, questions=[q for q in questions if q.get("dismiss") is True or q["quote"]], problems=problems)
 
 
+def separations(workdir):
+    entries = [e for e in read_json(Path(workdir) / READER_FILE, {}).get("entries", []) if isinstance(e, dict) and e.get("name")]
+    apart = [(name_key(e["name"]), name_key(b)) for e in entries for b in e.get("not_same_as", [])]
+    unaliased = {}
+    for e in entries:
+        unaliased.setdefault(name_key(e["name"]), set()).update(map(name_key, e.get("drop_aliases", [])))
+    return apart, unaliased
+
+
 def question_label(row):
     return row.get("id") or row["question"]
 
@@ -108,6 +117,7 @@ def join(kb, entry, until):
                else "already the same page" if part == page
                else f"chapter {chapter} is before one of them first appears"
                if chapter < max(kb.entities[part]["first_chapter"], kb.entities[page]["first_chapter"]) else None)
+    problem = problem or ("kept apart by a not_same_as row" if kb.kept_apart(part, page) else None)
     if problem:
         return [f"{label(entry)} {entry['name']} same_as {entry['same_as']}: {problem}, skipped"]
     if chapter <= until:

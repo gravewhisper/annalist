@@ -4,7 +4,8 @@ import re
 from pathlib import Path
 
 from .book import ladder_types
-from .corrections import correct_pages, known_from, load_corrections, PAGES, PROOFREAD, PROOFREAD_FILE, QUESTIONS, settle_questions, with_proofread
+from .corrections import (correct_pages, known_from, load_corrections, PAGES, PROOFREAD, PROOFREAD_FILE, QUESTIONS, separations,
+                          settle_questions, with_proofread)
 from .files import read_json, read_jsonl, write_json, write_jsonl
 from .names import function_word_name, LEADING_WORDS, name_key, name_pattern, names_of, parse_aliases, UNTYPED, written_summary
 from .ranks import joined_ladders, stated_ladders
@@ -134,6 +135,15 @@ class Knowledge:
         self.repeats = {}
         self.corrections = None
         self.problems = []
+        self.apart = []
+        self.unaliased = {}
+
+    def kept_apart(self, a, b):
+        na, nb = ({name_key(n) for n in names_of(self.entities[x])} for x in (a, b))
+        return any((x in na and y in nb) or (x in nb and y in na) for x, y in self.apart)
+
+    def unaliased_on(self, page, alias):
+        return any(name_key(alias) in self.unaliased.get(name_key(n), ()) for n in names_of(self.entities[page]))
 
     def bare_rank(self, name):
         return bool(self.rank_name and self.rank_name.fullmatch(name_key(name)))
@@ -169,7 +179,8 @@ class Knowledge:
         named = canonical is not None
         canonical = canonical or (matches[0] if matches else None)
         for other in matches:
-            if other == canonical or not self.same_kind(self.entities[other]["type"], self.entities[canonical]["type"]):
+            if (other == canonical or not self.same_kind(self.entities[other]["type"], self.entities[canonical]["type"])
+                    or self.kept_apart(other, canonical)):
                 continue
             if name_within(other, canonical):
                 self.merge(other, canonical)
@@ -190,6 +201,8 @@ class Knowledge:
             record["type"] = "uncategorized"
         for alias in [name] + aliases:
             holder = self.index.get(name_key(alias))
+            if self.unaliased_on(canonical, alias) or (holder not in (None, canonical) and self.kept_apart(holder, canonical)):
+                continue
             if holder in (None, canonical):
                 self.index[name_key(alias)] = canonical
             elif self.same_kind(self.entities[holder]["type"], record["type"]):
@@ -231,6 +244,8 @@ class Knowledge:
         if self.types.refines(gone["type"], record["type"]):
             record["type"] = gone["type"]
         for alias in [gone["name"]] + gone["aliases"]:
+            if self.unaliased_on(canonical, alias):
+                continue
             if name_key(alias) != name_key(canonical) and name_key(alias) not in map(name_key, record["aliases"]):
                 record["aliases"].append(alias)
         record["first_chapter"] = min(record["first_chapter"], gone["first_chapter"])
@@ -544,7 +559,7 @@ class Knowledge:
                 chapter = min([chapter] + [known[k] for k in map(name_key, names_of(self.entities[other])) if k in known])
             if until is not None and chapter is not None and chapter > until:
                 continue
-            if canonical and other and canonical != other and not self.person_and_power(canonical, other):
+            if canonical and other and canonical != other and not self.person_and_power(canonical, other) and not self.kept_apart(canonical, other):
                 self.merge(other, canonical, chapter)
         self.relations = [r for r in self.relations if r["source"] != r["target"]]
         for d in decisions:
@@ -589,6 +604,7 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
     book = read_json(Path(workdir) / "book.json", {})
     kb = Knowledge(book.get("ladder"), read_wordings(workdir), book.get("power_types") or ())
     kb.corrections = load_corrections(workdir) if corrections else None
+    kb.apart, kb.unaliased = separations(workdir)
     leads = read_json(Path(workdir) / "leads.json", {"leads": {}})
     kb.leads = leads["leads"]
     for pair in sorted(leads.get("repeats", []) if repeats else [], key=lambda p: p["earlier"]):

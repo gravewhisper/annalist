@@ -31,7 +31,7 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
     pairs = {}
 
     def add(a, b, rule, evidence=None):
-        if a == b:
+        if a == b or kb.kept_apart(a, b):
             return
         key = tuple(sorted((a, b)))
         entry = pairs.setdefault(key, {"rules": [], "evidence": []})

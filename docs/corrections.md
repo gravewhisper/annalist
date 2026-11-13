@@ -38,6 +38,15 @@ An entry merged into another page can take `"known_from": {"chapter": 40, "quote
 
 `chapter` is the chapter from which the reader can tell they are one person. The two stay separate pages before it, so the slider never shows the link early. From that chapter the page named by `name` becomes part of the `same_as` page, as when the wiki joins two names itself: its facts, relations, aliases, and infobox values show on one page. The quote is the clue the reader relies on. It does not need to state the link, but it must be in `chapter`, and a link with no matching quote is skipped with a warning. A `chapter` before either page first appears is also skipped with a warning. There is no way to join two pages without a quote: if you can tell they are one person, some passage told you, and its chapter is the earliest safe chapter for the link.
 
+The opposite mistake joins two people into one page, or files one person's name on another's page. `not_same_as` keeps two pages apart, and `drop_aliases` takes a wrong name off a page:
+
+```json
+{"name": "Mira Vale", "not_same_as": ["The Grey Stranger"], "why": "The stranger only wears her face."},
+{"name": "Tomas", "drop_aliases": ["Mira's puppet"]}
+```
+
+These rows act on the next rebuild, from `read` on, before any page is built. Two pages kept apart are never joined, whether by a chapter's read, by `resolve`, by a ladder, or by a `same_as` row, and neither takes the other's names as aliases. A dropped alias is never attached to the page, and a name that no longer belongs to any page gets a page of its own when a chapter lists it. A name in either list matches a page by its title or any of its aliases, like `name`. Neither row needs a quote, since it only stops a link. `why` is a note for you and is not read.
+
 A top-level `relations` list adds ties the wiki missed:
 
 ```json
