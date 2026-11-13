@@ -58,3 +58,21 @@ class PlainReasonTest(unittest.TestCase):
         from annalist.checks import plain_reason
         self.assertEqual(plain_reason('hedged reason ("likely")'), "the judge only said \u201clikely\u201d")
         self.assertEqual(plain_reason("cross-type (church / place)"), "one was filed as church, the other as place")
+
+
+class CheckScopeTest(unittest.TestCase):
+    def checks(self, entities, facts=(), review=None, last=None):
+        with tempfile.TemporaryDirectory() as tmp:
+            if review is not None:
+                Path(tmp, "review.json").write_text(json.dumps({"checks": review}), encoding="utf-8")
+            return site_checks(Path(tmp), entities, list(facts), last)
+
+    def test_a_described_page_whose_name_the_book_reveals_is_not_flagged(self):
+        named = page("n", "Ada Marsh", nameless=True, named_from=4)
+        self.assertEqual(self.checks([named], [{"entity": "n"}] * 6), [])
+
+    def test_nothing_past_the_wikis_last_chapter_is_listed(self):
+        review = [{"key": "dead_then_alive", "findings": [
+            {"character": "Wren", "died": 4, "later": "speaks", "later_chapter": 30, "explained_by": ""}]}]
+        self.assertEqual(self.checks([page("w", "Wren")], review=review, last=20), [])
+        self.assertEqual(len(self.checks([page("w", "Wren")], review=review, last=40)), 1)

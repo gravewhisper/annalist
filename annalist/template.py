@@ -78,7 +78,7 @@ def name_forms(name):
 
 
 def written(phrase, text):
-    return any(re.search(rf"(?<![\w-]){re.escape(form).replace(r'\ ', r'\s+')}(?:e?s)?(?![\w-])", text, re.I) for form in name_forms(phrase))
+    return any(re.search(r"(?<![\w-])" + re.escape(form).replace(r"\ ", r"\s+") + r"(?:e?s)?(?![\w-])", text, re.I) for form in name_forms(phrase))
 
 
 LEAD_STOP = {"of", "in", "within", "inside", "with", "without", "that", "which", "who", "whose", "where", "when", "for", "from", "to", "by",

@@ -21,7 +21,7 @@ def check_id(*parts):
     return hashlib.sha1("\x1f".join(map(str, parts)).encode()).hexdigest()[:10]
 
 
-def site_checks(workdir, entities, facts):
+def site_checks(workdir, entities, facts, last=None):
     """Pages a reader should look at first, each with a reason and the chapter from which it shows: names two
     character pages share, merges review.json found cross-type or hedged, deaths followed by an unexplained return,
     pages holding many names, and pages with many facts still titled by a description."""
@@ -54,7 +54,7 @@ def site_checks(workdir, entities, facts):
         if len(e.get("aliases", [])) >= MANY_NAMES:
             add("many_names", e, max(a["chapter"] for a in e["aliases"]),
                 f"holds {len(e['aliases'])} names; check they all belong to one person or thing")
-        if e.get("nameless") and counts.get(e["id"], 0) >= NAMELESS_FACTS:
+        if e.get("nameless") and e.get("named_from") is None and counts.get(e["id"], 0) >= NAMELESS_FACTS:
             add("description_title", e, e["first"], f"titled “{e['name']}” with {counts[e['id']]} facts; does the book name them?")
 
     review = {c["key"]: c["findings"] for c in read_json(workdir / "review.json", {"checks": []}).get("checks", [])}
@@ -67,4 +67,4 @@ def site_checks(workdir, entities, facts):
         if e and not d["explained_by"]:
             add("dead_alive", e, d["later_chapter"], f"dead in ch {d['died']}, then {d['later']} in ch {d['later_chapter']} with no revival recorded")
     seen = set()
-    return [c for c in out if not (c["id"] in seen or seen.add(c["id"]))]
+    return [c for c in out if not (c["id"] in seen or seen.add(c["id"])) and (last is None or c["chapter"] <= last)]

@@ -319,7 +319,7 @@ def cmd_export(args):
     data["book"]["text"] = not args.public
     if not args.public and review_tools(workdir):
         data["book"]["review_tools"] = True
-        data["checks"] = site_checks(workdir, data["entities"], data["facts"])
+        data["checks"] = site_checks(workdir, data["entities"], data["facts"], data["book"]["max"])
 
     if outdir.exists() and any(outdir.iterdir()):
         if not (outdir / "data" / "wiki.json").exists():
