@@ -13,7 +13,7 @@
   document.documentElement.dataset.theme = t;
 })();
 </script>
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="app.css?v=26b6278c81">
 </head>
 <body>
 <header class="top">
@@ -27,6 +27,7 @@
     <button class="iconbtn step" data-step="1" aria-label="Next chapter">&#8250;</button>
     <input type="range" id="n" min="1" max="1" value="1">
     <span class="ctitle" id="ctitle"></span>
+    <button class="volbadge" id="vol" data-volend hidden></button>
   </div>
   <button class="iconbtn themebtn" id="theme" aria-label="Toggle light and dark theme"><span class="sun">&#9728;</span><span class="moon">&#9790;</span></button>
 </header>
@@ -35,6 +36,8 @@
   <main id="main"><p class="muted">Loading...</p></main>
 </div>
 <div class="hover" id="hover" role="tooltip"></div>
-<script src="app.js"></script>
+<button class="reportbtn" id="report" data-report hidden>Report a problem</button>
+<div class="reportbox" id="reportbox" role="dialog" aria-label="Report a problem" hidden></div>
+<script src="app.js?v=a83edeefe6" data-wiki="data/wiki.json?v=d38371a7d0"></script>
 </body>
 </html>

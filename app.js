@@ -1,10 +1,12 @@
 const D = {};
-const S = {n: 1, p: 'home', tab: '', m: ''};
-const HASH_KEYS = ['n', 'p', 'tab', 'm'];
+const WIKI = document.currentScript?.dataset.wiki || 'data/wiki.json';
+const S = {n: 1, p: 'home', tab: '', m: '', sort: ''};
+const HASH_KEYS = ['n', 'p', 'tab', 'm', 'sort'];
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const label = key => cap(key.replace(/_/g, ' '));
+const catName = t => { const l = D.book.labels?.[t]; return l && l.chapter <= S.n ? cap(l.text) : cap(plural(t)); };
 const plural = t => t === 'uncategorized' ? t : /[^aeiou]y$/.test(t) ? t.slice(0, -1) + 'ies' : /(s|x|ch|sh)$/.test(t) ? t + 'es' : t + 's';
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -15,7 +17,7 @@ const latest = (rows, key = 'chapter') => until(rows, key).at(-1);
 let more = 60;
 
 async function load() {
-  const data = await fetch('data/wiki.json').then(r => r.json());
+  const data = await fetch(WIKI).then(r => r.json());
   Object.assign(D, data);
   D.byId = Object.fromEntries(D.entities.map(e => [e.id, e]));
   D.ch = Object.fromEntries(D.chapters.map(c => [c.n, c]));
@@ -28,10 +30,12 @@ async function load() {
   D.namesakes = {};
   for (const e of D.entities) (D.namesakes[e.name] ||= []).push(e.id);
   D.power = new Set(D.book.power_types);
+  D.parents = D.book.parents || {};
   D.tl = Object.fromEntries((D.timelines || []).map(t => [t.id, t]));
   D.storeKey = 'wiki-chapter:' + D.book.title;
   const typeCount = {};
   for (const e of D.entities) typeCount[e.type] = (typeCount[e.type] || 0) + 1;
+  for (const e of D.entities) if (e.retyped) { const now = e.type; Object.defineProperty(e, 'type', {get: () => S.n >= e.retyped.chapter ? now : e.retyped.from}); }
   D.typeOrder = Object.keys(typeCount).sort((a, b) => typeCount[b] - typeCount[a] || a.localeCompare(b));
   applyTheme(D.book.theme || {});
   document.title = D.book.title;
@@ -68,11 +72,56 @@ const vis = e => !!e && e.first <= S.n && live(e.id) === e.id;
 const pageIds = id => [id, ...(D.parts[id] || []).filter(p => live(p) === id)];
 const visAliases = e => until(e.aliases).map(a => a.name);
 const nameAt = (e, c) => e.name_chapter <= c ? e.name : e.aliases.find(a => (a.shown ?? a.chapter) <= c)?.name;
-function displayName(e) {
+function displayName(e, among) {
   if (e.name_chapter > S.n) return nameAt(e, S.n) || e.name;
-  return D.namesakes[e.name].some(id => id !== e.id && vis(D.byId[id])) ? `${e.name} (${e.type})` : e.name;
+  if (among === e.type) return e.name;
+  const others = D.namesakes[e.name].map(id => D.byId[id]).filter(o => o.id !== e.id && vis(o));
+  if (!others.length) return e.name;
+  if (others.some(o => o.type !== e.type) && !searchKey(e.name).endsWith(searchKey(e.type))) return `${e.name} (${e.type})`;
+  return `${e.name} (ch ${e.first})`;
 }
 const visNames = e => [...new Set([e.name_chapter <= S.n ? e.name : null, ...visAliases(e)].filter(Boolean))];
+const searchKey = s => s.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/['’ʼ`]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const inOrder = (q, t) => { let i = 0; for (const ch of t) if (ch === q[i]) i++; return i === q.length; };
+function typosToPrefix(q, t) {
+  let before = [], prev = Array.from({length: t.length + 1}, (_, j) => j);
+  for (let i = 1; i <= q.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= t.length; j++) {
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (q[i - 1] !== t[j - 1]));
+      if (i > 1 && j > 1 && q[i - 1] === t[j - 2] && q[i - 2] === t[j - 1]) row[j] = Math.min(row[j], before[j - 2] + 1);
+    }
+    [before, prev] = [prev, row];
+  }
+  return Math.min(...prev);
+}
+function nameRank(q, name) {
+  const n = searchKey(name), flat = q.replace(/ /g, ''), nflat = n.replace(/ /g, '');
+  const starts = [0, ...[...n.matchAll(/ /g)].map(m => m.index + 1)], words = n.split(' '), asked = q.split(' ');
+  if (n === q || nflat === flat) return 0;
+  if (n.startsWith(q)) return 1;
+  if (starts.some(i => n.startsWith(q, i))) return 2;
+  if (asked.length > 1 && asked.every(w => words.some(x => x.startsWith(w)))) return 3;
+  if (nflat.includes(flat)) return 4;
+  if (inOrder(flat, nflat)) return 5;
+  const slack = flat.length >= 8 ? 2 : flat.length >= 4 ? 1 : 0;
+  return slack && starts.some(i => typosToPrefix(q, n.slice(i)) <= slack) ? 6 : -1;
+}
+function findEntries(query, entities, tie = () => 0) {
+  const q = searchKey(query);
+  if (!q) return [];
+  const hits = [];
+  for (const e of entities) {
+    let best = null;
+    for (const via of visNames(e)) {
+      const rank = nameRank(q, via);
+      if (rank >= 0 && (!best || rank < best.rank)) best = {e, via, rank};
+    }
+    if (best) hits.push(best);
+  }
+  return hits.sort((a, b) => a.rank - b.rank || tie(a.e, b.e));
+}
+const hitName = ({e, via}) => esc(displayName(e)) + (via !== displayName(e) && via !== e.name ? ` <small>(${esc(via)})</small>` : '');
 const visFacts = id => until(pageIds(id).flatMap(p => D.factsBy[p] || [])).sort((a, b) => a.chapter - b.chapter);
 const visFactsAll = () => D.facts.reduce((a, f) => a + (f.chapter <= S.n), 0);
 const visRels = id => until([...new Set(pageIds(id).flatMap(p => D.relsBy[p] || []))]).map(r => ({...r, source: live(r.source), target: live(r.target)}))
@@ -111,7 +160,7 @@ function lede(e) {
 const TIERS = {series: 'Series mysteries', arc: 'Arc mysteries', cliffhanger: 'Cliffhangers'};
 const tierOf = q => q.tier?.series != null && q.tier.series <= S.n ? 'series' : q.tier?.arc != null && q.tier.arc <= S.n ? 'arc' : 'cliffhanger';
 
-const ENDINGS = {'left-open': 'Left open by the ending', unclear: 'Unclear whether the ending means to leave this open', 'dropped-thread': 'Never followed up'};
+const ENDINGS = {'left-open': 'Left open by the ending', unclear: 'Not answered by the end', 'dropped-thread': 'Never followed up'};
 const endOf = q => q.ending && q.ending.chapter <= S.n ? q.ending.verdict : null;
 const solved = q => q.resolved && until([q.resolved]).length > 0;
 const atEnd = q => (q.resolved?.at_end && solved(q)) || endOf(q) === 'answered-implicitly';
@@ -140,6 +189,7 @@ function linker() {
   linkCache = {n: S.n, map, plain, re: keys.length ? new RegExp('(?<![\\p{L}\\p{N}])(' + keys.join('|') + ')(?![\\p{L}\\p{N}])', 'gu') : null};
   return linkCache;
 }
+function unnamedAt(e) { return !!e.nameless && !(e.named_from <= S.n); }
 function linkify(text, self, chapter) {
   const {map, plain, re} = linker();
   text = String(text ?? '');
@@ -211,10 +261,10 @@ function predicate(wording) {
 }
 
 const chapterRefs = text => text.replace(/\(ch ?(\d+)\)/g, (m, n) => +n <= S.n ? `(<a ${goTo(`ch:${n}`)}>ch ${n}</a>)` : m);
-const entLink = id => {
+const entLink = (id, among) => {
   id = live(id);
   const e = D.byId[id];
-  return `<a class="ent" data-ent="${id}" href="#${hashFor({p: 'e:' + id, tab: ''})}">${esc(displayName(e))}</a>`;
+  return `<a class="ent" data-ent="${id}" href="#${hashFor({p: 'e:' + id, tab: ''})}">${esc(displayName(e, among))}</a>`;
 };
 const chLink = n => `<a ${goTo(`ch:${n}`)} class="chip">Ch ${n}</a>`;
 const ctitle = n => (D.ch[n]?.title || '').replace(/^\d+\s*[:.]?\s*/, '');
@@ -242,8 +292,9 @@ function expandHeading(title, body) {
 }
 
 const goTo = p => `data-go="${p}" href="#${esc(hashFor({p, tab: '', m: ''}))}"`;
+const onPage = patch => patch.p && patch.p !== S.p ? {sort: '', ...patch} : patch;
 function hashFor(patch) {
-  const st = {...S, ...patch};
+  const st = {...S, ...onPage(patch)};
   return new URLSearchParams(HASH_KEYS.filter(k => st[k] !== '' && st[k] != null).map(k => [k, st[k]])).toString();
 }
 function readHash() {
@@ -258,7 +309,7 @@ function writeHash() {
 }
 function go(patch) {
   const page = patch.p && patch.p !== S.p;
-  Object.assign(S, patch);
+  Object.assign(S, onPage(patch));
   if (page) { more = 60; Object.assign(G, {view: null, limit: STEP, open: new Set()}); }
   writeHash();
   render();
@@ -277,8 +328,9 @@ function renderSide(c) {
   const vols = D.volumes.filter(v => v.from <= S.n);
   const item = (go, text, n) => `<a ${goTo(go)} class="${S.p === go ? 'on' : ''}">${esc(text)}${n != null ? ` <span>${n}</span>` : ''}</a>`;
   $('side').innerHTML = `<h4>Navigate</h4>${item('home', 'Home')}${item('chapters', 'Chapters', S.n)}${item('mysteries', 'Mysteries', qs.filter(x => x === 'open' || x === 'partial').length)}${item('graph', 'Graph')}`
+    + (D.checks?.length ? item('checks', 'Needs checking', openChecks().length) : '')
     + (vols.length ? `<h4>Volumes</h4>${vols.map(v => item('v:' + v.id, v.name)).join('')}` : '')
-    + `<h4>Categories</h4>${types.map(t => item('cat:' + t, cap(plural(t)), c[t])).join('')}`;
+    + `<h4>Categories</h4>${types.map(t => item('cat:' + t, catName(t), c[t])).join('')}`;
 }
 
 function chapterCard(c, full) {
@@ -286,9 +338,29 @@ function chapterCard(c, full) {
   return `<div class="ccard ${full ? 'full' : ''}"><div>${chLink(c.n)}${text}</div><h3><a ${goTo(`ch:${c.n}`)}>${esc(ctitle(c.n))}</a></h3><p>${linkify(c.synopsis, null, c.n)}</p></div>`;
 }
 
-function entRow(e, extra) {
+function entRow(e, extra, among) {
   const l = lede(e);
-  return `<li><span class="ch">Ch ${e.first}</span>${entLink(e.id)}<span class="badge">${esc(e.type)}</span>${extra || ''}<span class="sum">${esc(l.text)}</span></li>`;
+  return `<li><span class="ch">Ch ${e.first}</span>${entLink(e.id, among)}<span class="badge">${esc(e.type)}</span>${extra || ''}<span class="sum">${esc(l.text)}</span></li>`;
+}
+
+const FEATURE = {pool: 12, leads: 6};
+function featured() {
+  const degree = {};
+  for (const r of edgesAt()) if (r.role !== 'erased') for (const id of [r.source, r.target]) degree[id] = (degree[id] || 0) + 1;
+  const people = D.entities.filter(e => e.type === 'character' && full(e) && degree[e.id] && lede(e).text);
+  people.sort((a, b) => degree[b.id] - degree[a.id] || displayName(a).localeCompare(displayName(b)));
+  const summed = people.filter(e => (e.summary && e.summary.chapter <= S.n) || until(e.summaries || []).length);
+  const pool = (summed.length ? summed : people).slice(0, FEATURE.pool);
+  return pool.length ? pool[S.n % pool.length] : null;
+}
+
+function portal() {
+  const e = featured();
+  const leads = D.questions.filter(q => qState(q) === 'partial').map(q => ({q, lead: until(q.leads).at(-1)}))
+    .sort((a, b) => b.lead.chapter - a.lead.chapter || a.q.id.localeCompare(b.q.id)).slice(0, FEATURE.leads);
+  const feature = e ? `<section class="panel feature"><h3>Featured entry</h3><h4>${entLink(e.id)}</h4><p>${linkify(clip(lede(e).text, 420), e.id, S.n)}</p><a ${goTo(`e:${e.id}`)}>Read the full entry</a></section>` : '';
+  const ask = leads.length ? `<section class="panel"><h3>Questions with new leads</h3><ul class="plist">${leads.map(({q, lead}) => `<li><span>${linkify(q.question, null, q.chapter)}</span><span class="chip">lead ch ${lead.chapter}</span></li>`).join('')}</ul><a ${goTo('mysteries')}>All mysteries</a></section>` : '';
+  return feature || ask ? `<div class="portal">${feature}${ask}</div>` : '';
 }
 
 function renderHome(c) {
@@ -300,29 +372,140 @@ function renderHome(c) {
   const intro = S.n === 1 && !store.get(D.storeKey + ':seen') ? `<div class="note">Set the slider to the chapter you have just finished. Nothing past it is shown anywhere on the site.</div>` : '';
   return `<div class="home"><h1>${esc(D.book.title)}</h1><div class="subtitle">Everything known up to chapter ${S.n}: ${esc(ctitle(S.n))}</div>${intro}
   <div class="stats"><div class="stat"><b>${D.entities.filter(full).length}</b>entries</div><div class="stat"><b>${visFactsAll()}</b>facts</div><div class="stat"><b>${qs.filter(x => x === 'open').length}</b>open mysteries</div><div class="stat"><b>${qs.filter(x => x === 'partial').length}</b>with leads</div><div class="stat"><b>${qs.filter(settled).length}</b>solved</div></div>
+  ${portal()}
   <h2>Latest chapters</h2><div class="cards">${chs.map(ch => chapterCard(ch)).join('')}</div>
   ${vols.length ? `<h2>Volumes</h2><div class="cards">${vols.map(v => `<a class="ccard" ${goTo(`v:${v.id}`)}><div><span class="chip">Ch ${v.from} to ${v.to}</span></div><h3>${esc(v.name)}</h3><p>${S.n >= v.to ? 'Complete' : 'In progress'}</p></a>`).join('')}</div>` : ''}
-  <h2>Categories</h2><div class="cats">${types.map(t => `<a class="cat" ${goTo(`cat:${t}`)}>${cap(plural(t))}<span>${c[t]}</span></a>`).join('')}</div>
+  <h2>Categories</h2><div class="cats">${types.map(t => `<a class="cat" ${goTo(`cat:${t}`)}>${esc(catName(t))}<span>${c[t]}</span></a>`).join('')}</div>
   <h2>Recently introduced</h2><ul class="list">${recent.map(e => entRow(e)).join('')}</ul></div>`;
 }
 const mentionQuote = e => e.mention.quote ? `<blockquote>${esc(e.mention.quote)}</blockquote>` : '';
 const ladderSteps = l => until(l.steps).filter(s => vis(D.byId[live(s.id)]));
-const visLadders = () => D.ladders.filter(l => vis(D.byId[live(l.group)]) && ladderSteps(l).length);
+const visLadders = () => D.ladders.filter(l => (l.group === null || vis(D.byId[live(l.group)])) && ladderSteps(l).length);
 const ladderList = l => `<ul class="list">${ladderSteps(l).map(s => `<li><span class="ch">${esc(cap(D.book.ladder.step_type))} ${s.rank}</span>${entLink(s.id)}${chLink(s.chapter)}</li>`).join('')}</ul>`;
 
-function renderCat(type) {
-  const byName = (a, b) => displayName(a).localeCompare(displayName(b));
-  const es = D.entities.filter(e => full(e) && e.type === type).sort(byName);
-  const minors = D.entities.filter(e => minor(e) && e.type === type).sort((a, b) => a.mention.chapter - b.mention.chapter || byName(a, b));
-  const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`)).join('')}</ul>`;
-  const unnamed = es.filter(e => e.nameless);
-  return `<div class="crumbs"><a ${goTo('home')}>Home</a></div><h1>${esc(cap(plural(type)))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
-  ${list(es.filter(e => !e.nameless))}${unnamed.length ? `<h2>Unnamed figures</h2>${list(unnamed)}` : ''}
-  ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
-  ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
+const catLink = t => `<a ${goTo(`cat:${esc(t)}`)}>${esc(catName(t))}</a>`;
+const typeCrumbs = t => `<a ${goTo('home')}>Home</a>${D.parents[t] ? ` &rsaquo; ${catLink(D.parents[t])}` : ''}`;
+
+const CAT = {az: 20, aliases: 2};
+let catCache = {n: -1};
+function catModel() {
+  if (catCache.n === S.n) return catCache;
+  const members = new Map(factionsAt('').groups.map(g => [g.id, g.members.length]));
+  const within = new Map(), people = new Map();
+  const walk = (p, up) => {
+    if (up) within.set(p.id, up);
+    people.set(p.id, p.people.length);
+    p.children.forEach(k => walk(k, p.id));
+  };
+  placesAt().roots.forEach(p => walk(p, null));
+  const rungs = new Map(), steps = new Map();
+  for (const l of visLadders()) {
+    const known = ladderSteps(l);
+    if (l.group) steps.set(live(l.group), known.length);
+    for (const st of known) if (!rungs.has(live(st.id))) rungs.set(live(st.id), {group: l.group && live(l.group), rank: st.rank});
+  }
+  catCache = {n: S.n, members, within, people, rungs, steps, seen: storyData().seen};
+  return catCache;
 }
 
-const PER_TIMELINE = new Set(['status', 'affiliation', 'marital_status']);
+const fieldCell = (e, key) => {
+  const o = fieldSeen(key, e.profile?.fields[key] || []).at(-1);
+  return o && {sort: o.value.toLowerCase(), html: linkify(cap(o.value), null, o.chapter)};
+};
+const countCell = (n, html = n) => n ? {sort: n, html} : null;
+const linkCell = id => id && {sort: displayName(D.byId[id]), html: entLink(id)};
+function nameCell(e) {
+  const name = displayName(e, e.type), aka = visAliases(e).filter(a => a !== name);
+  const more = aka.length > CAT.aliases ? ` +${aka.length - CAT.aliases}` : '';
+  return {sort: name, html: entLink(e.id, e.type) + (aka.length ? `<span class="al">${aka.slice(0, CAT.aliases).map(esc).join(', ')}${more}</span>` : '')};
+}
+const CAT_COLS = [
+  {key: 'name', label: () => 'Name', of: nameCell},
+  {key: 'status', label: () => 'Status', of: e => { const st = e.profile && currentStatus(e.profile); return st && {sort: st.value, html: esc(cap(st.value))}; }},
+  {key: 'affiliation', label: () => 'Affiliation', of: e => fieldCell(e, 'affiliation')},
+  {key: 'occupation', label: () => 'Occupation', of: e => fieldCell(e, 'occupation')},
+  {key: 'group', label: () => cap(D.book.ladder.group_type), of: (e, m) => linkCell(m.rungs.get(e.id)?.group)},
+  {key: 'rank', label: () => 'Rank', num: true, of: (e, m) => { const r = m.rungs.get(e.id); return r && {sort: r.rank, html: esc(r.rank)}; }},
+  {key: 'steps', label: () => cap(plural(D.book.ladder.step_type)), num: true, down: true, of: (e, m) => countCell(m.steps.get(e.id))},
+  {key: 'members', label: () => 'Members', num: true, down: true, of: (e, m) => countCell(m.members.get(e.id), `<a ${goTo(factionRoute(e.id))}>${m.members.get(e.id)}</a>`)},
+  {key: 'within', label: () => 'Located in', of: (e, m) => linkCell(m.within.get(e.id))},
+  {key: 'people', label: () => 'People', num: true, down: true, of: (e, m) => countCell(m.people.get(e.id))},
+  {key: 'first', label: () => 'First seen', num: true, of: e => ({sort: e.first, html: chLink(e.first)})},
+  {key: 'last', label: () => 'Last seen', num: true, down: true, of: e => { const c = lastSeen(e); return {sort: c, html: chLink(c)}; }},
+  {key: 'present', label: () => 'Chapters present', num: true, down: true, of: (e, m) => countCell(m.seen.get(e.id)?.size)},
+  {key: 'facts', label: () => 'Facts', num: true, down: true, of: e => { const n = visFacts(e.id).length; return {sort: n, html: n}; }},
+];
+
+const cmpCell = (a, b) => typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), undefined, {numeric: true, sensitivity: 'base'});
+function catSort(cols) {
+  const col = cols.find(c => c.key === S.sort.replace(/^-/, ''));
+  return col ? {col, down: S.sort.startsWith('-')} : {col: cols[0], down: false};
+}
+function sortRows(rows, {col, down}) {
+  const name = r => r.cells.name.sort;
+  return rows.sort((x, y) => {
+    const a = x.cells[col.key], b = y.cells[col.key];
+    return (a && b ? (down ? -1 : 1) * cmpCell(a.sort, b.sort) : !a - !b) || cmpCell(name(x), name(y));
+  });
+}
+const letterOf = name => {
+  const c = name.normalize('NFD').replace(/[^\p{L}\p{N}]/gu, '').charAt(0).toUpperCase();
+  return /[A-Z]/.test(c) ? c : 'other';
+};
+function sortHead(c, sort) {
+  const on = sort.col === c;
+  const next = (on ? !sort.down : c.down) ? '-' + c.key : c.key;
+  const mark = on ? `<span class="sortmark" aria-hidden="true">${sort.down ? '&darr;' : '&uarr;'}</span>` : '';
+  return `<th scope="col"${c.num ? ' class="num"' : ''}${on ? ` aria-sort="${sort.down ? 'descending' : 'ascending'}"` : ''}><a data-sort="${next}" href="#${esc(hashFor({sort: next}))}">${esc(c.label())}${mark}</a></th>`;
+}
+function catTable(rows, cols, sort, letters) {
+  const cell = (r, c, i) => {
+    const html = r.cells[c.key]?.html ?? '';
+    return i ? `<td${c.num ? ' class="num"' : ''}>${html}</td>` : `<th scope="row">${html}</th>`;
+  };
+  const row = r => {
+    const k = letters && letterOf(r.cells.name.sort), id = k && !letters.has(k) ? (letters.add(k), ` id="az-${k}"`) : '';
+    return `<tr${id}>${cols.map((c, i) => cell(r, c, i)).join('')}</tr>`;
+  };
+  return `<div class="ctable"><table><thead><tr>${cols.map(c => sortHead(c, sort)).join('')}</tr></thead><tbody>${rows.map(row).join('')}</tbody></table></div>`;
+}
+function azBar(rows) {
+  const have = new Set(rows.map(r => letterOf(r.cells.name.sort)));
+  const keys = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', ...(have.has('other') ? ['other'] : [])];
+  const text = k => k === 'other' ? '#' : k;
+  return `<nav class="az" aria-label="Jump to a letter">${keys.map(k => have.has(k) ? `<a data-az="${k}" href="#${esc(hashFor({sort: 'name'}))}">${text(k)}</a>` : `<span aria-hidden="true">${text(k)}</span>`).join('')}</nav>`;
+}
+
+function renderCat(type) {
+  const byName = (a, b) => displayName(a, type).localeCompare(displayName(b, type));
+  const es = D.entities.filter(e => full(e) && e.type === type).sort(byName);
+  const minors = D.entities.filter(e => minor(e) && e.type === type).sort((a, b) => a.mention.chapter - b.mention.chapter || byName(a, b));
+  const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`, type)).join('')}</ul>`;
+  const c = counts();
+  const subs = D.typeOrder.filter(t => D.parents[t] === type && c[t]);
+  const asList = S.tab === 'list';
+  const views = `<nav class="pills" aria-label="Show as">${[['', 'Table'], ['list', 'List']].map(([k, t]) => `<a data-tab="${k}" href="#${esc(hashFor({tab: k}))}"${(k === 'list') === asList ? ' class="on" aria-current="true"' : ''}>${t}</a>`).join('')}</nav>`;
+  let tools = views, named, unnamed;
+  if (asList) [named, unnamed] = [list(es.filter(e => !unnamedAt(e))), list(es.filter(unnamedAt))];
+  else {
+    const m = catModel();
+    const rows = es.map(e => ({e, cells: Object.fromEntries(CAT_COLS.map(col => [col.key, col.of(e, m) || null]))}));
+    const cols = CAT_COLS.filter(col => col.key === 'name' || rows.some(r => r.cells[col.key]));
+    const sort = catSort(cols);
+    sortRows(rows, sort);
+    const [mine, rest] = [rows.filter(r => !unnamedAt(r.e)), rows.filter(r => unnamedAt(r.e))];
+    if (mine.length > CAT.az) tools += azBar(mine);
+    named = mine.length ? catTable(mine, cols, sort, sort.col.key === 'name' && new Set()) : '';
+    unnamed = rest.length ? catTable(rest, cols, sort) : '';
+  }
+  return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(catName(type))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
+  ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(catName(t))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
+  ${es.length ? `<div class="ctools">${tools}</div>` : ''}${named}${es.some(unnamedAt) ? `<h2>Unnamed figures</h2>${unnamed}` : ''}
+  ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group, type)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
+  ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e, type))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
+}
+
+const PER_TIMELINE = new Set(['status', 'affiliation', 'marital_status', 'occupation', 'residence']);
 function currentStatus(profile) {
   const visible = until(profile.fields.status || []);
   const shown = visible.filter(o => role(o.timeline) === 'current');
@@ -335,6 +518,8 @@ function currentStatus(profile) {
   const past = visible.filter(o => o.value === 'dead' && D.tl[o.timeline]?.kind === 'flashback').at(-1);
   if (past && past.chapter >= Math.max(0, ...seen)) return {value: 'dead', chapter: past.chapter, basis: 'past', earlier: [], timeline: past.timeline};
   if (seen.length) return {value: 'alive', chapter: Math.max(...seen), basis: 'spoke', earlier: [], erasedDeath};
+  const present = (profile.appeared || []).filter(([c, tid]) => c <= S.n && role(tid) === 'current').map(([c]) => c);
+  if (present.length) return {value: 'alive', chapter: Math.max(...present), basis: 'appeared', earlier: [], erasedDeath};
   if (erasedDeath) return {value: 'alive', chapter: erasedDeath, basis: 'erased_death', earlier: []};
   return null;
 }
@@ -343,18 +528,21 @@ function statusRow(profile) {
   if (!s) return '';
   let cell;
   if (s.basis === 'erased_death') cell = `Alive <div class="prev">died only in an erased timeline (ch ${s.chapter})</div>`;
-  else if (s.basis === 'spoke') cell = `Alive <span class="prev">(as of ch ${s.chapter}, inferred)</span>${s.erasedDeath ? `<div class="prev">died only in an erased timeline (ch ${s.erasedDeath})</div>` : ''}`;
+  else if (s.basis === 'spoke' || s.basis === 'appeared') cell = `Alive <span class="prev">(as of ch ${s.chapter}, inferred)</span>${s.erasedDeath ? `<div class="prev">died only in an erased timeline (ch ${s.erasedDeath})</div>` : ''}`;
   else cell = `${esc(cap(s.value))} <span class="prev">(ch ${s.chapter})</span>${tlBadge(s.timeline)}`;
   if (s.earlier.length) cell += `<div class="prev">previously ${s.earlier.map(o => `${esc(cap(o.value))} (ch ${o.chapter})`).join(', ')}</div>`;
   return `<tr><th>${esc(label('status'))}</th><td>${cell}</td></tr>`;
+}
+function fieldSeen(key, obs) {
+  const current = until(obs).filter(o => role(o.timeline) === 'current');
+  return current.length || PER_TIMELINE.has(key) ? current : until(obs);
 }
 function infoRows(profile) {
   if (!profile) return '';
   const fields = 'status' in profile.fields ? profile.fields : {status: [], ...profile.fields};
   return Object.entries(fields).map(([key, obs]) => {
     if (key === 'status') return statusRow(profile);
-    const current = until(obs).filter(o => role(o.timeline) === 'current');
-    const seen = current.length || PER_TIMELINE.has(key) ? current : until(obs);
+    const seen = fieldSeen(key, obs);
     if (!seen.length) return '';
     const cur = seen.at(-1);
     const prev = [];
@@ -369,19 +557,37 @@ function obsList(obs, self) {
   return obs.map(o => expandRow(`${linkify(o.value, self, o.chapter)} ${chLink(o.chapter)}${tlBadge(o.timeline)}`, quoteNoun(o.quotes), quotes(o.quotes))).join('');
 }
 
-function profileSection(e) {
+const sectionHead = (key, title) => `<h3 id="sec-${key}" tabindex="-1">${title}</h3>`;
+const section = (key, title, body) => ({key, title, html: sectionHead(key, title) + body});
+
+function historySection(e) {
+  const arcs = until(e.history || []);
+  return arcs.length ? [section('history', 'History', arcs.map(h => `<div class="chgroup"><h4><span class="chip">Ch ${h.start} to ${h.end}</span> ${esc(h.arc)}</h4><div class="prose"><p>${chapterRefs(linkify(h.text, e.id))}</p></div></div>`).join(''))] : [];
+}
+
+function writtenSection(e, key, title, observations, paragraphs) {
+  const evidence = until(observations || []);
+  const para = latest(paragraphs || []);
+  if (para) return [section(key, title, `<div class="prose"><p>${chapterRefs(linkify(para.text, e.id))}</p></div><div class="asof">Written from evidence up to chapter ${para.chapter}</div>${evidence.length ? expander(showHide(`the evidence (${evidence.length})`), obsList(evidence, e.id)).join('') : ''}`)];
+  return evidence.length ? [section(key, title, obsList(evidence, e.id))] : [];
+}
+
+function profileSections(e) {
   const p = e.profile;
-  if (!p) return '';
+  if (!p) return historySection(e);
   const out = [];
-  const appearance = until(p.lists.appearance || []);
-  if (appearance.length) out.push(`<h3>Appearance</h3>${obsList(appearance, e.id)}`);
-  const evidence = until(p.lists.personality_evidence || []);
-  const para = latest(p.personality || []);
-  if (para) out.push(`<h3>Personality</h3><div class="prose"><p>${chapterRefs(linkify(para.text, e.id))}</p></div><div class="asof">Written from evidence up to chapter ${para.chapter}</div>${evidence.length ? expander(showHide(`the evidence (${evidence.length})`), obsList(evidence, e.id)).join('') : ''}`);
-  else if (evidence.length) out.push(`<h3>Personality</h3>${obsList(evidence, e.id)}`);
+  out.push(...writtenSection(e, 'appearance', 'Appearance', p.lists.appearance, p.appearance));
+  out.push(...writtenSection(e, 'personality', 'Personality', p.lists.personality_evidence, p.personality));
+  out.push(...historySection(e));
   const trivia = until(p.lists.trivia || []);
-  if (trivia.length) out.push(`<h3>Trivia</h3>${obsList(trivia, e.id)}`);
-  return out.join('');
+  if (trivia.length) out.push(section('trivia', 'Trivia', obsList(trivia, e.id)));
+  return out;
+}
+
+const TOC = {least: 5};
+function contentsList(items) {
+  const link = ([key, title, tab]) => `<a data-sec="${key}" data-in="${tab}" href="#${esc(hashFor(tab ? {tab} : {}))}">${title}</a>`;
+  return items.length < TOC.least ? '' : `<nav class="toc" aria-label="Contents">${items.map(link).join('')}</nav>`;
 }
 
 function factBadge(f) {
@@ -420,11 +626,13 @@ function erasedSection(fs, rels, id, name) {
   return `<h3>In erased timelines</h3>` + ids.map(t => `<div class="chgroup"><h4>${tlName(D.tl[t])} <span class="chip">Ch ${D.tl[t].started} to ${D.tl[t].erased}</span></h4>${by[t].map(x => x.claim ? factRow(x, id) : relRow(x, id, name)).join('')}</div>`).join('');
 }
 
+const lastSeen = e => Math.max(e.first, ...[...visFacts(e.id), ...visRels(e.id)].filter(r => role(r.timeline) !== 'erased').map(r => r.chapter));
+
 function renderEntity(id) {
   id = live(id);
   const e = D.byId[id];
   if (!vis(e)) return `<h1>Not yet introduced</h1><p class="muted">This entry first appears after chapter ${S.n}. Move the slider forward to reveal it.</p>`;
-  const crumbs = `<div class="crumbs"><a ${goTo('home')}>Home</a> &rsaquo; <a ${goTo(`cat:${esc(e.type)}`)}>${esc(cap(plural(e.type)))}</a></div>`;
+  const crumbs = `<div class="crumbs">${typeCrumbs(e.type)} &rsaquo; ${catLink(e.type)}</div>`;
   if (minor(e)) return `<article class="entity"><div class="ehead">${crumbs}<h1>${esc(displayName(e))}</h1><div class="subtitle">${esc(cap(e.type))} &middot; a minor mention in ${chLink(e.mention.chapter)}</div></div>
     ${mentionQuote(e)}<p class="muted">Nothing more is known about this entry by chapter ${S.n}.</p></article>`;
   const name = displayName(e);
@@ -436,23 +644,27 @@ function renderEntity(id) {
   const xRels = groupRels(allRels.filter(r => role(r.timeline) === 'erased'));
   const names = visNames(e);
   const qs = D.questions.filter(q => qState(q) && names.some(t => q.question.includes(t) || q.quote?.includes(t)));
-  const profile = profileSection(e);
+  const parts = profileSections(e);
+  const profile = parts.map(x => x.html).join('');
   const groups = {};
   for (const f of fs) (groups[f.chapter] ||= []).push(f);
   const chs = Object.keys(groups).map(Number).sort((a, b) => b - a);
-  const lastSeen = Math.max(e.first, ...fs.map(f => f.chapter), ...allRels.filter(r => role(r.timeline) !== 'erased').map(r => r.chapter));
   const aliases = visAliases(e).filter(a => a !== name);
   const l = lede(e);
   const ladder = visLadders().find(l => live(l.group) === id);
   const leads = until(e.possibly || []).filter(p => vis(D.byId[live(p.id)])).map(p => `<div class="note">Possibly ${entLink(p.id)} (implied, ch ${p.chapter})${quotes(p.quote ? [p.quote] : [])}</div>`).join('');
   const tabs = [profile && ['profile', 'Profile'], ['facts', `Facts (${fs.length + xFs.length})`], ['relations', `Relations (${rels.length + xRels.length})`], ['mysteries', `Mysteries (${qs.length})`]].filter(Boolean);
   const tab = tabs.some(([k]) => k === S.tab) ? S.tab : tabs[0][0];
+  const ego = egoPanel(id);
+  const contents = contentsList([l.text && ['summary', 'Summary', ''], ladder && ['ladder', 'Ladder', ''], ego && ['connections', 'Connections', ''],
+    ...parts.map(x => [x.key, x.title, 'profile']),
+    ...[['facts', 'Facts', fs.length + xFs.length], ['relations', 'Relations', rels.length + xRels.length], ['mysteries', 'Mysteries', qs.length]].filter(t => t[2]).map(([k, t]) => ['tabs', t, k])].filter(Boolean));
   const infobox = `<aside class="infobox"><h3>${esc(name)}</h3><table>
     <tr><th>Type</th><td>${esc(cap(e.type))}</td></tr>
     ${aliases.length ? `<tr><th>Also known as</th><td>${aliases.map(esc).join('<br>')}</td></tr>` : ''}
     ${infoRows(e.profile)}
     <tr><th>First seen</th><td>Ch ${e.first}: ${esc(ctitle(e.first))}</td></tr>
-    <tr><th>Last seen</th><td>Ch ${lastSeen}</td></tr>
+    <tr><th>Last seen</th><td>Ch ${lastSeen(e)}</td></tr>
     <tr><th>Facts</th><td>${fs.length} in ${chs.length} chapters</td></tr>
     </table></aside>`;
   let body;
@@ -461,10 +673,10 @@ function renderEntity(id) {
   else if (tab === 'relations') body = (rels.length ? `<div class="chgroup">${rels.slice().reverse().map(r => relRow(r, id, name)).join('')}</div>` : xRels.length ? '' : '<p class="muted">No relations recorded yet.</p>') + erasedSection([], xRels, id, name);
   else body = qs.length ? qs.map(mystCard).join('') : '<p class="muted">No mysteries mention this entry yet.</p>';
   return `<article class="entity">
-    <div class="ehead">${crumbs}<h1>${esc(name)}</h1><div class="subtitle">${esc(cap(e.type))} &middot; first appears in chapter ${e.first}</div></div>
+    <div class="ehead">${crumbs}<h1>${esc(name)}</h1><div class="subtitle">${esc(cap(e.type))} &middot; first appears in chapter ${e.first}</div>${contents}</div>
     ${infobox}
-    <div class="lede"><p>${linkify(l.text, id, l.chapter) || '<span class="muted">Nothing known yet.</span>'}</p>${l.chapter ? `<div class="asof">As understood at chapter ${l.chapter}</div>` : ''}${leads}${ladder ? `<h3>Ladder</h3>${ladderList(ladder)}` : ''}${egoPanel(id)}</div>
-    <nav class="tabs">${tabs.map(([k, t]) => `<a data-tab="${k}" href="#${esc(hashFor({tab: k}))}" class="${tab === k ? 'on' : ''}">${t}</a>`).join('')}</nav>
+    <div class="lede" id="sec-summary" tabindex="-1"><p>${linkify(l.text, id, l.chapter) || '<span class="muted">Nothing known yet.</span>'}</p>${l.chapter ? `<div class="asof">As understood at chapter ${l.chapter}</div>` : ''}${leads}${ladder ? `${sectionHead('ladder', 'Ladder')}${ladderList(ladder)}` : ''}${ego}</div>
+    <nav class="tabs" id="sec-tabs" tabindex="-1">${tabs.map(([k, t]) => `<a data-tab="${k}" href="#${esc(hashFor({tab: k}))}" class="${tab === k ? 'on' : ''}">${t}</a>`).join('')}</nav>
     <div class="ebody">${body}</div></article>`;
 }
 
@@ -573,19 +785,34 @@ function renderVolume(id) {
   ${done && v.development.length ? `<h2>Character development</h2>${v.development.map(d => `<div class="chgroup"><h4>${linkify(d.character)}</h4><div class="prose"><p>${linkify(d.development)}</p></div></div>`).join('')}` : ''}
   ${deaths.length ? `<h2>Deaths</h2>${deaths.map(d => expandRow(`${linkify(d.name, null, d.chapter)} ${chLink(d.chapter)}`, 'what happened', `<div class="prose"><p>${linkify(d.circumstances, null, d.chapter)}</p></div>${quotes(d.quotes)}${until(d.later || []).map(l => `<div class="prose"><p>${chLink(l.chapter)} ${linkify(l.circumstances, null, l.chapter)}</p></div>${quotes(l.quotes)}`).join('')}`)).join('')}` : ''}
   ${chars.length ? `<h2>Characters introduced</h2><ul class="list">${chars.map(e => entRow(e)).join('')}</ul>` : ''}
-  ${powers.length ? `<h2>Power system introduced</h2><ul class="list">${powers.map(e => entRow(e)).join('')}</ul>` : ''}`;
+  ${powers.length ? `<h2>World introduced</h2><ul class="list">${powers.map(e => entRow(e)).join('')}</ul>` : ''}`;
 }
 
-const FAMILIES = {kin: 'Family', romance: 'Romance', alliance: 'Allies', teaching: 'Teaching', faith: 'Faith', service: 'Service', membership: 'Membership', hostility: 'Hostility', investigation: 'Investigation', place: 'Places', ownership: 'Belongings', kind: 'Kinds and ranks', other: 'Other'};
 const REL_GROUPS = [
-  {key: 'close', label: 'Close', fams: ['kin', 'romance']},
-  {key: 'allies', label: 'Allies', fams: ['alliance', 'service', 'teaching']},
-  {key: 'conflict', label: 'Conflict', fams: ['hostility', 'investigation']},
-  {key: 'belong', label: 'Belonging', fams: ['membership', 'faith']},
-  {key: 'things', label: 'Things & places', fams: ['ownership', 'place', 'kind', 'other']},
+  {key: 'kin', label: 'Family', says: 'blood or legal family: parent, child, sibling, cousin, heir'},
+  {key: 'romance', label: 'Romance', says: 'marriage, courtship, love, a lover or former partner'},
+  {key: 'alliance', label: 'Allies', says: 'friend, ally, colleague, companion, helper, acquaintance'},
+  {key: 'teaching', label: 'Teaching', says: 'mentor and student, teacher, apprentice'},
+  {key: 'service', label: 'Service', says: 'employer and employee, servant, agent, commander and subordinate'},
+  {key: 'hostility', label: 'Hostility', says: 'enemy, rival, attacker, killer, captor'},
+  {key: 'investigation', label: 'Investigation', says: 'one suspects, questions, follows, or spies on the other'},
+  {key: 'membership', label: 'Membership', says: 'member, leader, or founder of a group'},
+  {key: 'faith', label: 'Faith', says: 'worship, belief in a deity, clergy of a church'},
+  {key: 'place', label: 'Places', says: 'where someone or something is, lives, or goes'},
+  {key: 'ownership', label: 'Belongings', says: 'owning, holding, making, or using a thing'},
+  {key: 'kind', label: 'Kinds and ranks', says: 'a kind, rank, stage, or other name of something'},
+  {key: 'other', label: 'Other', says: 'a tie of no kind above'},
+].map(g => ({...g, fams: [g.key]}));
+const SECTORS = [
+  {key: 'close', fams: ['kin', 'romance']},
+  {key: 'allies', fams: ['alliance', 'service', 'teaching']},
+  {key: 'conflict', fams: ['hostility', 'investigation']},
+  {key: 'belong', fams: ['membership', 'faith']},
+  {key: 'things', fams: ['ownership', 'place', 'kind', 'other']},
 ];
-const GROUP_OF = Object.fromEntries(REL_GROUPS.flatMap(g => g.fams.map(f => [f, g.key])));
-const groupOf = fam => GROUP_OF[fam] || 'things';
+const SECTOR_OF = Object.fromEntries(SECTORS.flatMap(s => s.fams.map(f => [f, s.key])));
+const groupOf = fam => REL_GROUPS.some(g => g.key === fam) ? fam : 'other';
+const sectorFor = fam => SECTOR_OF[groupOf(fam)];
 const swatch = group => `<i class="swatch" style="background:var(--r-${group})"></i>`;
 function pairGroup(rows) {
   const count = {}, last = {};
@@ -595,8 +822,8 @@ function pairGroup(rows) {
     count[g] = (count[g] || 0) + r.chapters.length;
     last[g] = Math.max(last[g] || 0, ...r.chapters);
   }
-  if (count.close) return 'close';
-  return Object.keys(count).sort((x, y) => count[y] - count[x] || last[y] - last[x])[0] || 'things';
+  const close = Object.keys(count).filter(g => sectorFor(g) === 'close');
+  return (close.length ? close : Object.keys(count)).sort((x, y) => count[y] - count[x] || last[y] - last[x])[0] || 'other';
 }
 function kindNow(rows) {
   const told = rows.filter(r => r.family !== 'other'), now = told.filter(r => r.role === 'current');
@@ -613,9 +840,12 @@ const TYPE_GROUPS = [
   {key: 'groups', label: 'Groups', types: ['organization']},
   {key: 'places', label: 'Places', types: ['place']},
   {key: 'things', label: 'Things', types: ['artifact']},
-  {key: 'lore', label: 'Lore', types: ['concept', 'event', 'deity', 'uncategorized']},
+  {key: 'lore', label: 'Lore', types: ['concept', 'event', 'deity', 'creature', 'uncategorized']},
 ];
-const groupTypes = g => g.key === 'lore' ? D.typeOrder.filter(t => !TYPE_GROUPS.some(o => o !== g && o.types.includes(t))) : g.types.filter(t => D.typeOrder.includes(t));
+const kindOf = t => D.parents[t] || t;
+const groupTypes = g => g.key === 'lore' ? D.typeOrder.filter(t => !TYPE_GROUPS.some(o => o !== g && o.types.includes(kindOf(t))))
+  : [...g.types.filter(t => D.typeOrder.includes(t)), ...D.typeOrder.filter(t => D.parents[t] && g.types.includes(D.parents[t]))];
+
 const peopleFirst = () => D.typeOrder.includes('character') ? ['character'] : D.typeOrder.slice(0, 1);
 const GRAPH_VIEWS = {
   characters: {label: 'Characters', route: 'graph', tab: true, types: peopleFirst},
@@ -673,7 +903,7 @@ function ties() {
     if (r.role === 'erased') continue;
     for (const [x, y] of [[r.source, r.target], [r.target, r.source]]) {
       add(partners, x, y);
-      if (r.family === 'membership' && D.byId[y].type === 'organization' && D.byId[x].type !== 'organization') add(orgs, x, y);
+      if (r.family === 'membership' && kindOf(D.byId[y].type) === 'organization' && kindOf(D.byId[x].type) !== 'organization') add(orgs, x, y);
     }
   }
   return Object.assign(edgeCache, {partners: new Map([...partners].map(([k, v]) => [k, v.size])), orgs});
@@ -825,7 +1055,7 @@ function egoAt(focus) {
   const closed = groups.filter(g => !G.open.has(g.key));
   const ids = [focus, ...shown], keep = new Set(ids);
   const edges = rows.filter(r => keep.has(r.source) && keep.has(r.target));
-  const lay = orbitLayout(focus, shown, closed, id => kindNow(toFocus.get(id)), orgs);
+  const lay = orbitLayout(focus, shown, closed, id => sectorFor(kindNow(toFocus.get(id))), orgs);
   const nodes = ids.map(id => ({id, label: displayName(D.byId[id]), type: D.byId[id].type, focus: id === focus, ...fate(id), ...lay.at.get(id)}));
   return withReveals({view: 'characters', focus, nodes, edges, links: linksOf(edges), bubbles: lay.bubbles, bands: lay.bands,
     more: Math.min(STEP, closed.reduce((s, g) => s + g.members.length, 0))}, besideRadially);
@@ -876,9 +1106,9 @@ function orbitLayout(focus, shown, bubbles, sectorOf, orgs) {
   const mainSector = g => {
     const n = {};
     for (const id of g.members) n[sectorOf(id)] = (n[sectorOf(id)] || 0) + 1;
-    return REL_GROUPS.map(s => s.key).sort((x, y) => (n[y] || 0) - (n[x] || 0))[0];
+    return SECTORS.map(s => s.key).sort((x, y) => (n[y] || 0) - (n[x] || 0))[0];
   };
-  const sectors = REL_GROUPS.map(({key}) => ({key, ids: shown.filter(id => sectorOf(id) === key).sort(order), bubbles: bubbles.filter(g => mainSector(g) === key)}));
+  const sectors = SECTORS.map(({key}) => ({key, ids: shown.filter(id => sectorOf(id) === key).sort(order), bubbles: bubbles.filter(g => mainSector(g) === key)}));
   const slots = s => s.ids.length + s.bubbles.length;
   spreadSectors(sectors, slots);
   const used = sectors.filter(slots);
@@ -953,12 +1183,12 @@ function wholeLayout(focus, ids, links, orgs) {
   const {hop, via} = hopsFrom(focus, links);
   const others = ids.filter(id => id !== focus), reached = others.filter(id => hop.has(id));
   const sectorOf = new Map();
-  for (const id of [...reached].sort((a, b) => hop.get(a) - hop.get(b))) sectorOf.set(id, hop.get(id) === 1 ? via.get(id).link.group : sectorOf.get(via.get(id).from));
+  for (const id of [...reached].sort((a, b) => hop.get(a) - hop.get(b))) sectorOf.set(id, hop.get(id) === 1 ? sectorFor(via.get(id).link.group) : sectorOf.get(via.get(id).from));
   const faction = factionsOf(others, orgs, focus);
   const kind = id => TYPE_GROUPS.findIndex(g => groupTypes(g).includes(D.byId[id].type));
   const at = new Map([[focus, {x: 0, y: 0}]]), sway = new Map(), runs = [];
   const order = (a, b) => kind(a) - kind(b) || !faction.get(a) - !faction.get(b) || cmp(faction.get(a), faction.get(b)) || (sway.get(via.get(a)?.from) || 0) - (sway.get(via.get(b)?.from) || 0) || D.byId[a].first - D.byId[b].first || cmp(a, b);
-  const sectors = REL_GROUPS.map(({key}) => ({key, n: reached.filter(id => sectorOf.get(id) === key).length}));
+  const sectors = SECTORS.map(({key}) => ({key, n: reached.filter(id => sectorOf.get(id) === key).length}));
   spreadSectors(sectors, s => s.n);
   let radius = WHOLE.first;
   const ring = (arcs, h) => {
@@ -1160,8 +1390,7 @@ function renderGraph(arg) {
   const famCount = {};
   for (const r of edgesAt()) if (G.erased || r.role !== 'erased') famCount[r.family] = (famCount[r.family] || 0) + 1;
   const erasedN = edgesAt().filter(r => r.role === 'erased').length;
-  const typeChips = visTypes.map(([t, c]) => `<a data-gt="${esc(t)}" class="${types.has(t) ? 'on' : ''}" role="switch" aria-checked="${types.has(t)}"><i class="dot" style="background:${typeColor(t)}"></i>${esc(cap(plural(t)))} ${c}</a>`).join('');
-  const famChips = Object.keys(FAMILIES).filter(f => famCount[f]).map(f => `<a data-gfam="${f}" class="${G.hideFams.has(f) ? '' : 'on'}" role="switch" aria-checked="${!G.hideFams.has(f)}">${swatch(groupOf(f))}${FAMILIES[f]} ${famCount[f]}</a>`).join('');
+  const typeChips = visTypes.map(([t, c]) => `<a data-gt="${esc(t)}" class="${types.has(t) ? 'on' : ''}" role="switch" aria-checked="${types.has(t)}"><i class="dot" style="background:${typeColor(t)}"></i>${esc(catName(t))} ${c}</a>`).join('');
   const whole = m.view === 'all', path = m.view === 'path';
   const bar = graphTabs(m.view) + freshNote({entry: m.nodes.filter(nd => nd.fresh).length, tie: m.links.filter(l => l.fresh).length});
   const entries = m.nodes.filter(nd => !nd.ghost).length;
@@ -1180,8 +1409,8 @@ function renderGraph(arg) {
   const finder = path ? pathPicker(m) : `<div class="searchwrap"><input id="gq" type="search" placeholder="Centre on an entry" autocomplete="off" aria-label="Centre on an entry"><div class="results" id="gqres" role="listbox"></div></div>`;
   return `<div class="crumbs"><a ${goTo('home')}>Home</a></div><h1>Graph</h1>${bar}${path ? `<p class="pathsum" aria-live="polite">${subtitle}</p>` : `<div class="subtitle">${subtitle}</div>`}
   <div class="gstage${m.nodes.length || G.full ? ' drawn' : ''}"><aside class="gpanel" aria-label="Legend and filters"><div class="gfilters"><div class="gctl">${finder}${toggles}</div>
-  ${groupedControls(types, famCount, c)}<details class="gmoref"${G.moreOpen ? ' open' : ''}><summary>More filters</summary><div class="pills gchips">${typeChips}</div><div class="pills gchips">${famChips}</div></details></div>
-  ${!path && m.nodes.length ? card : ''}<p class="muted glegend">${path ? 'The first chain is drawn bold. Show limits which kinds of entry a chain may pass through. ' : whole ? 'Each ring is one more step from the centre, and each slice follows the kind of tie that leads there. Entries with no path to the centre sit in the outer band. Names beyond the main entries appear as you zoom in or hover. Select an entry to centre the graph on it. ' : 'Close ties sit at the top, then allies, conflict, belonging, and things and places clockwise. The strongest ties sit nearest the centre, and a faint band joins members of one group. Select an entry to centre the graph on it, or tap it once on a touch screen to preview it; double-click, press O, or use Open page to read its page. '}Hover a line for the exact relations. Dashed lines are suspicions, dotted lines flashbacks.${m.links.some(l => l.same) ? ' A grey dashed line joins a name to the person it is revealed to be in this chapter.' : ''} Drag to pan, pinch or scroll to zoom.</p></aside><div class="gdraw">${body}</div></div>${routes}`;
+  ${groupedControls(types, famCount, c)}<details class="gmoref"${G.moreOpen ? ' open' : ''}><summary>More filters</summary><div class="pills gchips">${typeChips}</div></details></div>
+  ${!path && m.nodes.length ? card : ''}<p class="muted glegend">${path ? 'The first chain is drawn bold. Show limits which kinds of entry a chain may pass through. ' : whole ? 'Each ring is one more step from the centre, and each slice follows the kind of tie that leads there. Entries with no path to the centre sit in the outer band. Names beyond the main entries appear as you zoom in or hover. Select an entry to centre the graph on it. ' : 'Family and romance sit at the top, then allies, service, and teaching, then hostility and investigation, then membership and faith, and things and places clockwise. The strongest ties sit nearest the centre, and a faint band joins members of one group. Select an entry to centre the graph on it, or tap it once on a touch screen to preview it; double-click, press O, or use Open page to read its page. '}Each line colour is one kind of tie, named under Lines; hover a name there for what it covers, or hover a line for the exact relations. Dashed lines are suspicions, dotted lines flashbacks.${m.links.some(l => l.same) ? ' A grey dashed line joins a name to the person it is revealed to be in this chapter.' : ''} Drag to pan, pinch or scroll to zoom.</p></aside><div class="gdraw">${body}</div></div>${routes}`;
 }
 
 function backToDefault(focus) {
@@ -1257,7 +1486,7 @@ function groupedControls(types, famCount, c) {
   }).join('');
   const rels = REL_GROUPS.filter(g => g.fams.some(f => famCount[f])).map(g => {
     const cls = state(g.fams, f => !G.hideFams.has(f));
-    return `<a data-ggr="${g.key}" class="${cls}" role="switch" aria-checked="${cls === 'on'}">${swatch(g.key)}${esc(g.label)}</a>`;
+    return `<a data-ggr="${g.key}" class="${cls}" role="switch" aria-checked="${cls === 'on'}" title="${esc(cap(g.says))}">${swatch(g.key)}${esc(g.label)}<small>${famCount[g.key]}</small></a>`;
   }).join('');
   return `<div class="gquiet"><span class="gq-lab">Show</span>${ents}<span class="gq-sep"></span><span class="gq-lab">Lines</span>${rels}</div>`;
 }
@@ -1389,7 +1618,7 @@ function egoPanel(id) {
     drawn.some(d => d.aside) ? '<span><i class="swatch dot"></i>Flashback or aside</span>' : ''].join('');
   const more = drawn.length && all.length > drawn.length ? `<a ${goTo(`graph:${id}`)}>+${all.length - drawn.length} more</a>` : '';
   const figure = drawn.length ? expander(showHide('drawing'), `${ringSvg(D.byId[id], drawn)}<div class="egolegend">${marks}${more}</div>`).join('') : '';
-  return `<div class="egobox"><h3>Connections</h3><div class="conns">${connSections(id, all)}</div>`
+  return `<div class="egobox">${sectionHead('connections', 'Connections')}<div class="conns">${connSections(id, all)}</div>`
     + `<div class="asof">${all.length} connection${all.length > 1 ? 's' : ''} as of chapter ${S.n}. <a ${goTo(`graph:${id}`)}>Open in the graph</a> &middot; <a ${goTo(pairRoute(id, ''))}>How is ${esc(displayName(D.byId[id]))} connected to&hellip;</a> ${figure}</div></div>`;
 }
 
@@ -1662,12 +1891,10 @@ function graphKey(ev) {
 }
 
 function graphSearch(input, box, to) {
-  const s = input.value.trim().toLowerCase();
-  if (!s) return box.classList.remove('open');
+  if (!searchKey(input.value)) return box.classList.remove('open');
   const linked = new Set(edgesAt().flatMap(r => [r.source, r.target]));
-  const hits = D.entities.filter(e => vis(e) && linked.has(e.id) && visNames(e).some(x => x.toLowerCase().includes(s)));
-  hits.sort((a, b) => !displayName(a).toLowerCase().startsWith(s) - !displayName(b).toLowerCase().startsWith(s) || displayName(a).localeCompare(displayName(b)));
-  box.innerHTML = hits.slice(0, 12).map((e, i) => `<div data-go="${to(e.id)}" class="${i ? '' : 'sel'}" role="option"><span>${esc(displayName(e))}</span><small>${esc(e.type)}</small></div>`).join('') || '<div class="muted">No connected entry matches up to this chapter</div>';
+  const hits = findEntries(input.value, D.entities.filter(e => vis(e) && linked.has(e.id)), (a, b) => displayName(a).localeCompare(displayName(b)));
+  box.innerHTML = hits.slice(0, 12).map((h, i) => `<div data-go="${to(h.e.id)}" class="${i ? '' : 'sel'}" role="option"><span>${hitName(h)}</span><small>${esc(h.e.type)}</small></div>`).join('') || '<div class="muted">No connected entry matches up to this chapter</div>';
   box.classList.add('open');
 }
 
@@ -1980,16 +2207,17 @@ function storyClick(ev, act) {
   return false;
 }
 
+function storySearch(input, box, m) {
+  if (!searchKey(input.value)) return box.classList.remove('open');
+  const hits = findEntries(input.value, m.candidates.map(id => D.byId[id])).slice(0, 12);
+  box.innerHTML = hits.map((h, i) => `<div data-sadd="${h.e.id}" class="${i ? '' : 'sel'}" role="option"><span>${hitName(h)}</span></div>`).join('') || '<div class="muted">No other character matches up to this chapter</div>';
+  box.classList.add('open');
+}
+
 function mountStory() {
   const m = G.model, st = G.story, wrap = $('sscroll'), svg = $('story'), tip = $('stip');
   const input = $('sq'), box = $('sqres');
-  input.addEventListener('input', () => {
-    const s = input.value.trim().toLowerCase();
-    if (!s) return box.classList.remove('open');
-    const hits = m.candidates.map(id => D.byId[id]).filter(e => visNames(e).some(x => x.toLowerCase().includes(s))).slice(0, 12);
-    box.innerHTML = hits.map((e, i) => `<div data-sadd="${e.id}" class="${i ? '' : 'sel'}" role="option"><span>${esc(displayName(e))}</span></div>`).join('') || '<div class="muted">No other character matches up to this chapter</div>';
-    box.classList.add('open');
-  });
+  input.addEventListener('input', () => storySearch(input, box, m));
   input.addEventListener('keydown', ev => {
     if (ev.key === 'Enter') box.querySelector('[data-sadd]')?.click();
     if (ev.key === 'Escape') { input.value = ''; box.classList.remove('open'); }
@@ -2179,7 +2407,7 @@ function factionsAt(arg) {
   for (const r of edgesAt()) {
     if (r.role === 'erased' || r.status === 'belief') continue;
     const [a, b] = [isOrg(r.source), isOrg(r.target)];
-    if (a && b && groupOf(r.family) !== 'things') said.push({a: r.source, b: r.target, label: r.label, detail: r.detail, group: groupOf(r.family), chapter: firstOf(r), last: Math.max(...r.chapters)});
+    if (a && b && sectorFor(r.family) !== 'things') said.push({a: r.source, b: r.target, label: r.label, detail: r.detail, group: groupOf(r.family), chapter: firstOf(r), last: Math.max(...r.chapters)});
     else if (a !== b && MEMBER_FAMS.has(r.family) && isPerson(a ? r.target : r.source)) join(a ? r.source : r.target, a ? r.target : r.source, r.label, firstOf(r));
   }
   const named = D.entities.filter(e => vis(e) && orgs.has(e.type)).flatMap(e => visNames(e).map(n => [n, e.id]));
@@ -2241,7 +2469,12 @@ const rankOnly = () => new RegExp(`^${reEsc(D.book.ladder.step_type)}\\s*\\d+$`,
 const stepNames = e => visNames(e).filter(n => !rankOnly().test(n));
 const rankLabel = rank => D.book.ladder.rank === 'number' ? `${cap(D.book.ladder.step_type)} ${rank}` : `#${rank}`;
 
-function holdersAt(stepOf, power, groupIds) {
+const strongestStage = (text, stages) => {
+  const found = namedIn(text, stages.map((t, i) => [t.name, i]));
+  return found.size ? stages[Math.max(...found)] : null;
+};
+
+function holdersAt(stepOf, power, groupIds, stagesOf) {
   const powerKey = key => [...D.power].some(t => key.toLowerCase().includes(t));
   const names = [...stepOf.keys()].flatMap(id => stepNames(D.byId[id]).map(n => [n, id])).concat(groupIds.flatMap(id => visNames(D.byId[id]).map(n => [n, id])));
   const evidence = [];
@@ -2251,14 +2484,14 @@ function holdersAt(stepOf, power, groupIds) {
       const found = [...namedIn(o.value, names)];
       const groups = found.filter(id => groupIds.includes(id)), steps = found.filter(id => stepOf.has(id));
       const kept = groups.length ? steps.filter(s => groups.includes(stepOf.get(s))) : steps;
-      if (kept.length) kept.forEach(s => evidence.push({holder: e.id, group: stepOf.get(s), step: s, chapter: o.chapter}));
+      if (kept.length) kept.forEach(s => evidence.push({holder: e.id, group: stepOf.get(s), step: s, chapter: o.chapter, stage: strongestStage(o.value, stagesOf.get(s))}));
       else groups.forEach(g => evidence.push({holder: e.id, group: g, step: null, chapter: o.chapter}));
     }
   }
   for (const r of edgesAt()) {
     if (r.role === 'erased' || r.status !== 'stated' || !HOLD_FAMS.has(r.family)) continue;
     for (const [x, y] of [[r.source, r.target], [r.target, r.source]]) if (isPerson(x) && (stepOf.has(y) || groupIds.includes(y)))
-      for (const c of r.chapters) evidence.push({holder: x, group: stepOf.get(y) || y, step: stepOf.has(y) ? y : null, chapter: c});
+      for (const c of r.chapters) evidence.push({holder: x, group: stepOf.has(y) ? stepOf.get(y) : y, step: stepOf.has(y) ? y : null, chapter: c, stage: null});
   }
   const by = new Map();
   for (const ev of evidence) (by.get(ev.holder) || by.set(ev.holder, []).get(ev.holder)).push(ev);
@@ -2276,7 +2509,12 @@ function holdersAt(stepOf, power, groupIds) {
       const since = Math.min(...evs.filter(ev => (ev.step || ev.group) === key && ev.chapter > before).map(ev => ev.chapter));
       const sameLadder = cur.step ? [...first].filter(([step]) => !current.has(step) && stepOf.get(step) === cur.group).map(([step, chapter]) => ({step, chapter})) : [];
       const passed = sameLadder.filter(x => power.get(x.step) < power.get(cur.step)).sort((a, b) => power.get(a.step) - power.get(b.step));
-      placed.push({holder, group: cur.group, step: cur.step, since, passed, earlier: sameLadder.filter(x => !passed.includes(x))});
+      const staged = evs.filter(ev => ev.step === cur.step && ev.stage).sort((a, b) => a.chapter - b.chapter);
+      const stage = staged.at(-1)?.stage || null;
+      const stages = stagesOf.get(cur.step) || [];
+      const rose = staged.filter(ev => stages.indexOf(ev.stage) < stages.indexOf(stage)).map(ev => ({stage: ev.stage, chapter: ev.chapter}));
+      const reached = stage ? Math.min(...staged.filter(ev => ev.stage === stage).map(ev => ev.chapter)) : since;
+      placed.push({holder, group: cur.group, step: cur.step, since: reached, passed, earlier: sameLadder.filter(x => !passed.includes(x)), stage, rose: rose.slice(-1)});
     }
   }
   return placed.sort((a, b) => a.since - b.since || byName(a.holder, b.holder));
@@ -2287,17 +2525,20 @@ function ladderAt(arg) {
   if (!spec) return {view: 'ladder', focus: null, ladders: []};
   const strength = rank => spec.direction === 'descending' ? -rank : rank;
   const weakFirst = (a, b) => strength(a) - strength(b);
-  const known = visLadders().map(l => ({group: live(l.group), steps: ladderSteps(l).map(s => ({...s, id: live(s.id)}))}));
+  const known = visLadders().map(l => ({group: live(l.group), steps: ladderSteps(l).map(s => ({...s, id: live(s.id), stages: until(s.stages || [])}))}));
   const stepOf = new Map(known.flatMap(l => l.steps.map(s => [s.id, l.group])));
   const power = new Map(known.flatMap(l => l.steps.map(s => [s.id, strength(s.rank)])));
-  const placed = holdersAt(stepOf, power, known.map(l => l.group));
+  const stagesOf = new Map(known.flatMap(l => l.steps.map(s => [s.id, s.stages])));
+  const placed = holdersAt(stepOf, power, known.map(l => l.group).filter(Boolean), stagesOf);
   const ladders = known.map(l => ({group: l.group, unranked: placed.filter(p => p.group === l.group && !p.step),
     rungs: [...new Set(l.steps.map(s => s.rank))].sort(weakFirst).map(rank => ({rank,
-      steps: l.steps.filter(s => s.rank === rank).map(s => ({id: s.id, chapter: s.chapter, holders: placed.filter(p => p.step === s.id),
+      steps: l.steps.filter(s => s.rank === rank).map(s => ({id: s.id, chapter: s.chapter, stages: s.stages, holders: placed.filter(p => p.step === s.id),
         passed: placed.flatMap(p => p.passed.some(x => x.step === s.id) ? [{holder: p.holder, now: p.step, chapter: p.since}] : [])}))}))}));
   const focus = arg && ladders.some(l => l.group === live(arg)) ? live(arg) : null;
   return {view: 'ladder', focus, ladders};
 }
+
+const stageList = stages => stages.length ? `<ol class="lstages">${stages.map(t => `<li>${esc(t.name)}${newTag(t.chapter)}</li>`).join('')}</ol>` : '';
 
 function stepBlock(s) {
   const e = D.byId[s.id], main = displayName(e);
@@ -2308,18 +2549,37 @@ function stepBlock(s) {
     const other = r.source === s.id ? r.target : r.source, t = D.byId[other].type;
     if (D.power.has(t) && t !== D.book.ladder.step_type && t !== D.book.ladder.group_type) (kin.get(t) || kin.set(t, new Set()).get(t)).add(other);
   }
-  const powers = [...kin].map(([t, ids]) => `<div class="lpow">${esc(cap(plural(t)))}: ${[...ids].sort(byName).map(entLink).join(', ')}</div>`).join('');
+  const powers = [...kin].map(([t, ids]) => `<div class="lpow">${esc(catName(t))}: ${[...ids].sort(byName).map(entLink).join(', ')}</div>`).join('');
   const was = x => `${esc(displayName(D.byId[x.step]))} (ch ${x.chapter})`;
-  const history = h => [h.passed.length ? `advanced from ${was(h.passed.at(-1))}` : '', h.earlier.length ? `earlier ${h.earlier.map(was).join(', ')}` : ''].filter(Boolean).map(t => ` <span class="lprev">${t}</span>`).join('');
-  const rows = s.holders.map(h => `<li>${who(h.holder)} <span class="chip">since ch ${h.since}</span>${newTag(h.since)}${history(h)}</li>`)
+  const history = h => [h.passed.length ? `advanced from ${was(h.passed.at(-1))}` : '', h.earlier.length ? `earlier ${h.earlier.map(was).join(', ')}` : '',
+    ...h.rose.map(x => `rose from ${esc(x.stage.name)} (ch ${x.chapter})`)].filter(Boolean).map(t => ` <span class="lprev">${t}</span>`).join('');
+  const rows = s.holders.map(h => `<li>${who(h.holder)}${h.stage ? ` <span class="chip">${esc(h.stage.name)}</span>` : ''} <span class="chip">since ch ${h.since}</span>${newTag(h.since)}${history(h)}</li>`)
     .concat(s.passed.map(h => `<li class="lpast">${who(h.holder)} <span class="lprev">now ${esc(displayName(D.byId[h.now]))}, ch ${h.chapter}</span></li>`));
   const holders = rows.length ? `<ul class="lholders">${rows.join('')}</ul>` : '';
   return `<div class="lstep"><div class="lname">${entLink(s.id)}${aka.length ? ` <span class="laka">also ${aka.map(esc).join(', ')}</span>` : ''} ${chLink(s.chapter)}${newTag(s.chapter)}</div>`
-    + `${l.text ? `<p class="lsum">${linkify(l.text, s.id, l.chapter)}</p>` : ''}${powers}${holders}</div>`;
+    + `${l.text ? `<p class="lsum">${linkify(l.text, s.id, l.chapter)}</p>` : ''}${stageList(s.stages)}${powers}${holders}</div>`;
 }
 
+const LADDER_SHAPES = {
+  grouped: {
+    head: (l, on) => `<a ${goTo(ladderRoute(on ? '' : l.group))} aria-pressed="${on}">${esc(displayName(D.byId[l.group]))}</a>`,
+    color: l => typeColor(D.byId[l.group].type),
+    foot: l => `<a class="fopen" ${goTo('e:' + l.group)}>Open page</a>`,
+    subtitle: (spec, m) => m.ladders.length ? `${count(m.ladders.length, spec.group_type)} known by chapter ${S.n}, each from its weakest ${spec.step_type} to its strongest` : `No ${spec.group_type} has a known ${spec.step_type} by chapter ${S.n}.`,
+    legend: spec => `Each ${esc(spec.group_type)} runs from its weakest ${esc(spec.step_type)} at the top to its strongest known at the bottom. A ${esc(spec.step_type)} shows once the book places it, with what is known of it so far and who holds it. Someone who moves up keeps the powers of the ${esc(plural(spec.step_type))} below, so they stay listed there, fainter, with where they are now.`,
+  },
+  shared: {
+    head: () => esc(cap(plural(D.book.ladder.step_type))),
+    color: () => typeColor(D.book.ladder.step_type),
+    foot: () => '',
+    subtitle: (spec, m) => m.ladders.length ? `One ladder of ${plural(spec.step_type)} that everyone climbs: ${count(m.ladders[0].rungs.length, spec.step_type)} known by chapter ${S.n}, from the weakest to the strongest` : `No ${spec.step_type} is placed on the ladder by chapter ${S.n}.`,
+    legend: spec => `The ladder runs from the weakest ${esc(spec.step_type)} at the top to the strongest known at the bottom. Each ${esc(spec.step_type)} lists its sub-stages in order, weakest first, as the book names them. Each holder shows at the ${esc(spec.step_type)} and sub-stage the book last gives them. Someone who moves up stays listed at the ${esc(plural(spec.step_type))} below, fainter, with where they are now.`,
+  },
+};
+const ladderShape = () => LADDER_SHAPES[D.book.ladder.shape || 'grouped'];
+
 function ladderCard(l, on) {
-  const spec = D.book.ladder;
+  const spec = D.book.ladder, shape = ladderShape();
   const rows = [];
   l.rungs.forEach((r, i) => {
     const gap = spec.rank === 'number' && i ? Math.abs(r.rank - l.rungs[i - 1].rank) - 1 : 0;
@@ -2328,8 +2588,8 @@ function ladderCard(l, on) {
   });
   const unranked = l.unranked.length ? `<p class="lunknown">On this ${esc(spec.group_type)}, rank not yet known: ${l.unranked.map(p => who(p.holder)).join(', ')}</p>` : '';
   const holders = new Set([...l.rungs.flatMap(r => r.steps.flatMap(x => x.holders)), ...l.unranked].map(p => p.holder)).size;
-  return `<section class="lcard${on ? ' on' : ''}" style="--c:${typeColor(D.byId[l.group].type)}"><h3><a ${goTo(ladderRoute(on ? '' : l.group))} aria-pressed="${on}">${esc(displayName(D.byId[l.group]))}</a> <small>${count(l.rungs.length, 'rank')} known${holders ? `, ${count(holders, 'holder')}` : ''}</small></h3>`
-    + `<div class="lend">Weakest</div><ol class="lrungs">${rows.join('')}</ol><div class="lend">Strongest known</div>${unranked}<a class="fopen" ${goTo('e:' + l.group)}>Open page</a></section>`;
+  return `<section class="lcard${on ? ' on' : ''}" style="--c:${shape.color(l)}"><h3>${shape.head(l, on)} <small>${count(l.rungs.length, 'rank')} known${holders ? `, ${count(holders, 'holder')}` : ''}</small></h3>`
+    + `<div class="lend">Weakest</div><ol class="lrungs">${rows.join('')}</ol><div class="lend">Strongest known</div>${unranked}${shape.foot(l)}</section>`;
 }
 
 function renderLadder(m) {
@@ -2337,10 +2597,10 @@ function renderLadder(m) {
   const shown = m.focus ? [m.ladders.find(l => l.group === m.focus), ...m.ladders.filter(l => l.group !== m.focus)] : m.ladders;
   const steps = m.ladders.flatMap(l => l.rungs.flatMap(r => r.steps));
   const fresh = freshNote({step: steps.filter(s => s.chapter === S.n).length, holder: steps.reduce((n, s) => n + s.holders.filter(h => h.since === S.n).length, 0)});
-  const subtitle = !spec ? 'This book has no power ladder.' : m.ladders.length ? `${count(m.ladders.length, spec.group_type)} known by chapter ${S.n}, each from its weakest ${spec.step_type} to its strongest` : `No ${spec.group_type} has a known ${spec.step_type} by chapter ${S.n}.`;
+  const subtitle = !spec ? 'This book has no power ladder.' : ladderShape().subtitle(spec, m);
   return `<div class="crumbs"><a ${goTo('home')}>Home</a></div><h1>Graph</h1>${graphTabs('ladder')}${fresh}<div class="subtitle">${esc(subtitle)}</div>
   <div class="lgrid">${shown.map(l => ladderCard(l, l.group === m.focus)).join('')}</div>
-  ${m.ladders.length ? `<p class="muted glegend">Each ${esc(spec.group_type)} runs from its weakest ${esc(spec.step_type)} at the top to its strongest known at the bottom. A ${esc(spec.step_type)} shows once the book places it, with what is known of it so far and who holds it. Someone who moves up keeps the powers of the ${esc(plural(spec.step_type))} below, so they stay listed there, fainter, with where they are now.</p>` : ''}`;
+  ${m.ladders.length ? `<p class="muted glegend">${ladderShape().legend(spec)}</p>` : ''}`;
 }
 
 const KIN = [
@@ -2624,13 +2884,20 @@ function render() {
   $('n').value = S.n;
   $('nlab').textContent = S.n;
   $('ctitle').textContent = ctitle(S.n);
+  const vol = D.volumes.length > 1 ? volumeAt(S.n) : null, vb = $('vol');
+  vb.hidden = !vol;
+  if (vol) {
+    vb.textContent = vol.label;
+    vb.classList.toggle('end', vol.end);
+    vb.title = vol.end ? 'Everything up to the end of this volume is shown' : 'Jump to the end of this volume';
+  }
   $('brand').href = '#' + hashFor({p: 'home', tab: '', m: ''});
   const c = counts();
   renderSide(c);
   const [kind, arg] = S.p.split(/:(.*)/s);
   const pages = {
-    e: () => renderEntity(arg), cat: () => renderCat(arg), mysteries: renderMysteries, chapters: renderChapters,
-    ch: () => renderChapter(arg), v: () => renderVolume(arg), graph: () => renderGraph(arg),
+    e: () => renderEntity(arg), cat: () => renderCat(D.book.added?.[arg] > S.n ? D.parents[arg] : arg), mysteries: renderMysteries, chapters: renderChapters,
+    ch: () => renderChapter(arg), v: () => renderVolume(arg), graph: () => renderGraph(arg), checks: renderChecks,
   };
   const old = $('graph-view');
   $('main').innerHTML = (pages[kind] || (() => renderHome(c)))();
@@ -2657,6 +2924,94 @@ function showHover(el) {
 }
 function hideHover() { hover.classList.remove('show'); }
 
+function volumeAt(n) {
+  const v = D.volumes.find(x => x.from <= n && n <= x.to);
+  if (!v) return null;
+  const end = n === v.to;
+  return {id: v.id, to: v.to, end, label: end ? `End of ${v.name}` : `${v.name} \u00b7 ${n - v.from + 1} of ${v.to - v.from + 1}`};
+}
+
+function volumeTicks() {
+  const list = document.createElement('datalist');
+  list.id = 'volticks';
+  list.innerHTML = D.volumes.map(v => `<option value="${v.to}" label="${esc(v.name)}"></option>`).join('');
+  document.body.appendChild(list);
+  $('n').setAttribute('list', 'volticks');
+}
+
+const NOTES = {count: 0, answered: new Set(), pending: null};
+const CHECK_KINDS = {shared_name: 'Names two pages both claim', dead_alive: 'Dead, then alive with no explanation',
+  description_title: 'Important pages still titled by a description', many_names: 'Pages holding many names', merge: 'Merges the judge was unsure of'};
+const openChecks = () => (D.checks || []).filter(c => c.chapter <= S.n && vis(D.byId[c.entity]) && !NOTES.answered.has(c.id));
+function renderChecks() {
+  const rows = openChecks();
+  const answered = (D.checks || []).filter(c => NOTES.answered.has(c.id)).length;
+  const groups = Object.keys(CHECK_KINDS).map(k => [k, rows.filter(c => c.kind === k)]).filter(([, g]) => g.length);
+  const row = c => `<li class="checkrow"><div>${entLink(c.entity)} <span class="muted">${esc(c.reason)}</span> ${chLink(c.chapter)}</div>
+    <div class="checkbtns"><button data-check-right="${c.id}">Looks right</button><button data-check-wrong="${c.id}">Wrong</button></div></li>`;
+  return `<h1>Needs checking</h1><div class="subtitle">Pages the build is least sure of, up to chapter ${S.n}. Answer one and it leaves this list; your answer is saved with your notes.${answered ? ` ${answered} answered so far.` : ''}</div>`
+    + (NOTES.on ? '' : '<div class="note">Start the wiki with <code>annalist serve</code> to save answers.</div>')
+    + (groups.length ? groups.map(([k, g]) => `<h2>${esc(CHECK_KINDS[k])} <span class="muted">(${g.length})</span></h2><ul class="list checks">${g.map(row).join('')}</ul>`).join('')
+      : '<p class="muted">Nothing left to check up to this chapter.</p>');
+}
+async function answerCheck(id, verdict, text) {
+  const c = D.checks.find(x => x.id === id), e = D.byId[c.entity];
+  const r = await fetch('api/notes', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({page: 'e:' + c.entity, title: displayName(e), chapter: S.n, url: '#' + hashFor({p: 'e:' + c.entity, tab: '', m: ''}),
+      text: text || `Looks right: ${c.reason}`, check: id, verdict})});
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || r.status);
+  NOTES.count = d.count;
+  NOTES.answered.add(id);
+  reportLabel();
+  render();
+}
+async function probeNotes() {
+  try {
+    const r = await fetch('api/notes', {cache: 'no-store'});
+    const d = r.ok ? await r.json() : null;
+    if (!Array.isArray(d?.notes)) return;
+    NOTES.count = d.notes.length;
+    NOTES.on = true;
+    for (const n of d.notes) if (n.check) NOTES.answered.add(n.check);
+    if (S.p === 'checks') render();
+    $('report').hidden = false;
+    reportLabel();
+  } catch (err) { /* a plain static host has no notes endpoint, so the button stays hidden */ }
+}
+function reportLabel() { $('report').textContent = NOTES.count ? `Report a problem (${NOTES.count})` : 'Report a problem'; }
+function pageTitle() { return document.querySelector('#main h1')?.textContent.trim() || 'Home'; }
+function openReport() {
+  const box = $('reportbox');
+  box.innerHTML = `<h4>Report a problem</h4><div class="muted">${esc(pageTitle())} &middot; chapter ${S.n}</div>
+    <textarea id="reporttext" rows="5" placeholder="What is wrong here, and what should it say?"></textarea>
+    <div class="reportrow"><span class="muted" id="reportmsg"></span><button data-report-cancel>Cancel</button><button class="primary" data-report-save>Save note</button></div>`;
+  box.hidden = false;
+  if (NOTES.pending) $('reporttext').value = `Wrong: ${D.checks.find(x => x.id === NOTES.pending).reason}\n`;
+  $('reporttext').focus();
+}
+async function saveReport() {
+  const text = $('reporttext').value.trim();
+  if (!text) return;
+  const note = {page: S.p || 'home', title: pageTitle(), chapter: S.n, url: location.hash, text};
+  $('reportmsg').textContent = 'Saving...';
+  if (NOTES.pending) {
+    const id = NOTES.pending;
+    try { await answerCheck(id, 'wrong', text); NOTES.pending = null; $('reportbox').hidden = true; }
+    catch (err) { $('reportmsg').textContent = `Not saved: ${err.message}`; }
+    return;
+  }
+  try {
+    const r = await fetch('api/notes', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(note)});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    NOTES.count = d.count;
+    reportLabel();
+    $('reportbox').innerHTML = `<div class="muted">Saved. ${d.count} note${d.count === 1 ? '' : 's'} so far.</div>`;
+    setTimeout(() => { $('reportbox').hidden = true; }, 1500);
+  } catch (err) { $('reportmsg').textContent = `Not saved: ${err.message}`; }
+}
+
 function setN(n) {
   S.n = Math.min(Math.max(1, n), D.book.max);
   store.set(D.storeKey + ':seen', '1');
@@ -2664,19 +3019,24 @@ function setN(n) {
   setN.raf = requestAnimationFrame(() => { writeHash(); render(); });
 }
 
+const SEARCH = {perType: 5};
 function search() {
-  const s = $('q').value.trim().toLowerCase();
   const box = $('results');
-  if (!s) return box.classList.remove('open');
-  const hits = [];
-  for (const e of D.entities) if (full(e)) {
-    const via = visNames(e).find(x => x.toLowerCase().includes(s));
-    if (via) hits.push([e, via]);
-  }
-  const starts = x => x[1].toLowerCase().startsWith(s) ? 0 : 1;
-  hits.sort((a, b) => starts(a) - starts(b) || visFacts(b[0].id).length - visFacts(a[0].id).length);
-  box.innerHTML = hits.slice(0, 12).map(([e, via], i) => `<div data-res="${e.id}" class="${i ? '' : 'sel'}" role="option"><span>${esc(displayName(e))}${via !== displayName(e) && via !== e.name ? ` <small>(${esc(via)})</small>` : ''}</span><small>${esc(e.type)}</small></div>`).join('') || '<div class="muted">No matches up to this chapter</div>';
+  if (!searchKey($('q').value)) return box.classList.remove('open');
+  const hits = findEntries($('q').value, D.entities.filter(full), (a, b) => visFacts(b.id).length - visFacts(a.id).length);
+  const byType = new Map();
+  for (const hit of hits) (byType.get(hit.e.type) || byType.set(hit.e.type, []).get(hit.e.type)).push(hit);
+  const row = h => `<div data-res="${h.e.id}"${h === hits[0] ? ' class="sel"' : ''} role="option"><span>${hitName(h)}</span><small>ch ${h.e.first}</small></div>`;
+  box.innerHTML = [...byType].map(([type, rows]) => `<div class="rgroup" role="group" aria-label="${esc(catName(type))}"><div class="rhead" aria-hidden="true">${esc(catName(type))}<span>${rows.length}</span></div>${rows.slice(0, SEARCH.perType).map(row).join('')}</div>`).join('')
+    || '<div class="muted">No matches up to this chapter</div>';
   box.classList.add('open');
+}
+
+function jump(id) {
+  const to = $(id);
+  if (!to) return;
+  to.scrollIntoView({block: 'start'});
+  (to.hasAttribute('tabindex') ? to : to.querySelector('.ent') || to).focus({preventScroll: true});
 }
 
 function toggleIn(set, key) {
@@ -2698,15 +3058,28 @@ function wire() {
     let el;
     if (act('[data-gback]')) store.set('graph-focus', '');
     if ((ev.button || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) && act('[href]')) return;
+    if ((el = act('[data-check-right]'))) return answerCheck(el.dataset.checkRight, 'right').catch(err => alert(`Not saved: ${err.message}`));
+    if ((el = act('[data-check-wrong]'))) { NOTES.pending = el.dataset.checkWrong; return openReport(); }
+    if (act('[data-report]')) { NOTES.pending = null; return $('reportbox').hidden ? openReport() : ($('reportbox').hidden = true); }
+    if (act('[data-report-cancel]')) { NOTES.pending = null; return ($('reportbox').hidden = true); }
+    if (act('[data-report-save]')) return saveReport();
+    if (act('[data-volend]')) { const v = volumeAt(S.n); if (v && !v.end) setN(v.to); return; }
     if (graphClick(ev, act) || storyClick(ev, act)) return;
     if ((el = act('.disc'))) return toggleDisc(el);
     if ((el = act('.ent'))) { ev.preventDefault(); return go({p: 'e:' + el.dataset.ent, tab: ''}); }
     if ((el = act('[data-res]'))) { $('q').value = ''; $('results').classList.remove('open'); return go({p: 'e:' + el.dataset.res, tab: ''}); }
     if ((el = act('[data-go]'))) { ev.preventDefault(); return go({p: el.dataset.go}); }
+    if ((el = act('[data-sec]'))) { ev.preventDefault(); if (el.dataset.in && el.dataset.in !== S.tab) go({tab: el.dataset.in}); return jump('sec-' + el.dataset.sec); }
     if ((el = act('[data-tab]'))) return go({tab: el.dataset.tab});
     if ((el = act('[data-m]'))) { more = 60; return go({m: el.dataset.m}); }
+    if ((el = act('[data-sort]'))) {
+      ev.preventDefault();
+      const key = el.dataset.sort.replace(/^-/, '');
+      go({sort: el.dataset.sort});
+      return document.querySelector(`.ctable [data-sort="${key}"], .ctable [data-sort="-${key}"]`)?.focus();
+    }
+    if ((el = act('[data-az]'))) { ev.preventDefault(); if (!$('az-' + el.dataset.az)) go({sort: 'name'}); return jump('az-' + el.dataset.az); }
     if ((el = act('[data-gt]'))) return toggleIn(shownTypes(G.model.view), el.dataset.gt);
-    if ((el = act('[data-gfam]'))) return toggleIn(G.hideFams, el.dataset.gfam);
     if ((el = act('[data-ggt]'))) { const set = shownTypes(G.model.view); return toggleGroup(groupTypes(TYPE_GROUPS.find(g => g.key === el.dataset.ggt)), t => set.has(t), (t, on) => on ? set.add(t) : set.delete(t)); }
     if ((el = act('[data-ggr]'))) return toggleGroup(REL_GROUPS.find(g => g.key === el.dataset.ggr).fams, f => !G.hideFams.has(f), (f, on) => on ? G.hideFams.delete(f) : G.hideFams.add(f));
     if ((el = act('.gmoref summary'))) { G.moreOpen = !el.parentElement.open; return; }
@@ -2733,6 +3106,8 @@ function wire() {
   window.addEventListener('resize', () => G.refit?.());
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && G.full) toggleFull(false); });
   document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && $('reportbox').hidden === false) return ($('reportbox').hidden = true);
+    if (ev.target.id === 'reporttext' && ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) return saveReport();
     if (graphKey(ev)) return;
     if (ev.target.matches('input,textarea')) return;
     if (ev.key === 'Escape' && G.full) return toggleFull(false);
@@ -2742,6 +3117,6 @@ function wire() {
   });
 }
 
-load().then(() => { readHash(); wire(); writeHash(); render(); }).catch(err => {
+load().then(() => { readHash(); wire(); volumeTicks(); writeHash(); render(); if (D.book.review_tools) probeNotes(); }).catch(err => {
   $('main').innerHTML = `<p class="muted">Could not load data/wiki.json: ${esc(err.message)}. Serve this folder over HTTP rather than opening the file directly.</p>`;
 });
