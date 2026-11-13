@@ -460,8 +460,8 @@ def md_to_html(markdown, title):
 def cmd_render(args):
     workdir = Path(args.workdir).resolve()
     until = args.until
-    kb = load_states(workdir, until=until, ladders=True, corrections=EVERY_CORRECTION)
-    whole = kb if until is None else load_states(workdir, ladders=True, corrections=EVERY_CORRECTION)
+    kb = load_states(workdir, until=until, ladders=True, corrections=EVERY_CORRECTION, only_mysteries=True)
+    whole = kb if until is None else load_states(workdir, ladders=True, corrections=EVERY_CORRECTION, only_mysteries=True)
     names = read_pages(workdir, whole).names
 
     def page(name):
@@ -604,7 +604,7 @@ def cmd_render(args):
         index += ["## Volumes", ""]
     for v in volumes:
         index.append(f"- [{v['name']}](volumes/{slug(v['name'])}.md): chapters {v['from']} to {v['to']}")
-        pages.update(volume_markdown(v, load_states(workdir, until=v["to"], ladders=True, corrections=EVERY_CORRECTION), paths, chapter_link,
+        pages.update(volume_markdown(v, load_states(workdir, until=v["to"], ladders=True, corrections=EVERY_CORRECTION, only_mysteries=True), paths, chapter_link,
                                      load_book(workdir)["power_types"]))
     if volumes:
         index.append("")

@@ -197,7 +197,7 @@ def cmd_ending(args):
     if refusal:
         sys.exit(f"annalist ending: {refusal}; the end-of-book pass runs only on a complete book read to its last chapter")
     started = time.strftime("%Y-%m-%dT%H:%M:%S")
-    kb = load_states(workdir, corrections=(QUESTIONS,))
+    kb = load_states(workdir, corrections=(QUESTIONS,), only_mysteries=True)
     last = max(kb.synopses)
     path = workdir / "ending.json"
     opened = {q["id"] for q in kb.open_questions()}

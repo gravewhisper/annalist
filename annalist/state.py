@@ -575,7 +575,7 @@ FILLED = {"relate.json": "RF", "link.json": "RL"}
 
 
 def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FILLED), discovered=True, answers_before=None, ladders=False,
-                repeats=True, corrections=()):
+                repeats=True, corrections=(), only_mysteries=False):
     book = read_json(Path(workdir) / "book.json", {})
     kb = Knowledge(book.get("ladder"), read_wordings(workdir), book.get("power_types") or ())
     kb.corrections = load_corrections(workdir) if corrections else None
@@ -601,6 +601,10 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
                 kb.upsert_entity(e, state["chapter"])
     if ending["last"] is not None and max(kb.synopses, default=0) >= ending["last"]:
         kb.apply_ending(ending["questions"], ending["last"])
+    if only_mysteries:
+        for qid, tier in read_json(Path(workdir) / "tiers.json", {"questions": {}})["questions"].items():
+            if tier.get("mystery") is False:
+                kb.questions.pop(qid, None)
     if retypes:
         kb.apply_retypes(read_json(Path(workdir) / "types.json", {"entities": []})["entities"])
     if merges:

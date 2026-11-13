@@ -196,7 +196,7 @@ def cmd_answers(args):
     asked = 0
     for v in volumes:
         key = str(v["to"])
-        kb = load_states(workdir, until=v["to"], answers_before=v["to"], corrections=(QUESTIONS,))
+        kb = load_states(workdir, until=v["to"], answers_before=v["to"], corrections=(QUESTIONS,), only_mysteries=True)
         earlier = boundaries[key]["questions"]
         keep, work = pending(workdir, kb, v, earlier)
         boundaries[key] = {"name": v["name"], "to": v["to"], "questions": keep}

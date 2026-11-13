@@ -171,7 +171,7 @@ def stamp_assets(outdir):
 def build(workdir, theme):
     book = {**read_json(workdir / "book.json", {}), **theme}
     title = book.get("title") or workdir.name
-    kb = load_states(workdir, ladders=True, corrections=EVERY_CORRECTION)
+    kb = load_states(workdir, ladders=True, corrections=EVERY_CORRECTION, only_mysteries=True)
     entities = list(kb.entities.values())
     pages = read_pages(workdir, kb)
     facts, relations, states, registry, absorbed = pages.facts, pages.relations, pages.states, pages.registry, pages.absorbed

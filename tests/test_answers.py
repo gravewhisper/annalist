@@ -208,6 +208,28 @@ BRAM = {"question": "Will Bram get the key from Ines, as he demands?",
 BRAM_QUOTE = "He stood for a moment with the brass key in his hand, breathing hard."
 
 
+class NotAMysteryTest(unittest.TestCase):
+    def test_a_question_only_about_what_a_character_will_do_next_is_not_a_mystery(self):
+        script = answers_script()
+        for row in script["replies"]:
+            if row["purpose"] == "extract" and row["chapter"] == 4:
+                row["reply"] = copy.deepcopy(row["reply"])
+                row["reply"]["questions_raised"].append(BRAM)
+        script["replies"].insert(0, {"purpose": "mystery", "contains": BRAM["question"], "reply": {"questions": [
+            {"id": "Q0004-01", "mystery": False}, {"id": "Q0002-02", "mystery": True}]}})
+        book = MiniBuild(script)
+        try:
+            book.build(*VOLUMES)
+            self.assertIs(book.json("tiers.json")["questions"]["Q0004-01"]["mystery"], False)
+            self.assertNotIn("Q0004-01", book.json("answers.json")["boundaries"]["5"]["questions"])
+            wiki = json.loads((book.workdir / "site" / "data" / "wiki.json").read_text(encoding="utf-8"))
+            self.assertNotIn("Q0004-01", [q["id"] for q in wiki["questions"]])
+            self.assertIn("Q0002-02", [q["id"] for q in wiki["questions"]])
+            self.assertNotIn(BRAM["question"], render(book, 5))
+        finally:
+            book.close()
+
+
 RECOGNISED = "Livia knew Tomas for her father the moment he walked into her archive."
 
 
