@@ -548,7 +548,7 @@ class Knowledge:
 
 def answer_events(decision):
     if decision.get("lead"):
-        yield decision["lead"]["chapter"], "lead", {**decision["lead"], "by": "answers"}
+        yield decision["lead"].get("shown", decision["lead"]["chapter"]), "lead", {**decision["lead"], "by": "answers"}
     if decision.get("verdict") == "answered":
         yield decision["answer"]["chapter"], "answer", {**decision["answer"], "by": "answers"}
     if decision.get("verdict") == "premise-false":

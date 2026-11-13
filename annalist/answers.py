@@ -13,18 +13,18 @@ from .sweep import fingerprint, judge_answer
 from .text import chapter_text, check_quote, locate_quote
 
 
-ANSWERS_PROMPT = """A reader is partway through a novel that goes on after chapter {to}, the last chapter of {name}. Below are questions they noted while reading that were still open at that point. Each comes with the passage that raised it, any leads found so far, and passages from chapters up to {to} that may bear on it, each with its chapter's synopsis. The passages include the rest of the chapter that raised the question. Judge each question on its own passages: some are answered in them, some only narrowed down, some left for later.
+ANSWERS_PROMPT = """A reader is partway through a novel that goes on after chapter {to}, the last chapter of {name}. Below are questions they noted while reading that were still open at that point. Each comes with the passage that raised it, any leads found so far, and passages from chapters up to {to} that may bear on it, each with its chapter's synopsis. The passages include the rest of the chapter that raised the question, and may include a few from the chapters before it. Judge each question on its own passages: some are answered in them, some only narrowed down, some left for later.
 
 {items}
 
 For each question, report what its passages show, if anything:
 - "answer": a passage whose own text answers the core of the question. Give its "chapter", a "quote" from it, and "answer", one or two sentences answering the question from that passage and earlier text only. It answers the core when it names who or what the question asks for, or when a character reaches a firm conclusion that the story then treats as settled; when the passages together leave only one reading, quote the passage that completes it. A synopsis alone is not enough; a passage that repeats, deepens, or only hints at the mystery is not an answer. When several passages answer it, choose the earliest.
-- "lead": a passage, earlier than the answer if there is one, that narrows the question down without answering it. Give its "chapter", a "quote" from it, and "text", one sentence saying what it suggests, keeping the text's own hedging. Leave it out when it only repeats the setup or a lead already listed.
+- "lead": a passage, earlier than the answer if there is one, that narrows the question down without answering it. It may come from before the question was raised, such as an earlier scene that shows the person or thing the question asks about. Give its "chapter", a "quote" from it, and "text", one sentence saying what it suggests, keeping the text's own hedging. Leave it out when it only repeats the setup or a lead already listed.
 - "premise": the question takes for granted something the text shows is not so, such as a person, object or event that the passages show does not exist or did not happen. A question asking whether someone is real, or who fills a role, rests on a false premise when the text shows that no one fills that role, for example because it is a cover story or an invented name; report that as premise, not answer. Give "explanation", one or two sentences, and "quotes" that show it. Only when the text shows the assumption false, never because the text is silent about it.
 
 Reply with one JSON object: {{"results": [{{"id": "...", "answer": {{"chapter": n, "quote": "...", "answer": "..."}} or null, "lead": {{"chapter": n, "quote": "...", "text": "..."}} or null, "premise": {{"explanation": "...", "quotes": [{{"chapter": n, "quote": "..."}}]}} or null}}]}}, one entry per question.
 Rules:
-- answer, lead and premise state only what the text up to their chapter shows. Never use a name, event, or detail from a later passage or from outside the novel.
+- answer, lead and premise state only what the text up to their chapter shows, or up to the chapter that raised the question for a passage from before it. Never use a name, event, or detail from a later passage or from outside the novel.
 - every quote is one contiguous span of one or two sentences copied exactly, character for character, from a passage of that chapter, at most 300 characters. No ellipses, no paraphrase. This is checked by machine.
 """
 
@@ -68,7 +68,8 @@ def answers_item(q, passages, synopses):
     lines += [f"Lead from chapter {l['chapter']}: {l['text']}" for l in q["leads"]]
     lines.append("Passages:")
     for p in passages:
-        lines.append(f"[chapter {p['chapter']}] Synopsis: {synopses.get(p['chapter'], '')}")
+        before = ", before the question was raised" if p.get("before") else ""
+        lines.append(f"[chapter {p['chapter']}{before}] Synopsis: {synopses.get(p['chapter'], '')}")
         lines += [f"<passage chapter=\"{p['chapter']}\">\n{t}\n</passage>" for t in p["texts"]]
     return "\n".join(lines)
 
@@ -89,8 +90,8 @@ def checked_lead(workdir, q, raw, last):
     except (TypeError, ValueError):
         return None
     text, quote = str(raw.get("text") or "").strip(), str(raw.get("quote") or "").strip()
-    if text and quote and q["chapter"] <= n <= last and check_quote(str(workdir), n, quote)["ok"]:
-        return {"chapter": n, "text": text, "quote": quote}
+    if text and quote and 1 <= n <= last and check_quote(str(workdir), n, quote)["ok"]:
+        return {"chapter": n, "text": text, "quote": quote, **({"shown": q["chapter"]} if n < q["chapter"] else {})}
     return None
 
 
@@ -163,7 +164,7 @@ def pending(workdir, kb, v, old):
     for q in opened:
         if q["id"] in keep:
             continue
-        passages = rest_of_chapter(workdir, q, finder.candidates(q, chapters=10, after=True, full=5))
+        passages = finder.earlier(q) + rest_of_chapter(workdir, q, finder.candidates(q, chapters=10, after=True, full=5))
         stamp = verdict_basis(v, q)
         if q["id"] in old and reusable(old[q["id"]], stamp, [p["chapter"] for p in passages]):
             keep[q["id"]] = old[q["id"]]

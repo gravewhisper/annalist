@@ -63,30 +63,44 @@ class Finder:
         self.extra = evidence_text(kb, profiles, self.corpus.last)
         self.patterns = {k: name_pattern([a for a in names_of(e) if len(a) >= 3]) for k, e in kb.entities.items()
                          if any(len(a) >= 3 for a in names_of(e))}
+        self.name_words = {k: stems(" ".join(names_of(kb.entities[k]))) for k in self.patterns}
 
     def named(self, q):
         text = q["question"] + " " + q.get("quote", "")
         return [k for k, p in self.patterns.items() if p.search(text)]
+
+    def score(self, n, terms, weights, named):
+        corpus = self.corpus
+        best = corpus.best_windows(terms, weights, n, 1)
+        score = (best[0][0] if best else 0) + match_score(terms & corpus.dense[n], weights)
+        score += match_score(terms & self.extra.get(n, set()), weights)
+        return score + sum(math.log(1 + corpus.last / len(self.by_entity[k])) for k in named if n in self.by_entity.get(k, ()))
 
     def candidates(self, q, chapters=6, after=False, full=None):
         corpus = self.corpus
         terms = question_terms(q)
         weights = {t: corpus.idf(t) for t in terms}
         named = self.named(q)
-        scores = {}
-        for n in range(q["chapter"] if after else 1, corpus.last + 1):
-            best = corpus.best_windows(terms, weights, n, 1)
-            score = (best[0][0] if best else 0) + match_score(terms & corpus.dense[n], weights)
-            score += match_score(terms & self.extra.get(n, set()), weights)
-            score += sum(math.log(1 + corpus.last / len(self.by_entity[k])) for k in named if n in self.by_entity.get(k, ()))
-            if score > 0:
-                scores[n] = score
-        ranked = sorted(scores, key=lambda n: (-scores[n], n))[:chapters]
+        scores = {n: self.score(n, terms, weights, named) for n in range(q["chapter"] if after else 1, corpus.last + 1)}
+        ranked = sorted((n for n in scores if scores[n] > 0), key=lambda n: (-scores[n], n))[:chapters]
         doubled = set(ranked[:full])
         passages = []
         for n in sorted(ranked):
             picked = sorted({i for _, i in corpus.best_windows(terms, weights, n, 2 if n in doubled else 1)} or {0})
             passages.append({"chapter": n, "texts": [corpus.windows[n][i] for i in picked]})
+        return passages
+
+    def earlier(self, q, chapters=4, span=30):
+        corpus = self.corpus
+        terms = question_terms(q)
+        weights = {t: corpus.idf(t) for t in terms}
+        named = self.named(q)
+        described = terms - set().union(*(self.name_words[k] for k in named))
+        scores = {n: self.score(n, terms, weights, named) * (1 + 2 / (q["chapter"] - n)) for n in range(max(1, q["chapter"] - span), q["chapter"])}
+        passages = []
+        for n in sorted(sorted((n for n in scores if scores[n] > 0), key=lambda n: (-scores[n], -n))[:chapters]):
+            best = corpus.best_windows(described, weights, n, 1) or corpus.best_windows(terms, weights, n, 1)
+            passages.append({"chapter": n, "texts": [corpus.windows[n][best[0][1] if best else 0]], "before": True})
         return passages
 
 

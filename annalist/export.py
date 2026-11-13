@@ -98,7 +98,8 @@ def first_mention(texts, record):
 
 def question_record(q, tier):
     record = {"id": q["id"], "chapter": q["chapter"], "question": q["question"], "quote": q.get("quote", ""), **timeline(q),
-              "leads": [{"chapter": l["chapter"], "text": l["text"], "quote": l["quote"]} for l in q["leads"]],
+              "leads": [{"chapter": l["chapter"], "text": l["text"], "quote": l["quote"], **({"shown": l["shown"]} if "shown" in l else {})}
+                        for l in q["leads"]],
               "tier": {"arc": tier.get("arc_at"), "series": tier.get("series_at")}}
     if q["status"] == "resolved":
         record["resolved"] = {"chapter": q["resolved_chapter"], "shown": q.get("resolved_shown", q["resolved_chapter"]), "answer": q.get("answer", ""),
