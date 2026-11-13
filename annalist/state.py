@@ -166,10 +166,18 @@ class Knowledge:
         keys = [name_key(k) for k in [name] + aliases]
         matches = [m for m in dict.fromkeys([canonical] + [self.index[k] for k in keys if k in self.index])
                    if m and self.same_kind(self.entities[m]["type"], etype)]
+        named = canonical is not None
         canonical = canonical or (matches[0] if matches else None)
         for other in matches:
-            if other != canonical and self.same_kind(self.entities[other]["type"], self.entities[canonical]["type"]):
-                self.merge(other, canonical, None if name_within(other, canonical) else chapter)
+            if other == canonical or not self.same_kind(self.entities[other]["type"], self.entities[canonical]["type"]):
+                continue
+            if name_within(other, canonical):
+                self.merge(other, canonical)
+            elif self.entities[other]["first_chapter"] == chapter or (named and name_key(self.entities[other]["name"]) in keys
+                                                                       and self.weight(other) <= self.weight(canonical)):
+                self.merge(other, canonical, chapter)
+            else:
+                self.claim(canonical, [n for n in [name] + aliases if self.index.get(name_key(n)) == other], chapter)
         if canonical is None:
             canonical = qualified(name, etype) if split else name
             self.entities[canonical] = {"name": canonical, "type": "", "aliases": [], "summary": "",
@@ -195,6 +203,15 @@ class Knowledge:
         record["last_chapter"] = chapter
         return canonical
 
+    def weight(self, name):
+        return sum(f["entity"] == name for f in self.facts)
+
+    def claim(self, canonical, names, chapter):
+        claims = self.entities[canonical].setdefault("claims", [])
+        for n in names:
+            if not any(name_key(c["name"]) == name_key(n) for c in claims):
+                claims.append({"name": n, "chapter": chapter})
+
     def drop_alias(self, holder, alias):
         record = self.entities[holder]
         record["aliases"] = [a for a in record["aliases"] if name_key(a) != name_key(alias)]
@@ -209,6 +226,8 @@ class Knowledge:
                              "chapter": chapter})
         if absorbed:
             record["absorbed"] = record.get("absorbed", []) + absorbed
+        for c in gone.pop("claims", []):
+            self.claim(canonical, [c["name"]], c["chapter"])
         if self.types.refines(gone["type"], record["type"]):
             record["type"] = gone["type"]
         for alias in [gone["name"]] + gone["aliases"]:

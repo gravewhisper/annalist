@@ -4,12 +4,12 @@
 
 1. `extract` splits the epub into chapter text files and writes `chapters.json`, `source.json`, and `volumes.json`.
 2. `book` writes `book.json`: the power system, the power types, extra character fields, the timeline kind, and the power ladder shape.
-3. `read` reads each chapter in order and writes `state/NNNN.json` with that chapter's entries, facts, relations, and open questions.
+3. `read` reads each chapter in order and writes `state/NNNN.json` with that chapter's entries, facts, relations, and open questions. A chapter's entry that lists another page's name as an alias joins that page into it only when the other page is the smaller one and the name is that page's own title, or when the other page first appears in the same chapter. Otherwise the name stays with the page that holds it, so one chapter cannot file a character's persona, or the character, under someone who meets, recognizes, controls, or impersonates them. The entry records the name as a claim, and `resolve` judges it.
 4. `timelines` labels which timeline each chapter happens in. It is skipped when `book.json` says the story is linear.
 5. `wordings` splits relation wordings from older runs into a predicate and a detail.
 6. `retype` checks the type each entry is filed under. An entry filed under the ladder's group type that a fact or relation states is a numbered or ordered rank, such as "X is Circle 2 of Y", moves to the rank type, unless the wiki also gives it ranks of its own. So does an entry of an item type named after ranks (the type of "X elixir" when X is a rank or group) that a fact or relation states is a group's numbered or ordered rank, such as "The Circle 2 elixir of Y is X", unless its own name ends in the item word.
 7. `discover` adds entries for names that recur in the text but that `read` never listed.
-8. `resolve` merges entries that are one person, place, or thing under different names, including identities the book reveals later.
+8. `resolve` merges entries that are one person, place, or thing under different names, including identities the book reveals later. A claim the read recorded becomes a candidate pair, and the judge is told that one being who possesses, controls, or impersonates another is not that other.
 9. `relate` adds relations that each chapter shows between entries it names close together.
 10. `link` adds relations that possessive names and character facts state.
 11. `leads` folds a question raised again within two chapters of an open question about the same mystery into the open one, then keeps rejected answers to a question that are still useful partial leads.
