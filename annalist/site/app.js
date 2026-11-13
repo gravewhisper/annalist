@@ -70,8 +70,9 @@ const vis = e => !!e && e.first <= S.n && live(e.id) === e.id;
 const pageIds = id => [id, ...(D.parts[id] || []).filter(p => live(p) === id)];
 const visAliases = e => until(e.aliases).map(a => a.name);
 const nameAt = (e, c) => e.name_chapter <= c ? e.name : e.aliases.find(a => (a.shown ?? a.chapter) <= c)?.name;
-function displayName(e) {
+function displayName(e, among) {
   if (e.name_chapter > S.n) return nameAt(e, S.n) || e.name;
+  if (among === e.type) return e.name;
   return D.namesakes[e.name].some(id => id !== e.id && vis(D.byId[id])) ? `${e.name} (${e.type})` : e.name;
 }
 const visNames = e => [...new Set([e.name_chapter <= S.n ? e.name : null, ...visAliases(e)].filter(Boolean))];
@@ -255,10 +256,10 @@ function predicate(wording) {
 }
 
 const chapterRefs = text => text.replace(/\(ch ?(\d+)\)/g, (m, n) => +n <= S.n ? `(<a ${goTo(`ch:${n}`)}>ch ${n}</a>)` : m);
-const entLink = id => {
+const entLink = (id, among) => {
   id = live(id);
   const e = D.byId[id];
-  return `<a class="ent" data-ent="${id}" href="#${hashFor({p: 'e:' + id, tab: ''})}">${esc(displayName(e))}</a>`;
+  return `<a class="ent" data-ent="${id}" href="#${hashFor({p: 'e:' + id, tab: ''})}">${esc(displayName(e, among))}</a>`;
 };
 const chLink = n => `<a ${goTo(`ch:${n}`)} class="chip">Ch ${n}</a>`;
 const ctitle = n => (D.ch[n]?.title || '').replace(/^\d+\s*[:.]?\s*/, '');
@@ -331,9 +332,9 @@ function chapterCard(c, full) {
   return `<div class="ccard ${full ? 'full' : ''}"><div>${chLink(c.n)}${text}</div><h3><a ${goTo(`ch:${c.n}`)}>${esc(ctitle(c.n))}</a></h3><p>${linkify(c.synopsis, null, c.n)}</p></div>`;
 }
 
-function entRow(e, extra) {
+function entRow(e, extra, among) {
   const l = lede(e);
-  return `<li><span class="ch">Ch ${e.first}</span>${entLink(e.id)}<span class="badge">${esc(e.type)}</span>${extra || ''}<span class="sum">${esc(l.text)}</span></li>`;
+  return `<li><span class="ch">Ch ${e.first}</span>${entLink(e.id, among)}<span class="badge">${esc(e.type)}</span>${extra || ''}<span class="sum">${esc(l.text)}</span></li>`;
 }
 
 function renderHome(c) {
@@ -387,9 +388,9 @@ const fieldCell = (e, key) => {
 const countCell = (n, html = n) => n ? {sort: n, html} : null;
 const linkCell = id => id && {sort: displayName(D.byId[id]), html: entLink(id)};
 function nameCell(e) {
-  const name = displayName(e), aka = visAliases(e).filter(a => a !== name);
+  const name = displayName(e, e.type), aka = visAliases(e).filter(a => a !== name);
   const more = aka.length > CAT.aliases ? ` +${aka.length - CAT.aliases}` : '';
-  return {sort: name, html: entLink(e.id) + (aka.length ? `<span class="al">${aka.slice(0, CAT.aliases).map(esc).join(', ')}${more}</span>` : '')};
+  return {sort: name, html: entLink(e.id, e.type) + (aka.length ? `<span class="al">${aka.slice(0, CAT.aliases).map(esc).join(', ')}${more}</span>` : '')};
 }
 const CAT_COLS = [
   {key: 'name', label: () => 'Name', of: nameCell},
@@ -449,10 +450,10 @@ function azBar(rows) {
 }
 
 function renderCat(type) {
-  const byName = (a, b) => displayName(a).localeCompare(displayName(b));
+  const byName = (a, b) => displayName(a, type).localeCompare(displayName(b, type));
   const es = D.entities.filter(e => full(e) && e.type === type).sort(byName);
   const minors = D.entities.filter(e => minor(e) && e.type === type).sort((a, b) => a.mention.chapter - b.mention.chapter || byName(a, b));
-  const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`)).join('')}</ul>`;
+  const list = rows => `<ul class="list">${rows.map(e => entRow(e, `<span class="badge">${visFacts(e.id).length} facts</span>`, type)).join('')}</ul>`;
   const c = counts();
   const subs = D.typeOrder.filter(t => D.parents[t] === type && c[t]);
   const asList = S.tab === 'list';
@@ -473,8 +474,8 @@ function renderCat(type) {
   return `<div class="crumbs">${typeCrumbs(type)}</div><h1>${esc(cap(plural(type)))}</h1><div class="subtitle">${es.length} entries as of chapter ${S.n}</div>
   ${subs.length ? `<h2>Subcategories</h2><div class="cats">${subs.map(t => `<a class="cat" ${goTo(`cat:${esc(t)}`)}>${esc(cap(plural(t)))}<span>${c[t]}</span></a>`).join('')}</div>` : ''}
   ${es.length ? `<div class="ctools">${tools}</div>` : ''}${named}${es.some(unnamedAt) ? `<h2>Unnamed figures</h2>${unnamed}` : ''}
-  ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
-  ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
+  ${type === D.book.ladder?.group_type && visLadders().length ? `<h2>Ladders</h2>${visLadders().map(l => `<div class="chgroup"><h4>${entLink(l.group, type)}</h4>${ladderList(l)}</div>`).join('')}` : ''}
+  ${minors.length ? `<h2>Minor mentions</h2><ul class="list">${minors.map(e => `<li><span>${esc(displayName(e, type))}</span>${chLink(e.mention.chapter)}<span class="quote">${mentionQuote(e)}</span></li>`).join('')}</ul>` : ''}`;
 }
 
 const PER_TIMELINE = new Set(['status', 'affiliation', 'marital_status', 'occupation', 'residence']);

@@ -161,6 +161,20 @@ class CategoryTableTest(unittest.TestCase):
         self.assertEqual(len(rows(out["route:cat:rung@3"]["html"])), 2)
         self.assertEqual(table(out["route:cat:path@3"]["html"]), [["Ember Way", "2", "Ch 1", "Ch 1", "1"]])
 
+    def test_a_category_lists_a_name_shared_with_another_type_without_its_type_in_brackets(self):
+        wiki = json.loads(json.dumps(self.wiki))
+        wiki["entities"].append(thing(12, "Spark", "path", 1))
+        wiki["facts"].append({"id": "F98", "chapter": 1, "entity": "t0000012", "claim": "Spark is a path of the quay.", "status": "stated",
+                              "by": "narrator", "quotes": []})
+        path = Path(self.tmp.name) / "namesakes.json"
+        path.write_text(json.dumps(wiki), encoding="utf-8")
+        out = site_views(path, "route:cat:path@3", "route:cat:rung@3", "route:cat:path@3?tab=list", "route:home@3")
+        self.assertEqual(sorted(names(out["route:cat:path@3"]["html"])), ["Ember Way", "Spark"])
+        self.assertIn(">Spark</a>", out["route:cat:path@3?tab=list"]["html"])
+        self.assertNotIn("Spark (path)", text(out["route:cat:path@3?tab=list"]["html"]))
+        self.assertIn("Spark", names(out["route:cat:rung@3"]["html"]))
+        self.assertIn("Spark (path)", text(out["route:home@3"]["html"]))
+
     def test_the_list_view_keeps_each_entry_s_summary(self):
         page = self.page("route:cat:character@2?tab=list")
         self.assertNotIn("<table", page)
