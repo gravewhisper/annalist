@@ -271,7 +271,24 @@ def raised(script, chapter, question):
     return script
 
 
-class EarlierClueTest(unittest.TestCase):
+class LaterVolumeTest(unittest.TestCase):
+    def test_a_question_no_later_chapter_comes_back_to_keeps_its_verdict_without_an_ask(self):
+        book = MiniBuild(raised(answers_script(), 2, WICK))
+        try:
+            book.build(*VOLUMES)
+            boundaries = book.json("answers.json")["boundaries"]
+            self.assertEqual(boundaries["3"]["questions"]["Q0002-03"]["source"], "llm")
+            self.assertEqual({k: boundaries["5"]["questions"]["Q0002-03"][k] for k in ("source", "verdict", "since")},
+                             {"source": "carried", "verdict": "unanswered", "since": 3})
+            self.assertEqual(boundaries["5"]["questions"]["Q0002-02"]["source"], "llm")
+            calls = len(book.calls())
+            book.edit_code("answers.py", "\ndef cmd_answers(", "\nRULES = 2\n\n\ndef cmd_answers(")
+            book.build(*VOLUMES)
+            self.assertEqual(len(book.calls()), calls)
+            self.assertEqual(book.json("answers.json")["boundaries"], boundaries)
+        finally:
+            book.close()
+
     def test_a_clue_from_before_a_question_is_a_lead_shown_from_the_question_on(self):
         script = raised(answers_script(), 4, KEY)
         script["replies"].insert(0, {"purpose": "answers", "contains": f'Question: {KEY["question"]}', "reply": {"results": [

@@ -50,6 +50,7 @@ Does the evidence itself show that what the question takes for granted is false?
 
 SETTLED = ("answered", "premise-false")
 MAX_SWAPPED_CHAPTERS = 2
+PROMPT_STAMP = fingerprint(ANSWERS_PROMPT)
 
 
 def verdict_basis(v, q):
@@ -155,22 +156,42 @@ def eligible(workdir, to):
                   key=lambda v: v["to"])
 
 
-def pending(workdir, kb, v, old):
+def last_judged(before, qid):
+    for b in sorted(before, key=lambda b: -b["to"]):
+        d = b["questions"].get(qid)
+        if d:
+            return b["to"] if d.get("verdict") == "unanswered" and d.get("prompt") == PROMPT_STAMP else None
+    return None
+
+
+def came_back(q, since, chapters):
+    return (any(n > since for n in chapters) or any(l["chapter"] > since and l.get("by") != "answers" for l in q["leads"])
+            or any(a["chapter"] > since for a in q.get("again", [])))
+
+
+def pending(workdir, kb, v, old, before):
     finder = Finder(workdir, kb)
     opened = kb.open_questions()
     asked = {q["id"] for q in opened}
     keep = {k: d for k, d in old.items() if k not in asked and d.get("verdict") in SETTLED}
-    work = []
+    work, carried = [], 0
     for q in opened:
         if q["id"] in keep:
             continue
-        passages = finder.earlier(q) + rest_of_chapter(workdir, q, finder.candidates(q, chapters=10, after=True, full=5))
         stamp = verdict_basis(v, q)
+        since = last_judged(before, q["id"])
+        passages = rest_of_chapter(workdir, q, finder.candidates(q, chapters=10, after=True, full=5))
+        if since is not None and not came_back(q, since, [p["chapter"] for p in passages]):
+            keep[q["id"]] = {"source": "carried", "verdict": "unanswered", "since": since, "basis": stamp, "prompt": PROMPT_STAMP}
+            carried += 1
+            continue
+        if since is None:
+            passages = finder.earlier(q) + passages
         if q["id"] in old and reusable(old[q["id"]], stamp, [p["chapter"] for p in passages]):
             keep[q["id"]] = old[q["id"]]
         else:
             work.append((q, passages, stamp))
-    return keep, work
+    return keep, work, carried
 
 
 def ask(workdir, kb, v, batch):
@@ -181,7 +202,8 @@ def ask(workdir, kb, v, batch):
         log(workdir, f"  answers batch {batch[0][0]['id']}: {exc}")
         return {q["id"]: {"source": "llm", "verdict": "error", "reason": str(exc)} for q, _, _ in batch}
     results = {str(r.get("id")): r for r in reply.get("results") or [] if isinstance(r, dict)}
-    return {q["id"]: {**decide(workdir, kb, q, results.get(q["id"], {}), [p["chapter"] for p in passages], v["to"]), "basis": stamp}
+    return {q["id"]: {**decide(workdir, kb, q, results.get(q["id"], {}), [p["chapter"] for p in passages], v["to"]), "basis": stamp,
+                      "prompt": PROMPT_STAMP}
             for q, passages, stamp in batch}
 
 
@@ -199,12 +221,12 @@ def cmd_answers(args):
         key = str(v["to"])
         kb = load_states(workdir, until=v["to"], answers_before=v["to"], corrections=(QUESTIONS,), only_mysteries=True)
         earlier = boundaries[key]["questions"]
-        keep, work = pending(workdir, kb, v, earlier)
+        keep, work, carried = pending(workdir, kb, v, earlier, [boundaries[str(u["to"])] for u in volumes if u["to"] < v["to"]])
         boundaries[key] = {"name": v["name"], "to": v["to"], "questions": keep}
         write_json(path, {"boundaries": boundaries})
         batches = [work[i:i + args.batch] for i in range(0, len(work), args.batch)]
         log(workdir, f"answers: {len(work)} of {len(kb.open_questions())} questions open at the end of {v['name']} (ch {v['to']}) "
-                     f"to ask in {len(batches)} batches")
+                     f"to ask in {len(batches)} batches; {carried} kept from an earlier volume end, as no chapter since came back to them")
 
         def record(batch):
             decided = ask(workdir, kb, v, batch)
