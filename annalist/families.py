@@ -121,8 +121,6 @@ def reading_key(key, target_type):
 
 def relation_family(rtype, readings=None, target_type=None):
     key = wording_key(rtype)
-    if len(signals(key)) == 1:
-        return rule_family(key)
     return (readings or {}).get(reading_key(key, target_type)) or rule_family(key)
 
 

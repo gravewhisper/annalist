@@ -1,3 +1,4 @@
+import json
 import unittest
 
 from annalist.families import relation_family
@@ -82,13 +83,10 @@ class RuleFamilyTest(unittest.TestCase):
         self.assertEqual(relation_family(NEWS, readings, "artifact"), "other")
         self.assertEqual(relation_family(NEWS, readings), "other")
 
-    def test_admiring_someone_is_alliance_not_romance_even_over_an_earlier_reading(self):
+    def test_admiring_someone_is_alliance_not_romance(self):
         for wording in ("admirer of", "admires", "admired", "formerly admired"):
-            self.assertEqual(relation_family(wording, {f"{wording} [character]": "romance"}, "character"), "alliance", wording)
+            self.assertEqual(relation_family(wording), "alliance", wording)
         self.assertEqual(relation_family("hopes to find the fleet admiral through"), "other")
-
-    def test_a_wording_with_one_rule_signal_follows_the_rule_over_a_stored_reading(self):
-        self.assertEqual(relation_family("lover of", {"lover of [character]": "alliance"}, "character"), "romance")
 
 
 class ThirdPartyTest(unittest.TestCase):
@@ -155,6 +153,19 @@ class FamiliesMiniTest(unittest.TestCase):
         rows = self.shown("Ines Varro", "Tomas Hale")
         self.assertEqual([(r["type"], r["family"], r["status"], r["by"]) for r in rows if "courtship" in r["type"]],
                          [("secret courtship with", "romance", "belief", "Odile Marr")])
+
+    def test_rerunning_the_stage_drops_a_stored_reading_of_a_wording_the_rules_now_settle(self):
+        path = self.book.workdir / "families.json"
+        kept = path.read_text(encoding="utf-8")
+        try:
+            stale = {**self.book.json("families.json")["readings"], "admirer of [character]": "romance"}
+            path.write_text(json.dumps({"readings": stale}), encoding="utf-8")
+            self.book.run_annalist("families", str(self.book.workdir))
+            readings = self.book.json("families.json")["readings"]
+            self.assertNotIn("admirer of [character]", readings)
+            self.assertIn(f"{NEWS} [character]", readings)
+        finally:
+            path.write_text(kept, encoding="utf-8")
 
     def test_every_relation_says_who_asserts_it(self):
         self.assertTrue(all("by" in r for r in self.wiki["relations"]))
