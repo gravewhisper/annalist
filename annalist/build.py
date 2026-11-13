@@ -207,9 +207,7 @@ STAGES = (
     Stage("resolve", lambda run: cmd_resolve(namespace(run)), STATE + ("types.json", "discover.json"), lambda run: ["merges.json"],
           ("resolve", "reveal", "identify"), code=("resolve",)),
     Stage("newtypes", lambda run: cmd_newtypes(namespace(run, to=run.last)), STATE + ("types.json", "discover.json", "merges.json", "volumes.json"),
-          lambda run: ["newtypes.json"], ("newtypes",),
-          skip=lambda run: (None if run.eligible_volumes() else f"no volume ends by chapter {run.last}") if run.book().get("power_types")
-          else "the book keeps to the general types",
+          lambda run: ["newtypes.json"], ("newtypes",), skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}",
           code=("newtypes",)),
     Stage("relate", lambda run: cmd_relate(namespace(run)), STATE + (*TYPED, "merges.json", "discover.json"),
           lambda run: ["relate.json"], ("relate",), code=("relate",)),
