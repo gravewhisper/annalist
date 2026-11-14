@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import re
 import shutil
 import sys
@@ -308,6 +309,19 @@ def build(workdir, theme):
     }
 
 
+def write_site(workdir, outdir, data, public):
+    shutil.copytree(SITE, outdir)
+    (outdir / "data").mkdir()
+    (outdir / "data" / "wiki.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    stamp_assets(outdir)
+    if not public:
+        (outdir / "text").mkdir()
+        for c in data["chapters"]:
+            src = workdir / "chapters" / f"{c['n']:04d}.txt"
+            if src.exists():
+                shutil.copy(src, outdir / "text" / src.name)
+
+
 def cmd_export(args):
     workdir, outdir = Path(args.workdir).resolve(), Path(args.outdir).resolve()
     theme = read_json(args.theme, {}) if args.theme else {}
@@ -321,20 +335,21 @@ def cmd_export(args):
         data["book"]["review_tools"] = True
         data["checks"] = site_checks(workdir, data["entities"], data["facts"], data["book"]["max"])
 
-    if outdir.exists() and any(outdir.iterdir()):
-        if not (outdir / "data" / "wiki.json").exists():
-            sys.exit(f"{outdir} is not empty and is not a previous export; refusing to replace it")
-        shutil.rmtree(outdir)
-    shutil.copytree(SITE, outdir)
-    (outdir / "data").mkdir()
-    (outdir / "data" / "wiki.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    stamp_assets(outdir)
-    if not args.public:
-        (outdir / "text").mkdir()
-        for c in data["chapters"]:
-            src = workdir / "chapters" / f"{c['n']:04d}.txt"
-            if src.exists():
-                shutil.copy(src, outdir / "text" / src.name)
+    if outdir.exists() and any(outdir.iterdir()) and not (outdir / "data" / "wiki.json").exists():
+        sys.exit(f"{outdir} is not empty and is not a previous export; refusing to replace it")
+    staged = outdir.with_name(f"{outdir.name}.new-{os.getpid()}")
+    try:
+        write_site(workdir, staged, data, args.public)
+    except BaseException:
+        shutil.rmtree(staged, ignore_errors=True)
+        raise
+    if outdir.exists():
+        old = outdir.with_name(f"{outdir.name}.old-{os.getpid()}")
+        outdir.rename(old)
+        staged.rename(outdir)
+        shutil.rmtree(old)
+    else:
+        staged.rename(outdir)
     size = sum(p.stat().st_size for p in outdir.rglob("*") if p.is_file())
     print(f"exported {len(data['entities'])} entities, {len(data['facts'])} facts, chapters 1-{data['book']['max']} "
           f"to {outdir} ({'public' if args.public else 'private'}, {size / 1e6:.1f} MB)")

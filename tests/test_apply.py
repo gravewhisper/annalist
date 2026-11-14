@@ -4,6 +4,7 @@ import os
 import re
 import tempfile
 import unittest
+from argparse import Namespace
 from dataclasses import replace
 from pathlib import Path
 from unittest import mock
@@ -12,6 +13,7 @@ from annalist.apply import built_run
 from annalist.backends import load_settings
 from annalist.build import run_stage, STAGES
 from annalist.estimate import prompt_pricer
+from annalist.export import cmd_export
 from annalist.files import read_jsonl
 from annalist.llm import Budget, BudgetSpent, cached_llm, cached_reply, Unpriced
 from annalist.render import Ask, ask_all
@@ -176,6 +178,20 @@ class ApplyTest(unittest.TestCase):
         with mock.patch.dict(os.environ, self.book.env, clear=True):
             run_stage(built_run(self.workdir, 1), replace(render, run=lambda run: self.correct({"entries": [RETITLED]})))
         self.assertEqual(plan_rows(self.book.build("--dry-run").stdout)["render"], "run: input changed")
+
+
+class ExportSwapTest(unittest.TestCase):
+    def test_an_export_that_fails_partway_leaves_the_previous_site_whole(self):
+        book = MiniBuild(build_script())
+        self.addCleanup(book.close)
+        book.build()
+        site = book.workdir / "site"
+        before = pages(book.workdir)
+        with mock.patch.dict(os.environ, book.env, clear=True), mock.patch("annalist.export.stamp_assets", side_effect=OSError("disk full")):
+            with self.assertRaises(OSError):
+                cmd_export(Namespace(workdir=str(book.workdir), outdir=str(site), public=False, theme=None))
+        self.assertEqual(pages(book.workdir), before)
+        self.assertEqual(sorted(p.name for p in book.workdir.iterdir() if p.name.startswith("site")), ["site"])
 
 
 if __name__ == "__main__":
