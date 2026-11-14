@@ -111,10 +111,11 @@ def join(kb, entry, until):
     part, page, chapter = kb.resolve(entry["name"]), kb.resolve(entry["same_as"]), entry["chapter"]
     if page is None:
         return [unmatched(entry["same_as"], entry)]
+    if part == page:
+        return []
     later = absorbed_part(kb.entities[page], entry["same_as"])
     chapter = max(chapter, later["chapter"]) if later else chapter
     problem = ("already part of another page" if absorbed_part(kb.entities[part], entry["name"]) and name_key(entry["name"]) != name_key(part)
-               else "already the same page" if part == page
                else f"chapter {chapter} is before one of them first appears"
                if chapter < max(kb.entities[part]["first_chapter"], kb.entities[page]["first_chapter"]) else None)
     problem = problem or ("kept apart by a not_same_as row" if kb.kept_apart(part, page) else None)

@@ -123,10 +123,19 @@ class SameAs(unittest.TestCase):
             self.assertIn("Grey Stranger", kb.entities)
             self.assertEqual(kb.problems, ["corrections.json names 'Nobody', which matches no entry, skipped"])
 
-    def test_two_names_of_one_page_are_left_alone(self):
+    def test_two_names_of_one_page_are_left_alone_without_a_warning(self):
         kb = Story(self, {"entries": [{**SAME, "name": "Old Grey", "same_as": "Grey Stranger"}]}).kb()
         self.assertIn("Grey Stranger", kb.entities)
-        self.assertIn("already the same page", kb.problems[0])
+        self.assertEqual(kb.problems, [])
+
+    def test_a_name_already_joined_into_the_same_page_needs_no_warning(self):
+        row = {"name": "Hood", "same_as": "Grey Stranger", "chapter": 3, "quotes": ["the hood fell back"]}
+        self.assertEqual(Story(self, {"entries": [row]}).kb().problems, [])
+
+    def test_a_name_joined_into_a_different_page_is_still_reported(self):
+        row = {"name": "Hood", "same_as": "Mira Vale", "chapter": 4, "quotes": ["He pushed his spectacles up"]}
+        self.assertEqual(Story(self, {"entries": [row]}).kb().problems,
+                         ["correction Hood same_as Mira Vale: already part of another page, skipped"])
 
     def test_a_link_whose_quote_is_not_in_its_chapter_is_skipped_with_a_warning(self):
         kb = Story(self, {"entries": [{**SAME, "quotes": ["He took off his hat."]}]}).kb()
