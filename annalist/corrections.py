@@ -153,6 +153,16 @@ def drop_relation(kb, row):
     return []
 
 
+def dismiss(kb, entry, key):
+    if name_key(entry["name"]) != name_key(key):
+        return [f"{origin(entry)} dismisses {entry['name']!r}, a name on the page {key!r}, not a page of its own, skipped"]
+    del kb.entities[key]
+    kb.index = {k: v for k, v in kb.index.items() if v != key}
+    kb.facts = [f for f in kb.facts if f["entity"] != key]
+    kb.relations = [r for r in kb.relations if key not in (r["source"], r["target"])]
+    return []
+
+
 def correct_pages(kb, corrections, until):
     problems = [unmatched(e["name"], e) for e in corrections.entries if kb.resolve(e["name"]) is None]
     for entry in corrections.entries:
@@ -164,6 +174,9 @@ def correct_pages(kb, corrections, until):
             kb.entities[key]["type"] = entry["type"]
         if key and "title" in entry:
             kb.entities[key]["title"] = {"name": entry["title"], **({"chapter": entry["title_chapter"]} if "title_chapter" in entry else {})}
+    for entry in corrections.entries:
+        if entry.get("dismiss") is True and (key := kb.resolve(entry["name"])):
+            problems += dismiss(kb, entry, key)
     for k, row in enumerate(corrections.relations, 1):
         problems += add_relation(kb, row, k, until)
     for row in corrections.dropped:
@@ -183,7 +196,7 @@ def find_question(questions, row):
 def claims(kb, kind, row):
     if kind == "entries":
         key = kb.resolve(row["name"]) or row["name"]
-        yield from ((part, key) for part in ("same_as", "type", "title") if part in row)
+        yield from ((part, key) for part in ("same_as", "type", "title", "dismiss") if part in row)
         for field, rows in row.get("fields", {}).items():
             yield from (("value", key, field, r["chapter"]) for r in rows)
         for field, rows in row.get("drop", {}).items():

@@ -47,6 +47,14 @@ The opposite mistake joins two people into one page, or files one person's name 
 
 These rows act on the next rebuild, from `read` on, before any page is built. Two pages kept apart are never joined, whether by a chapter's read, by `resolve`, by a ladder, or by a `same_as` row, and neither takes the other's names as aliases. A dropped alias is never attached to the page, and a name that no longer belongs to any page gets a page of its own when a chapter lists it. A name in either list matches a page by its title or any of its aliases, like `name`. Neither row needs a quote, since it only stops a link. `why` is a note for you and is not read.
 
+A page that is no real entry, such as a word the book capitalizes for effect, can be dismissed. It disappears at every chapter with its facts and ties, like a dismissed question:
+
+```json
+{"name": "Evermore", "dismiss": true}
+```
+
+`name` must be the page's own title. A name that is only an alias of another page is skipped with a warning, so a dismissal never removes a real page.
+
 A top-level `relations` list adds ties the wiki missed:
 
 ```json

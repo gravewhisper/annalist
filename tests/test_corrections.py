@@ -221,6 +221,20 @@ class Questions(unittest.TestCase):
         for until in (3, 4, None):
             self.assertNotIn("Q0003-01", story.kb(until=until).questions)
 
+    def test_a_dismissed_entry_is_gone_from_every_chapter_with_its_facts_and_ties(self):
+        story = Story(self, {"entries": [{"name": "The Veil", "dismiss": True}]}, merges=MERGES[1:])
+        for until in (2, 4, None):
+            kb = story.kb(until=until)
+            self.assertNotIn("The Veil", kb.entities)
+            self.assertFalse([f for f in kb.facts if f["entity"] == "The Veil"])
+            self.assertIsNone(kb.resolve("The Veil"))
+        self.assertNotIn("The Veil", [e["name"] for e in story.site()[1]["entities"]])
+
+    def test_a_dismissal_naming_another_page_s_alias_is_skipped(self):
+        kb = Story(self, {"entries": [{"name": "Old Grey", "dismiss": True}]}).kb()
+        self.assertIn("Grey Stranger", kb.entities)
+        self.assertIn("corrections.json dismisses 'Old Grey', a name on the page 'Grey Stranger', not a page of its own, skipped", kb.problems)
+
     def test_the_question_stages_treat_a_settled_question_as_settled_and_see_no_page_correction(self):
         story = Story(self, {"entries": [SAME], "questions": [ANSWER, {"id": "Q0003-01", "dismiss": True}]})
         kb = story.kb(corrections=(QUESTIONS,))
