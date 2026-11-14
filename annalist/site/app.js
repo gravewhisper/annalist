@@ -2916,11 +2916,15 @@ function showHover(el) {
   const said = el.dataset.rels ? el.dataset.rels.split('\n') : [];
   const rels = said.length ? `<ul class="hrels">${said.slice(0, 4).map(t => `<li>${esc(t)}</li>`).join('')}${said.length > 4 ? `<li class="muted">and ${said.length - 4} more</li>` : ''}</ul>` : '';
   hover.innerHTML = `<h4>${esc(displayName(e))}</h4><div class="muted">${esc(cap(e.type))} &middot; since ch ${e.first} &middot; ${visFacts(e.id).length} facts</div>${al.length ? `<div class="muted">aka ${al.map(esc).join(', ')}</div>` : ''}${rels}<p>${esc(rels ? clip(l.text, 220) : l.text)}</p>`;
-  const r = (el.querySelector('circle') || el).getBoundingClientRect();
-  const w = hover.offsetWidth || 320;
-  hover.style.left = Math.max(8, Math.min(scrollX + r.left, scrollX + innerWidth - w - 8)) + 'px';
-  hover.style.top = (scrollY + r.bottom + 6) + 'px';
   hover.classList.add('show');
+  const spot = hoverSpot((el.querySelector('circle') || el).getBoundingClientRect(), hover.offsetWidth, hover.offsetHeight, innerWidth, innerHeight);
+  hover.style.left = spot.left + 'px';
+  hover.style.top = spot.top + 'px';
+}
+function hoverSpot(r, w, h, vw, vh) {
+  const below = r.bottom + 6, above = r.top - 6 - h;
+  return {left: Math.max(8, Math.min(r.left, vw - w - 8)),
+          top: below + h <= vh - 8 ? below : above >= 8 ? above : Math.max(8, Math.min(below, vh - h - 8))};
 }
 function hideHover() { hover.classList.remove('show'); }
 
@@ -3103,6 +3107,7 @@ function wire() {
     if (ev.key === 'Escape') { $('q').value = ''; $('results').classList.remove('open'); }
   });
   window.addEventListener('hashchange', () => { readHash(); render(); });
+  window.addEventListener('scroll', hideHover, {passive: true});
   window.addEventListener('resize', () => G.refit?.());
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && G.full) toggleFull(false); });
   document.addEventListener('keydown', ev => {
