@@ -27,6 +27,26 @@ def shared_type(kb, a, b):
     return ta if ta == tb else kb.types.kind(ta) if kb.types.kin(ta, tb) else None
 
 
+SPLIT_MARK = re.compile(r"\s*\([^)]*\)$")
+
+
+def same_name_across_types(kb, typed):
+    """Pairs of entries filed under unrelated types that go by one name, up to plural and possessive endings, such as an
+    item and the ability of the same name."""
+    holders = {}
+    for names in typed.values():
+        for n in names:
+            for x in names_of(kb.entities[n]):
+                if stems := frozenset(name_stems(x)):
+                    holders.setdefault(stems, set()).add(n)
+    found = set()
+    for group in holders.values():
+        for a, b in combinations(sorted(group), 2):
+            if not kb.types.kin(kb.entities[a]["type"], kb.entities[b]["type"]) and len({SPLIT_MARK.sub("", n) for n in (a, b)}) == 2:
+                found.add((a, b))
+    return sorted(found)
+
+
 def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partners=3):
     pairs = {}
 
@@ -55,6 +75,8 @@ def candidate_pairs(workdir, kb, by_entity, max_chapter, radius=150, stub_partne
             typed.setdefault(e["type"], []).append(name)
     for a, b in kin_pairs(kb, typed):
         variants(a, b)
+    for a, b in same_name_across_types(kb, typed):
+        add(a, b, f"same-name-across-types: {kb.entities[a]['type']} / {kb.entities[b]['type']}")
     for a, e in kb.entities.items():
         if e["type"] in UNTYPED:
             for b in (b for names in typed.values() for b in names):

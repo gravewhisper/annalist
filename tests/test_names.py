@@ -107,3 +107,21 @@ class NearSpellingPairTest(unittest.TestCase):
 
     def test_short_names_or_other_first_letters_need_a_one_letter_typo(self):
         self.assertEqual(self.pairs("Wren", "Brin", "Halden", "Velden", "Tamsin", "Tamsyn"), {("Tamsin", "Tamsyn")})
+
+
+class SameNameAcrossTypesTest(unittest.TestCase):
+    def test_one_name_filed_under_two_unrelated_types_goes_to_the_judge(self):
+        kb = Knowledge()
+        kb.upsert_entity({"name": "Ember Rounds", "type": "artifact"}, 1)
+        kb.upsert_entity({"name": "Ember Round", "type": "concept"}, 2)
+        kb.upsert_entity({"name": "Brannoc's Tavern", "type": "place"}, 1)
+        kb.upsert_entity({"name": "Brannoc Tavern", "type": "organization"}, 3)
+        kb.upsert_entity({"name": "Ember Hall", "type": "place"}, 1)
+        kb.upsert_entity({"name": "Warden", "type": "organization"}, 1)
+        kb.upsert_entity({"name": "Warden (sequence)", "type": "concept"}, 1)
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "chapters").mkdir()
+            (Path(tmp) / "chapters" / "0001.txt").write_text("Nothing here.\n", encoding="utf-8")
+            pairs = candidate_pairs(Path(tmp), kb, {}, 1)
+        across = {k for k, v in pairs.items() if any(r.startswith("same-name-across-types") for r in v["rules"])}
+        self.assertEqual(across, {("Ember Round", "Ember Rounds"), ("Brannoc Tavern", "Brannoc's Tavern")})
