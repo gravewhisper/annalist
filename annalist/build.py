@@ -31,7 +31,7 @@ from .read import cmd_read
 from .link import cmd_link
 from .newtypes import cmd_newtypes
 from .relate import cmd_relate
-from .render import ARCS_FILE, cmd_render
+from .render import ARCS_FILE, render_targets
 from .resolve import cmd_resolve
 from .retype import cmd_retype
 from .review import cmd_review
@@ -41,7 +41,7 @@ from .sweep import cmd_sweep
 from .template import overlapping_pairs
 from .tiers import cmd_tiers
 from .timelines import cmd_timelines
-from .volume import cmd_open_volume, cmd_volume
+from .volume import cmd_open_volume, write_volume
 from .wordings import cmd_wordings
 
 
@@ -147,7 +147,7 @@ def run_volumes(run):
     for v in started_volumes(run):
         if v["to"] <= run.last:
             keep.add(f"{slug(v['name'])}.json")
-            cmd_volume(Namespace(workdir=str(run.workdir), name=v["name"], start=v["from"], end=v["to"]))
+            write_volume(run.workdir, v["name"], v["from"], v["to"])
         else:
             cmd_open_volume(run.workdir, v["name"], v["from"], v["to"], run.last)
     for path in (run.workdir / "volumes").glob("*.json"):
@@ -156,6 +156,10 @@ def run_volumes(run):
     current = {(v["name"], v["from"]) for v in run.volumes["volumes"]}
     arcs = read_json(run.workdir / ARCS_FILE, {"volumes": []})["volumes"]
     write_json(run.workdir / ARCS_FILE, {"volumes": [v for v in arcs if (v["name"], v["from"]) in current]})
+
+
+def rendered(run):
+    return [None] + [v["to"] for v in run.eligible_volumes()]
 
 
 def namespace(run, **kw):
@@ -250,10 +254,11 @@ STAGES = (
                    "ladders.json", "answers.json", "ending.json", "volumes.json"),
           lambda run: ["proofread.json"], ("proofread",),
           skip=lambda run: None if run.eligible_volumes() else f"no volume ends by chapter {run.last}", code=("proofread",)),
-    Stage("render", lambda run: cmd_render(namespace(run, until=None, html=True)),
+    Stage("render", lambda run: render_targets(run.workdir, rendered(run), run.args.jobs, html_pages=True),
           STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
                    "ending.json", "volumes", ARCS_FILE, "ladders.json", "corrections.json", "proofread.json"),
-          lambda run: ["wiki/index.md"], ("summary", "personality", "appearance", "history"), code=("render",)),
+          lambda run: [f"wiki-ch{t:04d}/index.md" if t else "wiki/index.md" for t in rendered(run)], ("summary", "personality", "appearance", "history"),
+          code=("render",)),
     Stage("export", lambda run: cmd_export(Namespace(workdir=str(run.workdir), outdir=str(run.workdir / "site"), public=False, theme=None)),
           STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "leads.json", "sweep.json", "tiers.json", "profiles.json", "answers.json",
                    "ending.json", "volumes", ARCS_FILE, "ladders.json", "families.json", "corrections.json", "proofread.json"),

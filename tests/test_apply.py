@@ -22,5 +22,27 @@ class RenderKeysTest(unittest.TestCase):
                          "a render prompt changed, so every built run pays for it again; if that is meant, rewrite " + RENDER_KEYS.name)
 
 
+TRAITS = {"entries": [{"name": "Ines Varro", "fields": {"personality_evidence": [
+    {"chapter": 2, "value": "watchful", "quotes": ["He trained an apprentice."]},
+    {"chapter": 4, "value": "steadfast", "quotes": ["My name was Livia Hale. Tomas was my father.”"]}]}}]}
+
+
+def personality_chapters(book, name):
+    wiki = book.json("site/data/wiki.json")
+    page = next(e for e in wiki["entities"] if e["name"] == name)
+    return [p["chapter"] for p in page["profile"].get("personality", [])]
+
+
+class AsOfRenderTest(unittest.TestCase):
+    def test_a_correction_reaches_the_personality_the_site_shows_at_an_earlier_volume_end(self):
+        book = MiniBuild(echo_script())
+        self.addCleanup(book.close)
+        book.build("--volumes", "1-3,4-5")
+        self.assertEqual(personality_chapters(book, "Ines Varro"), [1])
+        (book.workdir / "corrections.json").write_text(json.dumps(TRAITS), encoding="utf-8")
+        book.build("--volumes", "1-3,4-5")
+        self.assertEqual(personality_chapters(book, "Ines Varro"), [1, 2, 4])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,3 @@
-import argparse
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -7,7 +6,7 @@ from pathlib import Path
 from .files import read_json, write_json
 from .llm import cached_llm
 from .names import slug
-from .render import ARCS_FILE, cmd_render
+from .render import ARCS_FILE, render_targets
 from .state import load_states, timeline_role
 
 
@@ -129,14 +128,12 @@ def cmd_open_volume(workdir, name, lo, hi, read):
     close_arcs(workdir, name, lo, hi, read, synopsis_lines(workdir, kb, lo, read))
 
 
-def cmd_volume(args):
-    workdir = Path(args.workdir).resolve()
-    lo, hi = args.start, args.end
+def write_volume(workdir, name, lo, hi):
     kb = load_states(workdir, until=hi)
     synopses = synopsis_lines(workdir, kb, lo, hi)
-    arcs = close_arcs(workdir, args.name, lo, hi, hi, synopses)
+    arcs = close_arcs(workdir, name, lo, hi, hi, synopses)
     page = cached_llm(workdir, "volume", VOLUME_PROMPT.format(
-        name=args.name, lo=lo, hi=hi, synopses=synopses(lo, hi),
+        name=name, lo=lo, hi=hi, synopses=synopses(lo, hi),
         arcs="\n\n".join(f"{a['name']} (chapters {a['start']} to {a['end']}):\n{a['summary']}" for a in arcs)))
     stored = read_json(workdir / "profiles.json", {"characters": {}, "deaths": []})
     profiles = stored["characters"]
@@ -147,9 +144,15 @@ def cmd_volume(args):
                     if o["value"] == "revived" and d["chapter"] < o["chapter"] <= hi and o.get("quote_ok")]
         if revivals:
             d["revived"] = revivals[0]
-    write_json(workdir / "volumes" / f"{slug(args.name)}.json",
-               {"name": args.name, "from": lo, "to": hi, "arcs": arcs, "page": page,
+    write_json(workdir / "volumes" / f"{slug(name)}.json",
+               {"name": name, "from": lo, "to": hi, "arcs": arcs, "page": page,
                 "key_events": key_events(workdir, kb, arcs), "deaths": deaths})
     print(f"{len(deaths)} deaths")
-    cmd_render(argparse.Namespace(workdir=str(workdir), until=hi, html=True, jobs=4))
+
+
+def cmd_volume(args):
+    workdir = Path(args.workdir).resolve()
+    hi = args.end
+    write_volume(workdir, args.name, args.start, hi)
+    render_targets(workdir, [hi], 4, html_pages=True)
     print(f"volume page: {workdir / f'wiki-ch{hi:04d}' / 'volumes' / (slug(args.name) + '.md')}")
