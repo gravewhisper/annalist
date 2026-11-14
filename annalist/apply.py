@@ -15,6 +15,10 @@ UNREAD = ("extract",)
 DEFAULT_MARGIN = 1.25
 
 
+def dollars(amount):
+    return money(amount) if amount is None or amount >= 1 else f"${amount:.4f}"
+
+
 def refuse(message):
     sys.exit(f"annalist apply: {message}; nothing was asked or written")
 
@@ -60,13 +64,13 @@ def total(prices):
 def print_quote(asks, misses):
     print(f"render: {len(set(asks))} prompts, {len(misses)} not answered yet")
     by_purpose = {}
-    for a, dollars in misses.items():
-        by_purpose.setdefault(a.purpose, []).append((a, dollars))
+    for a, price in misses.items():
+        by_purpose.setdefault(a.purpose, []).append((a, price))
     for purpose, rows in sorted(by_purpose.items()):
         pages = list(dict.fromkeys(a.page for a, _ in rows))
         shown = ", ".join(pages[:5]) + (f" and {len(pages) - 5} more" if len(pages) > 5 else "")
-        print(f"  {purpose:<12} {len(rows):>5}  {money(total(dict(rows))):>10}  {shown}")
-    print(f"price: {money(total(misses))}")
+        print(f"  {purpose:<12} {len(rows):>5}  {dollars(total(dict(rows))):>10}  {shown}")
+    print(f"price: {dollars(total(misses))}")
 
 
 def budget_cap(args, price):
@@ -75,11 +79,11 @@ def budget_cap(args, price):
     if price is None:
         refuse("a model has no price in book.json, so pass --budget")
     if args.yes:
-        refuse(f"pass --budget with --yes; the price is {money(price)}")
+        refuse(f"pass --budget with --yes; the price is {dollars(price)}")
     if not sys.stdin.isatty():
         refuse("this will spend LLM calls; pass --yes and --budget to run without asking, or --dry-run to only see the price")
     cap = price * DEFAULT_MARGIN
-    if input(f"Pay up to {money(cap)}? [y/N] ").strip().lower() not in ("y", "yes"):
+    if input(f"Pay up to {dollars(cap)}? [y/N] ").strip().lower() not in ("y", "yes"):
         refuse("stopped before spending anything")
     return cap
 
@@ -99,8 +103,9 @@ def cmd_apply(args):
         if reader:
             refuse("these corrections.json rows would be skipped:\n" + "\n".join(f"  {p}" for p in reader)
                    + "\nfix them and run annalist apply again")
-        asks = whole.asks() + [a for t in targets if t is not None for a in prepare(workdir, t).asks()]
+        asks = whole.asks()
         del whole
+        asks += [a for t in targets if t is not None for a in prepare(workdir, t).asks()]
         settings = run.settings()
         misses = priced_misses(workdir, settings, asks)
         left = leftovers(run)
@@ -114,7 +119,7 @@ def cmd_apply(args):
             return
         price = total(misses)
         cap = budget_cap(args, price) if misses and price != 0 else 0.0
-        budget = Budget(cap, {(a.purpose, a.prompt): dollars or 0.0 for a, dollars in misses.items()})
+        budget = Budget(cap, {(a.purpose, a.prompt): estimate or 0.0 for a, estimate in misses.items()})
         try:
             ask_all(workdir, list(misses), args.jobs, budget)
         except BudgetSpent as exc:
@@ -128,4 +133,4 @@ def cmd_apply(args):
         cmd_export(Namespace(workdir=str(workdir), outdir=str(workdir / "site"), public=False, theme=None))
         for name in APPLIED:
             stamp(run, stages[name], before[name])
-        print(f"annalist apply: done, {money(budget.spent)} spent; site {workdir / 'site'}")
+        print(f"annalist apply: done, {dollars(budget.spent)} spent; site {workdir / 'site'}")

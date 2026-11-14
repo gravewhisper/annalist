@@ -34,7 +34,7 @@ Options per backend:
 
 - `anthropic`: `base_url`, `api_key_env`, `max_tokens` (default 32000), `timeout_s` (default 900), `prices`.
 - `openai`: `base_url` (default `$OPENAI_BASE_URL`, then `https://api.openai.com/v1`), `api_key_env`, `max_tokens` (sent only when set), `timeout_s`, `prices`.
-- `fake`: `script`, a path relative to the run directory.
+- `fake`: `script`, a path relative to the run directory, and `prices`, as for `anthropic`. The fake backend counts four characters a token, so a test can spend and stop at a budget.
 
 `prices` maps a model id to dollars per million input and output tokens. Anthropic models have built-in prices. A model with no price logs a null cost.
 
