@@ -280,6 +280,12 @@ function toggleDisc(btn) {
   btn.setAttribute('aria-expanded', String(open));
   $(btn.getAttribute('aria-controls')).hidden = !open;
 }
+const FEW = 3;
+function fold(items, sep) {
+  if (items.length <= FEW + 1) return items.join(sep);
+  const [btn, panel] = expander(showHide(`${items.length - FEW} more`), items.slice(FEW).join(sep));
+  return `${items.slice(0, FEW).join(sep)} ${btn}${panel}`;
+}
 function expandRow(head, noun, body) {
   if (!body) return `<div class="fact">${head}</div>`;
   const [btn, panel] = expander(showHide(noun), body);
@@ -523,6 +529,7 @@ function currentStatus(profile) {
   if (erasedDeath) return {value: 'alive', chapter: erasedDeath, basis: 'erased_death', earlier: []};
   return null;
 }
+const earlierValues = obs => `<div class="prev">previously ${fold(obs.map(o => `${linkify(cap(o.value), null, o.chapter)} (ch ${o.chapter})`), ', ')}</div>`;
 function statusRow(profile) {
   const s = currentStatus(profile);
   if (!s) return '';
@@ -530,7 +537,7 @@ function statusRow(profile) {
   if (s.basis === 'erased_death') cell = `Alive <div class="prev">died only in an erased timeline (ch ${s.chapter})</div>`;
   else if (s.basis === 'spoke' || s.basis === 'appeared') cell = `Alive <span class="prev">(as of ch ${s.chapter}, inferred)</span>${s.erasedDeath ? `<div class="prev">died only in an erased timeline (ch ${s.erasedDeath})</div>` : ''}`;
   else cell = `${esc(cap(s.value))} <span class="prev">(ch ${s.chapter})</span>${tlBadge(s.timeline)}`;
-  if (s.earlier.length) cell += `<div class="prev">previously ${s.earlier.map(o => `${esc(cap(o.value))} (ch ${o.chapter})`).join(', ')}</div>`;
+  if (s.earlier.length) cell += earlierValues(s.earlier);
   return `<tr><th>${esc(label('status'))}</th><td>${cell}</td></tr>`;
 }
 function fieldSeen(key, obs) {
@@ -549,7 +556,7 @@ function infoRows(profile) {
     for (const o of seen.slice(0, -1).reverse()) {
       if (o.value.toLowerCase() !== cur.value.toLowerCase() && !prev.some(p => p.value.toLowerCase() === o.value.toLowerCase())) prev.push(o);
     }
-    return `<tr><th>${esc(label(key))}</th><td>${linkify(cap(cur.value), null, cur.chapter)} <span class="prev">(ch ${cur.chapter})</span>${tlBadge(cur.timeline)}${prev.length ? `<div class="prev">previously ${prev.map(o => `${esc(cap(o.value))} (ch ${o.chapter})`).join(', ')}</div>` : ''}</td></tr>`;
+    return `<tr><th>${esc(label(key))}</th><td>${linkify(cap(cur.value), null, cur.chapter)} <span class="prev">(ch ${cur.chapter})</span>${tlBadge(cur.timeline)}${prev.length ? earlierValues(prev) : ''}</td></tr>`;
   }).join('');
 }
 
@@ -661,7 +668,7 @@ function renderEntity(id) {
     ...[['facts', 'Facts', fs.length + xFs.length], ['relations', 'Relations', rels.length + xRels.length], ['mysteries', 'Mysteries', qs.length]].filter(t => t[2]).map(([k, t]) => ['tabs', t, k])].filter(Boolean));
   const infobox = `<aside class="infobox"><h3>${esc(name)}</h3><table>
     <tr><th>Type</th><td>${esc(cap(e.type))}</td></tr>
-    ${aliases.length ? `<tr><th>Also known as</th><td>${aliases.map(esc).join('<br>')}</td></tr>` : ''}
+    ${aliases.length ? `<tr><th>Also known as</th><td>${fold(aliases.map(esc), '<br>')}</td></tr>` : ''}
     ${infoRows(e.profile)}
     <tr><th>First seen</th><td>Ch ${e.first}: ${esc(ctitle(e.first))}</td></tr>
     <tr><th>Last seen</th><td>Ch ${lastSeen(e)}</td></tr>
@@ -2915,7 +2922,7 @@ function showHover(el) {
   const l = lede(e), al = visAliases(e).filter(a => a !== displayName(e));
   const said = el.dataset.rels ? el.dataset.rels.split('\n') : [];
   const rels = said.length ? `<ul class="hrels">${said.slice(0, 4).map(t => `<li>${esc(t)}</li>`).join('')}${said.length > 4 ? `<li class="muted">and ${said.length - 4} more</li>` : ''}</ul>` : '';
-  hover.innerHTML = `<h4>${esc(displayName(e))}</h4><div class="muted">${esc(cap(e.type))} &middot; since ch ${e.first} &middot; ${visFacts(e.id).length} facts</div>${al.length ? `<div class="muted">aka ${al.map(esc).join(', ')}</div>` : ''}${rels}<p>${esc(rels ? clip(l.text, 220) : l.text)}</p>`;
+  hover.innerHTML = `<h4>${esc(displayName(e))}</h4><div class="muted">${esc(cap(e.type))} &middot; since ch ${e.first} &middot; ${visFacts(e.id).length} facts</div>${al.length ? `<div class="muted">aka ${al.slice(0, FEW).map(esc).join(', ')}${al.length > FEW ? ` and ${al.length - FEW} more` : ''}</div>` : ''}${rels}<p>${esc(rels ? clip(l.text, 220) : l.text)}</p>`;
   hover.classList.add('show');
   const spot = hoverSpot((el.querySelector('circle') || el).getBoundingClientRect(), hover.offsetWidth, hover.offsetHeight, innerWidth, innerHeight);
   hover.style.left = spot.left + 'px';

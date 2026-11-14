@@ -15,9 +15,9 @@ let url = '';
 const context = {document, window: {addEventListener: noop, scrollTo: noop}, location: {hash: ''}, history: {replaceState: (state, title, to) => { url = to; }},
   localStorage: (() => { const kept = new Map(); return {getItem: k => kept.get(k) ?? null, setItem: (k, v) => kept.set(k, String(v))}; })(), matchMedia: () => ({matches: false, addEventListener: noop}),
   fetch: async () => ({json: async () => JSON.parse(readFileSync(wikiPath, 'utf8'))}), console, URLSearchParams,
-  requestAnimationFrame: () => 0, cancelAnimationFrame: noop, performance, scrollX: 0, scrollY: 0, innerWidth: 1200};
+  requestAnimationFrame: () => 0, cancelAnimationFrame: noop, performance, scrollX: 0, scrollY: 0, innerWidth: 1200, innerHeight: 800};
 vm.createContext(context);
-vm.runInContext(readFileSync(app, 'utf8') + '\nglobalThis.__app = {S, G, D, volumeAt, renderEntity, renderMysteries, renderGraph, mainCharacter, shownNames, renderHome, renderChapter, renderVolume, counts, graphAt, qState, load, go, search, graphSearch, storySearch, readHash, REL_GROUPS, TYPE_GROUPS, predicate, questions: () => D.questions, ORBIT, fitView, labelSpots, outward, revealTiming, CAT_COLS, hoverSpot};', context);
+vm.runInContext(readFileSync(app, 'utf8') + '\nglobalThis.__app = {S, G, D, volumeAt, renderEntity, renderMysteries, renderGraph, mainCharacter, shownNames, renderHome, renderChapter, renderVolume, counts, graphAt, qState, load, go, search, graphSearch, storySearch, readHash, REL_GROUPS, TYPE_GROUPS, predicate, questions: () => D.questions, ORBIT, fitView, labelSpots, outward, revealTiming, CAT_COLS, hoverSpot, showHover};', context);
 await context.__app.load();
 await new Promise(r => setTimeout(r));
 
@@ -127,6 +127,7 @@ for (const view of views) {
     : id === 'tables' ? {rel: a.REL_GROUPS, types: a.TYPE_GROUPS, sorts: a.CAT_COLS.map(c => c.key)}
     : id === 'volumeat' ? a.volumeAt(+focus)
     : id === 'hoverspot' ? a.hoverSpot(...JSON.parse(focus))
+    : id === 'hover' ? (a.showHover({dataset: {ent: focus}, querySelector: () => null, getBoundingClientRect: () => ({top: 0, bottom: 20, left: 0})}), nodes.hover.innerHTML)
     : id === 'header' ? {brand: nodes.brand.textContent, title: document.title}
     : id === 'search' ? (document.getElementById('q').value = focus, a.search(), nodes.results.innerHTML)
     : id === 'gsearch' ? boxed(box => a.graphSearch({value: focus}, box, x => x))
