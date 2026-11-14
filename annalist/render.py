@@ -10,7 +10,7 @@ from .book import load_book
 from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
 from .files import read_json, write_atomic
 from .families import wording_key
-from .llm import cached_llm, must_hit
+from .llm import cached_llm, must_hit, UNLIMITED
 from .names import display_names, name_key, slug
 from .pages import PageName, read_pages
 from .profile import page_profiles
@@ -522,10 +522,10 @@ def prepare(workdir, until):
                 problems=(whole.problems + missed) if until is None else [])
 
 
-def ask_all(workdir, asks, jobs):
+def ask_all(workdir, asks, jobs, gate=UNLIMITED):
     settings = load_settings(workdir)
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        futures = [pool.submit(cached_llm, workdir, a.purpose, a.prompt, settings=settings) for a in asks]
+        futures = [pool.submit(cached_llm, workdir, a.purpose, a.prompt, settings=settings, gate=gate) for a in asks]
         try:
             for future in futures:
                 future.result()

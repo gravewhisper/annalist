@@ -41,6 +41,42 @@ class Unpriced(Exception):
     pass
 
 
+class Unlimited:
+    def admit(self, purpose, prompt):
+        return 0.0
+
+    def charge(self, reserved, cost):
+        pass
+
+
+UNLIMITED = Unlimited()
+
+
+class Budget:
+    """Lets through only the prompts it priced, and only while what it spent and holds for calls under way stays within the cap.
+    Each attempt holds its estimate before it starts, so parallel calls cannot together pass the cap."""
+
+    def __init__(self, cap, approved):
+        self.cap, self.approved = cap, approved
+        self.spent = self.held = 0.0
+        self.lock = threading.Lock()
+
+    def admit(self, purpose, prompt):
+        estimate = self.approved.get((purpose, prompt))
+        if estimate is None:
+            raise Unpriced(f"{purpose}: a prompt that was not priced reached the model")
+        with self.lock:
+            if self.spent + self.held + estimate > self.cap + 1e-9:
+                raise BudgetSpent(f"spent ${self.spent:,.2f} of the ${self.cap:,.2f} budget; the next {purpose} call would pass it")
+            self.held += estimate
+        return estimate
+
+    def charge(self, reserved, cost):
+        with self.lock:
+            self.held -= reserved
+            self.spent += reserved if cost is None else cost
+
+
 def parse_json_object(text):
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
     start, end = text.find("{"), text.rfind("}")
@@ -107,7 +143,7 @@ Reply again with one JSON object that follows every rule above and fixes this.
 """
 
 
-def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, settings=None, prefix=""):
+def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, settings=None, prefix="", gate=UNLIMITED):
     tally("fresh")
     settings = settings or load_settings(workdir)
     model = settings.model_for(purpose)
@@ -123,6 +159,7 @@ def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, setti
         started = time.time()
         record = {"purpose": purpose, "chapter": chapter, "attempt": attempt, "mode": mode, "backend": settings.backend,
                   "model": model, **({"effort": effort} if effort else {}), "prompt_chars": len(attempt_prompt), "prompt_sha1": prompt_sha1(prompt), "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        reserved = gate.admit(purpose, prompt)
         reply = transient = None
         try:
             reply = backend.complete(Request(system=SYSTEM_PROMPT, prompt=attempt_prompt, model=model, purpose=purpose, chapter=chapter,
@@ -132,6 +169,8 @@ def llm(workdir, purpose, prompt, chapter=None, check=None, rejected=None, setti
         except Fatal as exc:
             append_line(Path(workdir) / "calls.jsonl", json.dumps({**record, "error": str(exc)}, ensure_ascii=False))
             raise LLMUnavailable(f"{purpose}: {exc}")
+        finally:
+            gate.charge(reserved, reply.cost_usd if reply is not None else 0.0)
         record["wall_s"] = round(time.time() - started, 2)
         result = content_error = None
         if reply is not None:
@@ -200,7 +239,7 @@ def must_hit(workdir):
     return reply
 
 
-def cached_llm(workdir, purpose, prompt, check=None, chapter=None, settings=None, prefix=""):
+def cached_llm(workdir, purpose, prompt, check=None, chapter=None, settings=None, prefix="", gate=UNLIMITED):
     settings = settings or load_settings(workdir)
     reply = cached_reply(workdir, purpose, prompt, settings)
     error = check(reply) if reply is not None and check else None
@@ -210,7 +249,7 @@ def cached_llm(workdir, purpose, prompt, check=None, chapter=None, settings=None
     if error:
         log(workdir, f"  {purpose}: cached reply rejected: {error}")
     reply = llm(workdir, purpose, prompt, chapter=chapter, check=check,
-                rejected=(json.dumps(reply, ensure_ascii=False), error) if error else None, settings=settings, prefix=prefix)
+                rejected=(json.dumps(reply, ensure_ascii=False), error) if error else None, settings=settings, prefix=prefix, gate=gate)
     write_json(cache_paths(workdir, settings, purpose, prompt)[0],
                {"purpose": purpose, "backend": settings.backend, "model": settings.model_for(purpose), "reply": reply})
     return reply

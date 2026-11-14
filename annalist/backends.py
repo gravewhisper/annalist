@@ -252,6 +252,7 @@ class Fake:
             entries = json.loads(path.read_text(encoding="utf-8"))["replies"]
         except (OSError, ValueError, KeyError) as exc:
             raise ConfigError(f"fake backend script {path}: {exc}")
+        self.prices = options.get("prices", {})
         self.by_hash = {e["prompt_sha1"]: e["reply"] for e in entries if "prompt_sha1" in e}
         self.by_text = [(e["purpose"], e["contains"], e.get("model"), e["reply"]) for e in entries if "contains" in e]
         self.by_step = {}
@@ -274,7 +275,9 @@ class Fake:
             raise Fatal(f"fake backend has no scripted reply for purpose {request.purpose!r} chapter {request.chapter} "
                         f"prompt_sha1 {digest}")
         text = reply if isinstance(reply, str) else json.dumps(reply, ensure_ascii=False)
-        return Reply(text=text, model=request.model, usage={"input_tokens": 0, "output_tokens": 0}, cost_usd=0.0, duration_s=0.0)
+        usage = {"input_tokens": (len(request.system) + len(request.prompt)) // 4, "output_tokens": len(text) // 4}
+        return Reply(text=text, model=request.model, usage=usage, cost_usd=cost(self.prices, request.model, usage) if self.prices else 0.0,
+                     duration_s=0.0)
 
 
 BACKENDS = {b.name: b for b in (ClaudeCLI, Anthropic, OpenAI, Fake)}
@@ -284,7 +287,7 @@ OPTIONS = {
     "claude-cli": {},
     "anthropic": {"base_url": str, "api_key_env": str, "max_tokens": int, "timeout_s": int, "prices": dict},
     "openai": {"base_url": str, "api_key_env": str, "max_tokens": int, "timeout_s": int, "prices": dict},
-    "fake": {"script": str},
+    "fake": {"script": str, "prices": dict},
 }
 
 

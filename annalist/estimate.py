@@ -86,11 +86,37 @@ def measure_rates(workdirs, purposes=None):
 
 def dollars_per_million(settings, model):
     if settings.backend == "fake":
-        return {"input": 0.0, "output": 0.0}
+        return settings.options.get("prices", {}).get(model, {"input": 0.0, "output": 0.0})
     if settings.backend == "openai":
         return settings.options.get("prices", {}).get(model)
     prices = {**ANTHROPIC_PRICES, **settings.options.get("prices", {})}
     return prices.get(ANTHROPIC_ALIASES.get(model, model)) or prices.get(model)
+
+
+TOKENS_PER_CHAR = 0.25
+
+
+def prompt_pricer(workdir, settings):
+    """Dollars for one prompt, from the tokens per prompt character and the mean reply tokens this run's calls of its purpose used.
+    A purpose this run never asked falls back to the run's other calls, then to four characters a token and the reply share in RATES."""
+    totals = {}
+    for row in read_jsonl(Path(workdir) / "calls.jsonl"):
+        if row.get("usage") and row.get("prompt_chars"):
+            tokens, output = call_tokens(row)
+            for key in (row["purpose"], None):
+                t = totals.setdefault(key, [0, 0, 0, 0])
+                t[0], t[1], t[2], t[3] = t[0] + tokens, t[1] + row["prompt_chars"], t[2] + output, t[3] + 1
+
+    def price(purpose, prompt):
+        own, every = totals.get(purpose), totals.get(None)
+        per_char = own[0] / own[1] if own else every[0] / every[1] if every else TOKENS_PER_CHAR
+        tokens = len(prompt) * per_char
+        output = own[2] / own[3] if own else tokens * RATES[purpose].output_tokens / RATES[purpose].input_tokens
+        prices = [dollars_per_million(settings, model) for model in settings.models_for(purpose)]
+        if None in prices:
+            return None
+        return sum((tokens * p["input"] + output * p["output"]) / 1e6 for p in prices)
+    return price
 
 
 @dataclass(frozen=True)
