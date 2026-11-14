@@ -99,13 +99,29 @@ def is_stub(entity):
     return any(w[0].islower() and w.lower() not in FUNCTION_WORDS for w in content_words(entity["name"]))
 
 
+def edits(x, y):
+    """Letters to insert, delete, change, or swap with a neighbour to turn x into y."""
+    before, row = None, list(range(len(y) + 1))
+    for i, a in enumerate(x, 1):
+        now = [i]
+        for j, b in enumerate(y, 1):
+            cost = min(row[j] + 1, now[j - 1] + 1, row[j - 1] + (a != b))
+            if before and i > 1 and j > 1 and a == y[j - 2] and x[i - 2] == b:
+                cost = min(cost, before[j - 2] + 1)
+            now.append(cost)
+        before, row = row, now
+    return row[-1]
+
+
 def near_spelling(x, y):
+    """Two spellings of one name: one letter apart, the same letters reordered, or, for words of six letters
+    or more that start alike, two letters apart (Caitlyn and Catelyn)."""
     if sorted(x) == sorted(y):
         return True
-    if len(x) == len(y):
-        return sum(a != b for a, b in zip(x, y)) == 1
-    short, long = sorted((x, y), key=len)
-    return len(long) - len(short) == 1 and any(long[:i] + long[i + 1:] == short for i in range(len(long)))
+    if abs(len(x) - len(y)) > 2:
+        return False
+    limit = 2 if min(len(x), len(y)) >= 6 and x[0] == y[0] else 1
+    return edits(x, y) <= limit
 
 
 @cache

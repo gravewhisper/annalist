@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from annalist.discover import candidates
+from annalist.resolve import candidate_pairs
 from annalist.names import name_key, name_tokens
 from annalist.state import Knowledge
 
@@ -88,3 +89,21 @@ class PronounNameTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NearSpellingPairTest(unittest.TestCase):
+    def pairs(self, *names):
+        kb = Knowledge()
+        for n in names:
+            kb.upsert_entity({"name": n, "type": "character"}, 1)
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "chapters").mkdir()
+            (Path(tmp) / "chapters" / "0001.txt").write_text("Nothing here.\n", encoding="utf-8")
+            return {k for k, v in candidate_pairs(Path(tmp), kb, {}, 1).items() if any("near-spelling" in r for r in v["rules"])}
+
+    def test_a_name_two_letters_off_is_put_to_the_judge(self):
+        self.assertEqual(self.pairs("Lady Ysolde", "Lady Yseldo", "Corvenna", "Corvanne", "Silk-masked man", "Silken-masked man"),
+                         {("Lady Yseldo", "Lady Ysolde"), ("Corvanne", "Corvenna"), ("Silk-masked man", "Silken-masked man")})
+
+    def test_short_names_or_other_first_letters_need_a_one_letter_typo(self):
+        self.assertEqual(self.pairs("Wren", "Brin", "Halden", "Velden", "Tamsin", "Tamsyn"), {("Tamsin", "Tamsyn")})
