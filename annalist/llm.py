@@ -37,6 +37,10 @@ class BudgetSpent(Exception):
     pass
 
 
+class Unpriced(Exception):
+    pass
+
+
 def parse_json_object(text):
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
     start, end = text.find("{"), text.rfind("}")
@@ -183,6 +187,17 @@ def cached_reply(workdir, purpose, prompt, settings=None):
         if path.exists():
             return json.loads(path.read_text(encoding="utf-8"))["reply"]
     return None
+
+
+def must_hit(workdir):
+    settings = load_settings(workdir)
+
+    def reply(purpose, prompt):
+        found = cached_reply(workdir, purpose, prompt, settings)
+        if found is None:
+            raise Unpriced(f"{purpose}: no cached reply for a prompt that was never asked")
+        return found
+    return reply
 
 
 def cached_llm(workdir, purpose, prompt, check=None, chapter=None, settings=None, prefix=""):
