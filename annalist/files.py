@@ -1,8 +1,10 @@
+import fcntl
 import json
 import os
 import sys
 import threading
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -61,3 +63,16 @@ def last_chapter(workdir):
 def state_paths(workdir):
     end = last_chapter(workdir)
     return [p for p in sorted((Path(workdir) / "state").glob("[0-9][0-9][0-9][0-9].json")) if end is None or int(p.stem) <= end]
+
+
+@contextmanager
+def run_lock(workdir, command):
+    """Held by build, apply and export while they write a run. The kernel drops it when the process ends, so a crash leaves no stale lock."""
+    workdir = Path(workdir)
+    workdir.mkdir(parents=True, exist_ok=True)
+    with open(workdir / ".lock", "w") as fh:
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            sys.exit(f"annalist {command}: another annalist build, apply or export is writing {workdir}; wait for it to finish")
+        yield

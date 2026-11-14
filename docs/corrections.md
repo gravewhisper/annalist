@@ -3,7 +3,7 @@
 An LLM wrote the wiki, so some of it will be wrong. Build the wiki, read it, then fix what is left. Choose the fix by who the mistake affects:
 
 - If the mistake could happen in another book, fix it in code with a test. Every later book gets the fix.
-- If the mistake belongs to this one book, add it to `corrections.json` in the run directory. It costs no LLM calls.
+- If the mistake belongs to this one book, add it to `corrections.json` in the run directory and run `annalist apply`. It pays only for the page text the correction changes.
 - If the mistake is small and misleads nobody, leave it.
 
 A correction names an entry by its title or any of its aliases, and can change its type, its page title, and its dated infobox values, or remove a wrong value:
@@ -109,14 +109,22 @@ So a run with N corrections asks the model at most a few prompts per corrected p
 
 ## Apply your corrections
 
-After an edit, run `annalist build` on the run again. It sees that `corrections.json` changed and reruns `render` and `export`, and also `sweep`, `answers`, and `ending` when the `questions` list changed. `render` asks the model for the pages your corrections changed, so check the cost with `--dry-run` first and pass `--budget`:
+After a build, apply an edit with `annalist apply`. It reruns only `render` and `export`, and asks the model only for the page text your corrections change. Every other page reuses its cached reply. It first lists each prompt it will ask, by purpose with the pages they belong to, and their price, so look before you pay:
 
 ```sh
-python3 -m annalist build book.epub runs/book --dry-run
-python3 -m annalist build book.epub runs/book --budget 1
+python3 -m annalist apply runs/book --dry-run
+python3 -m annalist apply runs/book --yes --budget 0.50
 ```
 
-`annalist export runs/book runs/book/site` alone also applies the corrections, but it only reads replies that `render` already has, so a rewritten page shows no summary until the next build. If the pipeline code has changed since the last build, `export` refuses to run until you rebuild. Add `--allow-stale` to export anyway. `export` warns about any correction whose quote is not in its chapter or whose name or id no longer matches an entry or a question.
+The price is each new prompt's length times the tokens per character that this run's earlier calls of the same purpose used, plus their mean reply, at the model's price. Without `--yes`, `apply` asks before it pays, with a budget of the price plus a quarter. With `--yes`, it needs `--budget` whenever there is anything to pay. It never starts a call that the prompts it priced did not list, and it stops before a call whose estimated price would take the spend past the budget. A stop writes no page, and the replies already paid for stay cached, so a rerun prices only the rest.
+
+`apply` checks every row before it asks anything. It refuses when a row would be skipped: a quote not found in its chapter, a name or question that matches nothing, a chapter before the entry or question first appears, or a `drop` that matches no value. Fix the row and run it again. Rows that `proofread.json` proposes and that fail only print a warning, as in `export`.
+
+`apply` runs only on a finished build, and not while a `build`, an `export`, or another `apply` writes the same run. When it finishes, `annalist build --dry-run` shows `render` and `export` as done. It lists any other stage whose inputs or code changed since the build, such as `sweep`, `answers`, and `ending` after an edit to the `questions` list. It does not run those stages: the next `annalist build` does. `not_same_as` and `drop_aliases` rows show on the pages at once, but the stages before `render` that they would have changed, such as `resolve` and `relate`, run with them only when a later build reruns those stages.
+
+`annalist build` also applies an edit. It reruns `render` and `export`, and also `sweep`, `answers`, and `ending` when the `questions` list changed. Check its cost with `--dry-run` and pass `--budget`.
+
+`annalist export runs/book runs/book/site` alone also applies the corrections, but it only reads replies that `render` already has, so a rewritten page shows no summary until the next `apply` or build. If the pipeline code has changed since the last build, `export` refuses to run until you rebuild. Add `--allow-stale` to export anyway. `export` warns about any correction whose quote is not in its chapter or whose name or id no longer matches an entry or a question.
 
 Later volumes keep your corrections:
 

@@ -1,17 +1,22 @@
+import fcntl
 import json
 import os
+import re
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
+from annalist.apply import built_run
 from annalist.backends import load_settings
+from annalist.build import run_stage, STAGES
 from annalist.estimate import prompt_pricer
 from annalist.files import read_jsonl
 from annalist.llm import Budget, BudgetSpent, cached_llm, cached_reply, Unpriced
 from annalist.render import Ask, ask_all
-from tests.test_asof_leaks import SAME_PERSON, echo_script
-from tests.test_build import MiniBuild, ROOT
+from tests.test_asof_leaks import RETITLED, SAME_PERSON, echo_script
+from tests.test_build import build_script, MiniBuild, plan_rows, ROOT
 
 RENDER_PURPOSES = ("summary", "personality", "appearance", "history")
 RENDER_KEYS = ROOT / "tests" / "data" / "mini-render-keys.txt"
@@ -87,6 +92,90 @@ class GateTest(unittest.TestCase):
         (self.workdir / "calls.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
         price = prompt_pricer(self.workdir, load_settings(self.workdir))
         self.assertAlmostEqual(price("summary", "x" * 4000), (4000 * 0.5 + 100) * 10000.0 / 1e6)
+
+
+CHEAP = {"name": "fake", "script": "script.json", "prices": {"fake": {"input": 3.0, "output": 15.0}}}
+UNQUOTED = {"entries": [{"name": "Ines Varro", "fields": {"age": [{"chapter": 1, "value": "twenty", "quotes": ["She was twenty that winter."]}]}}]}
+
+
+def pages(workdir):
+    return {p.relative_to(workdir): p.read_bytes() for d in ("wiki", "site") for p in (workdir / d).rglob("*") if p.is_file()}
+
+
+class ApplyTest(unittest.TestCase):
+    def setUp(self):
+        self.book = MiniBuild(build_script(), book={"backend": CHEAP})
+        self.addCleanup(self.book.close)
+        self.book.build()
+        self.workdir = self.book.workdir
+
+    def correct(self, rows):
+        (self.workdir / "corrections.json").write_text(json.dumps(rows), encoding="utf-8")
+
+    def apply(self, *args):
+        return self.book.run_annalist("apply", str(self.workdir), *args, check=False)
+
+    def test_apply_asks_only_the_prompts_a_title_row_changes_and_leaves_render_and_export_done(self):
+        self.correct({"entries": [RETITLED]})
+        calls, cached = len(self.book.calls()), set(render_keys(self.workdir))
+        dry = self.apply("--dry-run")
+        self.assertEqual((dry.returncode, len(self.book.calls())), (0, calls))
+        planned = int(re.search(r"(\d+) not answered yet", dry.stdout).group(1))
+        self.assertGreater(planned, 0)
+        applied = self.apply("--yes", "--budget", "5")
+        self.assertEqual(applied.returncode, 0, applied.stderr)
+        asked = self.book.calls()[calls:]
+        self.assertEqual(len(asked), planned)
+        self.assertEqual(len(set(render_keys(self.workdir)) - cached), planned)
+        self.assertLessEqual({c["purpose"] for c in asked}, set(RENDER_PURPOSES))
+        rows = plan_rows(self.book.build("--dry-run").stdout)
+        self.assertEqual((rows["render"], rows["export"]), ("done", "done"))
+        self.assertIn(RETITLED["title"], {e["name"] for e in self.book.json("site/data/wiki.json")["entities"]})
+        again = self.apply("--yes")
+        self.assertEqual((again.returncode, len(self.book.calls())), (0, calls + planned), again.stderr)
+
+    def test_apply_refuses_a_row_whose_quote_is_not_in_its_chapter_before_asking_anything(self):
+        self.correct(UNQUOTED)
+        calls, before = len(self.book.calls()), pages(self.workdir)
+        refused = self.apply("--yes", "--budget", "5")
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn("Ines Varro.age ch1 has no quote found in that chapter", refused.stderr)
+        self.assertEqual((len(self.book.calls()), pages(self.workdir)), (calls, before))
+
+    def test_a_budget_below_the_price_stops_before_the_first_call_and_writes_no_page(self):
+        self.correct({"entries": [RETITLED]})
+        calls, before = len(self.book.calls()), pages(self.workdir)
+        stopped = self.apply("--yes", "--budget", "0.000001")
+        self.assertEqual(stopped.returncode, 3, stopped.stderr)
+        self.assertEqual((len(self.book.calls()), pages(self.workdir)), (calls, before))
+        self.assertEqual(plan_rows(self.book.build("--dry-run").stdout)["render"], "run: input changed")
+
+    def test_yes_without_a_budget_spends_nothing_when_there_is_a_price(self):
+        self.correct({"entries": [RETITLED]})
+        calls = len(self.book.calls())
+        refused = self.apply("--yes")
+        self.assertIn("--budget", refused.stderr)
+        self.assertEqual((refused.returncode != 0, len(self.book.calls())), (True, calls))
+
+    def test_apply_refuses_a_run_whose_build_has_not_finished(self):
+        stamps = self.book.json("build.json")
+        (self.workdir / "build.json").write_text(json.dumps({**stamps, "started": "2026-11-15T10:00:00"}), encoding="utf-8")
+        refused = self.apply("--dry-run")
+        self.assertIn("has not finished", refused.stderr)
+
+    def test_apply_does_not_run_while_another_command_writes_the_run(self):
+        with open(self.workdir / ".lock", "w") as held:
+            fcntl.flock(held, fcntl.LOCK_EX)
+            busy = [self.apply("--dry-run"), self.book.build(check=False),
+                    self.book.run_annalist("export", str(self.workdir), str(self.workdir / "site"), check=False)]
+        for proc in busy:
+            self.assertIn("another annalist build, apply or export is writing", proc.stderr)
+
+    def test_an_input_edited_while_a_stage_runs_leaves_the_stage_stale(self):
+        render = next(s for s in STAGES if s.name == "render")
+        with mock.patch.dict(os.environ, self.book.env, clear=True):
+            run_stage(built_run(self.workdir, 1), replace(render, run=lambda run: self.correct({"entries": [RETITLED]})))
+        self.assertEqual(plan_rows(self.book.build("--dry-run").stdout)["render"], "run: input changed")
 
 
 if __name__ == "__main__":

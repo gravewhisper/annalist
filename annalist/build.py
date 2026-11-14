@@ -5,7 +5,7 @@ import os
 import sys
 import time
 from argparse import Namespace
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cache, cached_property
 from pathlib import Path
 from typing import Callable
@@ -18,7 +18,7 @@ from .epub import cmd_extract, extract_book
 from .estimate import estimate
 from .export import cmd_export
 from .families import cmd_families
-from .files import read_json, write_json
+from .files import read_json, run_lock, write_json
 from .ladders import cmd_ladders, generate_ladder, ladder_needed
 from .leads import cmd_leads
 from .llm import ASKED, BudgetSpent, LLMError, LLMUnavailable, spent_since
@@ -52,7 +52,7 @@ class Run:
     def __init__(self, args):
         self.args = args
         self.workdir = Path(args.workdir).resolve()
-        self.epub = Path(args.epub).resolve()
+        self.epub = Path(args.epub).resolve() if args.epub else None
 
     @cached_property
     def extraction(self):
@@ -343,6 +343,19 @@ def write_stamps(run, **parts):
     write_json(run.workdir / STAMPS, {**read_json(run.workdir / STAMPS, {"stages": {}}), **parts})
 
 
+def inputs_digest(run, stage):
+    outputs = set(stage.outputs(run))
+    return digest(run, replace(stage, inputs=tuple(i for i in stage.inputs if i.partition("#")[0] not in outputs)))
+
+
+def stamp(run, stage, before):
+    """Stamp a stage that ran, unless an input it does not write itself changed since `before`: the output may predate that change."""
+    if inputs_digest(run, stage) != before:
+        print(f"annalist: an input of {stage.name} changed while it ran, so it stays stale", file=sys.stderr)
+        return
+    write_stamps(run, stages={**stamps(run), stage.name: {"input": digest(run, stage), "code": code_digest(stage.code)}})
+
+
 def status(run, stage):
     reason = stage.skip(run)
     if reason:
@@ -376,7 +389,8 @@ def cmd_export_built(args):
     problem = export_problem(Path(args.workdir).resolve())
     if problem and not args.allow_stale:
         sys.exit(f"annalist export: {problem}; run annalist build <epub> {args.workdir} first")
-    cmd_export(args)
+    with run_lock(args.workdir, "export"):
+        cmd_export(args)
 
 
 def stale(state):
@@ -472,6 +486,7 @@ def stop(stage, message):
 def run_stage(run, stage):
     rerun = stage.name in stamps(run)
     before = ASKED.copy()
+    inputs = None if stage.done else inputs_digest(run, stage)
     try:
         stage.run(run)
     except LLMError as exc:
@@ -490,7 +505,7 @@ def run_stage(run, stage):
     if rerun and asked:
         write_stamps(run, cache={**cache_shares(run), stage.name: {"fresh_share": round(asked["fresh"] / asked.total(), 4)}})
     if not stage.done:
-        write_stamps(run, stages={**stamps(run), stage.name: {"input": digest(run, stage), "code": code_digest(stage.code)}})
+        stamp(run, stage, inputs)
 
 
 def cmd_build(args):
@@ -503,11 +518,16 @@ def cmd_build(args):
         return
     if any(stale(state) and cost and cost.dollars != 0 for _, state, cost in rows) and not args.yes:
         confirm(total, likely)
+    with run_lock(run.workdir, "build"):
+        run_build(run, args)
+
+
+def run_build(run, args):
     block = run.backend_block()
     if block:
         write_json(run.workdir / "book.json", {**read_json(run.workdir / "book.json", {}), **block})
     started = read_json(run.workdir / STAMPS, {}).get("started") or time.strftime("%Y-%m-%dT%H:%M:%S")
-    write_stamps(run, started=started)
+    write_stamps(run, started=started, last=run.last)
     for stage in STAGES:
         state = status(run, stage)
         if not stale(state):

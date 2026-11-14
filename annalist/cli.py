@@ -3,6 +3,7 @@ import sys
 
 from .backends import ConfigError
 from .llm import BudgetSpent
+from .apply import cmd_apply
 from .build import cmd_build, cmd_export_built
 from .epub import cmd_extract
 from .leads import cmd_leads
@@ -51,6 +52,17 @@ def main():
     p.add_argument("--model", help="backend model written to book.json")
     p.add_argument("--option", action="append", help="backend option KEY=VALUE written to book.json; repeat for more")
     p.set_defaults(func=cmd_build)
+
+    p = sub.add_parser("apply", description="After a build, bring the wiki and the site up to date with an edited corrections.json. "
+                                            "Reruns only render and export, asks the model only for the page text the corrections change, "
+                                            "and prints those prompts and their price before spending anything.")
+    p.add_argument("workdir")
+    p.add_argument("--dry-run", action="store_true", help="print the prompts to ask and their price, then stop")
+    p.add_argument("--yes", action="store_true", help="run without asking; needs --budget when there is anything to pay")
+    p.add_argument("--budget", type=float, help="never start a call that could take the spend past this many dollars; "
+                                                 "default when asked: the price plus a quarter")
+    p.add_argument("--jobs", type=int, default=6)
+    p.set_defaults(func=cmd_apply)
 
     p = sub.add_parser("serve", description="Serve a built wiki on this computer and save the notes its report button sends to reader-notes.jsonl.")
     p.add_argument("workdir")
