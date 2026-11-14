@@ -50,6 +50,10 @@ class HoverCardTest(unittest.TestCase):
         css = (ROOT / "annalist" / "site" / "app.css").read_text(encoding="utf-8")
         self.assertRegex(re.search(r"\.hover\{[^}]*\}", css).group(0), r"position:fixed")
 
+    def test_a_card_never_grows_taller_than_the_window(self):
+        css = (ROOT / "annalist" / "site" / "app.css").read_text(encoding="utf-8")
+        self.assertRegex(re.search(r"\.hover\{[^}]*\}", css).group(0), r"max-height:calc\(100vh - 16px\);overflow:hidden")
+
 
 if __name__ == "__main__":
     unittest.main()
