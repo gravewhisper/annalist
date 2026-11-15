@@ -23,31 +23,50 @@ class Registry:
     def __init__(self, entities):
         self.entities = {e["name"]: e for e in entities}
         self.index = {}
+        self.parts = {}
         for e in entities:
             for n in [e["name"]] + e["aliases"]:
                 self.index.setdefault(name_key(n), []).append(e["name"])
+            for a in e.get("absorbed", []):
+                for n in [a["name"]] + a["aliases"]:
+                    self.parts.setdefault((name_key(n), a.get("type", e["type"])), set()).add(e["name"])
 
     def resolve(self, name, etype=""):
         found = list(dict.fromkeys(self.index.get(name_key(name), [])))
         typed = [n for n in found if self.entities[n]["type"] == name_key(etype)]
         if len(typed) == 1:
             return typed[0]
+        owners = self.parts.get((name_key(name), name_key(etype)), set()) if found and not typed else set()
+        if len(owners) == 1:
+            return next(iter(owners))
         return found[0] if len(found) == 1 else None
+
+
+def part_pages(entities):
+    """Each absorbed part's page key, by (page, part name): the part's name, or, when a page or another part has that name too, the part's
+    name with its page's, so that the two never share facts, blurbs, a profile, or an id."""
+    entities = list(entities)
+    taken = Counter([e["name"] for e in entities] + [a["name"] for e in entities for a in e.get("absorbed", [])])
+    return {(e["name"], a["name"]): a["name"] if taken[a["name"]] == 1 else f"{a['name']} ({e['name']})"
+            for e in entities for a in e.get("absorbed", [])}
 
 
 class Absorbed:
     def __init__(self, entities):
-        self.entries = {a["name"]: {**a, "into": e["name"]} for e in entities for a in e.get("absorbed", [])}
+        entities = list(entities)
+        self.keys = part_pages(entities)
+        self.entries = {self.keys[(e["name"], a["name"])]: {**a, "into": e["name"], "page": self.keys[(e["name"], a["name"])]}
+                        for e in entities for a in e.get("absorbed", [])}
         self.owner = {(a["into"], name_key(n)): a for a in self.entries.values() for n in a["aliases"]}
         self.owner.update({(a["into"], name_key(a["name"])): a for a in self.entries.values()})
 
     def page(self, canonical, filed, chapter):
-        a = self.entries.get(filed)
-        return filed if a and a["into"] == canonical and chapter < a["chapter"] else canonical
+        key = self.keys.get((canonical, filed))
+        return key if key and chapter < self.entries[key]["chapter"] else canonical
 
     def page_for_name(self, canonical, name, chapter):
         a = self.owner.get((canonical, name_key(name)))
-        return a["name"] if a and chapter < a["chapter"] else canonical
+        return a["page"] if a and chapter < a["chapter"] else canonical
 
     def floor(self, canonical, name, chapter):
         a = self.owner.get((canonical, name_key(name)))
@@ -162,8 +181,9 @@ def page_name(e, seen, blurbs, own_facts, texts, words, registry, absorbed, show
 
 
 def part_name(part, seen):
-    aliases = [{"name": x, "chapter": seen[(part["name"], x)]} for x in part["aliases"] if (part["name"], x) in seen]
-    return PageName(part["name"], part["name"], seen.get((part["name"], part["name"]), part["first_chapter"]), part["first_chapter"],
+    key = part["page"]
+    aliases = [{"name": x, "chapter": seen[(key, x)]} for x in part["aliases"] if (key, x) in seen]
+    return PageName(part["name"], part["name"], seen.get((key, part["name"]), part["first_chapter"]), part["first_chapter"],
                     sorted(aliases, key=lambda x: x["chapter"]))
 
 
@@ -240,6 +260,6 @@ def read_pages(workdir, kb):
     names = {}
     for e in entities:
         names[e["name"]] = page_name(e, seen, blurbs, own_facts.get(e["name"], []), texts, words, registry, absorbed, shown_at.get(e["name"], []))
-        names.update((a["name"], part_name(a, seen)) for a in e.get("absorbed", []))
+    names.update((key, part_name(a, seen)) for key, a in absorbed.entries.items())
     group_titles(kb, names)
     return Pages(facts, relations, states, registry, absorbed, blurbs, texts, words, fact_page, rel_ends, names)

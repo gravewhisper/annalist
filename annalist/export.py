@@ -264,17 +264,19 @@ def build(workdir, theme):
             if history:
                 record["history"] = history
         out_entities.append(record)
-        kept = {a["name"]: kept_prompts(a, own, ties.get(e["name"], []), arcs, timelines, last, names[a["name"]]) for a in reader_parts(e)}
+        kept = {a["name"]: kept_prompts(a, own, ties.get(e["name"], []), arcs, timelines, last, names[absorbed.keys[(e["name"], a["name"])]])
+                for a in reader_parts(e)}
         for a in e.get("absorbed", []):
+            key = absorbed.keys[(e["name"], a["name"])]
             kind = a.get("type", e["type"])
-            named = names[a["name"]]
-            part = {"id": ids[a["name"]], "name": named.name, "name_chapter": named.chapter, "type": kind, "first": named.first, "aliases": named.aliases,
-                    "blurbs": blurbs.get(a["name"], []), "merged": {"into": ids[e["name"]], "chapter": a["chapter"]}, **nameless(kind, a)}
+            named = names[key]
+            part = {"id": ids[key], "name": named.name, "name_chapter": named.chapter, "type": kind, "first": named.first, "aliases": named.aliases,
+                    "blurbs": blurbs.get(key, []), "merged": {"into": ids[e["name"]], "chapter": a["chapter"]}, **nameless(kind, a)}
             part["mention"] = first_mention(texts, part)
             if kind == "character":
-                part["present"] = sorted(present.get(a["name"], ()))
-            if a["name"] in profiles:
-                part["profile"] = export_profile(workdir, named, profiles[a["name"]], spoken.get(a["name"], []), appeared.get(a["name"], []))
+                part["present"] = sorted(present.get(key, ()))
+            if key in profiles:
+                part["profile"] = export_profile(workdir, named, profiles[key], spoken.get(key, []), appeared.get(key, []))
             if a["name"] in kept:
                 part.update(kept_prose(workdir, kept[a["name"]], a, part, last, named))
             out_entities.append(part)

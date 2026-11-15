@@ -487,7 +487,8 @@ class View:
 def prepare(workdir, until):
     kb = load_states(workdir, until=until, ladders=True, corrections=EVERY_CORRECTION, only_mysteries=True)
     whole = kb if until is None else load_states(workdir, ladders=True, corrections=EVERY_CORRECTION, only_mysteries=True)
-    names = read_pages(workdir, whole).names
+    pages = read_pages(workdir, whole)
+    names = pages.names
 
     def page(name):
         return names.get(name) or PageName(name, name, 0, 0, [])
@@ -507,7 +508,8 @@ def prepare(workdir, until):
             ties = [r for r in kb.relations if n in (r["source"], r["target"])]
             for r in ties:
                 r.update(verified_quotes(workdir, r["chapter"], r["quotes"]))
-            kept[part["name"]] = kept_prompts(part, by_entity.get(n, []), ties, arcs, kb.timelines, last, page(part["name"]))
+            key = pages.absorbed.keys.get((n, part["name"]), part["name"])
+            kept[key] = kept_prompts(part, by_entity.get(n, []), ties, arcs, kb.timelines, last, page(key))
     written = [(n, key, prompt) for n, p in profiles.items() if n in kept or (n in kb.entities and kb.entities[n]["type"] == "character")
                for key in WRITTEN if (prompt := written_prompt(key, page(n), visible(p["lists"].get(key, []), last)))]
     needs_summary = [n for n in kb.entities if len(by_entity.get(n, [])) >= 3]

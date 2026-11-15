@@ -12,6 +12,7 @@ from .families import read_families, relation_family
 from .files import log, read_json, state_paths, write_json
 from .llm import BudgetSpent, cached_llm, cached_reply, spent_since
 from .names import name_key
+from .pages import part_pages
 from .profile import page_profiles
 from .state import load_states, UNRESOLVED
 from .template import CHARACTER_FIELDS, CHARACTER_LISTS, ENTITY_TYPES
@@ -299,7 +300,8 @@ class Review:
             return f"{field!r} is not an infobox field"
         if not isinstance(value, dict) or not isinstance(value.get("chapter"), int) or not part[0] <= value["chapter"] <= part[1]:
             return f"chapter is outside chapters {part[0]}-{part[1]}"
-        names = [key] + [a["name"] for a in self.kb.entities[key].get("absorbed", [])]
+        keys = part_pages(self.kb.entities.values())
+        names = [key] + [keys[(key, a["name"])] for a in self.kb.entities[key].get("absorbed", [])]
         rows = [o for n in names for o in (self.pages.get(n) or {}).get(profile_group(field), {}).get(field, [])]
         if not any(o["chapter"] == value["chapter"] and name_key(o["value"]) == name_key(value.get("value") or "") for o in rows):
             return "matches no value the wiki shows"

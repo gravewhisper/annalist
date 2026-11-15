@@ -10,6 +10,7 @@ from .evidence import add_evidence, class_pattern, stems
 from .files import read_json, write_json
 from .llm import cached_llm
 from .names import name_key, name_pattern, names_of, short_names
+from .pages import part_pages
 from .state import load_states, timeline_line
 from .template import CHARACTER_FIELDS, PROFILE_FIELDS, PROFILE_LISTS, STATUS_VALUES
 from .text import chapter_text, locate_quote, text_window, verified_quotes, widen_to
@@ -341,11 +342,11 @@ def profile_observations(profile):
                 yield group, key, o
 
 
-def filed_page(workdir, entity, o):
+def filed_page(workdir, entity, o, keys):
     pending = [a for a in entity.get("absorbed", []) if o["chapter"] < a["chapter"]]
     names = names_of(entity) + [n for a in pending for n in [a["name"]] + a["aliases"]]
     owner = {name_key(n): entity["name"] for n in names}
-    owner.update({name_key(n): a["name"] for a in pending for n in [a["name"]] + a["aliases"]})
+    owner.update({name_key(n): keys[(entity["name"], a["name"])] for a in pending for n in [a["name"]] + a["aliases"]})
     text = chapter_text(str(workdir), o["chapter"])
     spans = [s for s in (locate_quote(text, q)["span"] for q in o["quotes"]) if s]
     if not spans:
@@ -362,14 +363,16 @@ def filed_page(workdir, entity, o):
 
 
 def page_profiles(workdir, entities, profiles):
+    entities = list(entities)
+    keys = part_pages(entities)
     pages = {}
     for e in entities:
         if e["type"] != "character":
             continue
         joined = [a for a in e.get("absorbed", []) if a.get("by") == "reader" and a["name"] in profiles]
-        pages.update(split_profile(workdir, {**e, "absorbed": [a for a in e.get("absorbed", []) if a.get("by") != "reader"]}, profiles))
+        pages.update(split_profile(workdir, {**e, "absorbed": [a for a in e.get("absorbed", []) if a.get("by") != "reader"]}, profiles, keys))
         for a in joined:
-            own = pages[a["name"]] = {group: dict(profiles[a["name"]][group]) for group in ("fields", "extra", "lists")}
+            own = pages[keys[(e["name"], a["name"])]] = {group: dict(profiles[a["name"]][group]) for group in ("fields", "extra", "lists")}
             page = pages.setdefault(e["name"], {"fields": {}, "extra": {}, "lists": {}})
             for group, rows in own.items():
                 for key, obs in rows.items():
@@ -377,10 +380,10 @@ def page_profiles(workdir, entities, profiles):
     return pages
 
 
-def split_profile(workdir, e, profiles):
+def split_profile(workdir, e, profiles, keys):
     if e["name"] not in profiles:
         return {}
-    merged_at = {a["name"]: a["chapter"] for a in e.get("absorbed", [])}
+    merged_at = {keys[(e["name"], a["name"])]: a["chapter"] for a in e.get("absorbed", [])}
     split = {page: {"fields": {}, "extra": {}, "lists": {}} for page in [e["name"]] + list(merged_at)}
     for group in ("fields", "extra", "lists"):
         for key, obs in profiles[e["name"]][group].items():
@@ -388,7 +391,7 @@ def split_profile(workdir, e, profiles):
                 page[group][key] = []
             for o in obs:
                 pending = [c for c in merged_at.values() if o["chapter"] < c]
-                page = filed_page(workdir, e, o) if pending else e["name"]
+                page = filed_page(workdir, e, o, keys) if pending else e["name"]
                 if page == e["name"]:
                     split[page][group][key].append(o)
                     continue

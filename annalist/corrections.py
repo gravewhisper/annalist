@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .files import read_json
 from .names import name_key
+from .pages import part_pages
 from .template import PROFILE_FIELDS, PROFILE_LISTS
 from .text import check_quote
 
@@ -281,6 +282,7 @@ def drop_value(rows_by_field, field, row):
 
 
 def correct_profiles(kb, pages, corrections):
+    keys = part_pages(kb.entities.values())
     problems = []
     for entry in corrections.entries:
         key = kb.resolve(entry["name"])
@@ -291,11 +293,11 @@ def correct_profiles(kb, pages, corrections):
             group = profile_group(field)
             earlier = [r for r in rows if part and r["chapter"] < part["chapter"]]
             if earlier:
-                own = pages.setdefault(part["name"], empty_profile())[group]
+                own = pages.setdefault(keys[(key, part["name"])], empty_profile())[group]
                 own[field] = merged_rows(own.get(field, []), earlier)
             page = pages.setdefault(key, empty_profile())[group]
             page[field] = merged_rows(page.get(field, []), [{**r, "shown": part["chapter"]} if r in earlier else r for r in rows])
-        names = [key] + [a["name"] for a in kb.entities[key].get("absorbed", [])]
+        names = [key] + [keys[(key, a["name"])] for a in kb.entities[key].get("absorbed", [])]
         for field, rows in entry.get("drop", {}).items():
             for row in rows:
                 if not sum(drop_value(pages[n][profile_group(field)], field, row) for n in names if n in pages):
