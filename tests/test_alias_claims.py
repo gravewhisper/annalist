@@ -65,6 +65,24 @@ class AliasClaimTest(unittest.TestCase):
         self.assertIn("{listing}", RESOLVE_PROMPT)
         self.assertIn("marionette", CLAIMED)
 
+    def test_a_name_listed_as_its_own_entity_does_not_join_another_entry_by_alias(self):
+        father = person("Aubric", summary="Calls himself Aubric.")
+        for before in ([chapter(1, [person("Halvane")], [fact("Halvane", "Halvane is a magistrate.")])], []):
+            for entities in ([person("Halvane", "Aubric"), father], [father, person("Halvane", "Aubric")]):
+                kb = self.read(*before, chapter(2, entities, [fact("Aubric", "Aubric is a conspirator."),
+                                                               fact("Halvane", "Halvane is a royalist.")]))
+                self.assertEqual(kb.resolve("Halvane"), "Halvane")
+                self.assertEqual(kb.resolve("Aubric"), "Aubric")
+                self.assertEqual(kb.entities["Halvane"]["aliases"], [])
+                self.assertEqual({f["claim"]: f["entity"] for f in kb.facts}["Aubric is a conspirator."], "Aubric")
+
+    def test_an_alias_no_entity_of_the_chapter_bears_still_joins(self):
+        kb = self.read(chapter(1, [person("Halvane")]),
+                       chapter(2, [person("Halvane", "the Magistrate"), person("Aubric")], [fact("the Magistrate", "The Magistrate frowned.")]))
+        self.assertEqual(kb.resolve("the Magistrate"), "Halvane")
+        self.assertEqual(kb.facts[0]["entity"], "Halvane")
+        self.assertEqual(kb.resolve("Aubric"), "Aubric")
+
 
 if __name__ == "__main__":
     unittest.main()
