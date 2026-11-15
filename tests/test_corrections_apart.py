@@ -30,8 +30,13 @@ class KeptApart(unittest.TestCase):
             (root / "merges.json").write_text(json.dumps({"pairs": list(merges)}))
             return load_states(root)
 
-    def test_without_a_row_the_read_joins_the_two_pages(self):
-        self.assertNotIn("Count Orvell", self.load([]).entities)
+    def test_without_a_row_a_merge_joins_the_two_pages(self):
+        merge = {"a": "Serrin Vale", "b": "Count Orvell", "canonical": "Serrin Vale", "same": True,
+                 "revealed": {"basis": "quote", "chapter": 3, "quote": "x"}}
+        self.assertNotIn("Count Orvell", self.load([], [merge]).entities)
+
+    def test_a_chapter_that_lists_both_names_never_joins_them_by_alias(self):
+        self.assertIn("Count Orvell", self.load([]).entities)
 
     def test_two_pages_kept_apart_never_merge(self):
         merge = {"a": "Serrin Vale", "b": "Count Orvell", "canonical": "Serrin Vale", "same": True,

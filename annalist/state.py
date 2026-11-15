@@ -183,12 +183,12 @@ class Knowledge:
     def same_kind(self, a, b):
         return a in UNTYPED or b in UNTYPED or self.types.kin(a, b)
 
-    def upsert_entity(self, entity, chapter, timeline="main"):
+    def upsert_entity(self, entity, chapter, timeline="main", listed=frozenset()):
         name = str(entity.get("name") or "").strip()
         if function_word_name(name) or self.bare_rank(name):
             return None
         etype = name_key(entity.get("type") or "")
-        aliases = [a for a in parse_aliases(entity.get("aliases")) if not self.bare_rank(a)]
+        aliases = [a for a in parse_aliases(entity.get("aliases")) if not self.bare_rank(a) and name_key(a) not in listed - {name_key(name)}]
         holder = self.index.get(name_key(name))
         canonical = holder if holder and name_key(holder) == name_key(name) else None
         split = canonical is not None and self.splits(self.entities[canonical]["type"], etype)
@@ -410,9 +410,10 @@ class Knowledge:
         label = self.apply_timelines(n, state.get("timelines") or {})
         self.synopses[n] = str(out.get("synopsis") or "").strip()
         listed = {}
+        names = frozenset(name_key(str(e.get("name") or "")) for e in out.get("entities") or [] if isinstance(e, dict))
         for i, entity in enumerate(out.get("entities") or [], 1):
             if isinstance(entity, dict):
-                canonical = self.upsert_entity(entity, n, label(f"E{i}"))
+                canonical = self.upsert_entity(entity, n, label(f"E{i}"), names)
                 if canonical and "written" in self.entities[canonical]:
                     listed[name_key(self.entities[canonical]["written"])] = canonical
         new_facts, slot = [], 0
