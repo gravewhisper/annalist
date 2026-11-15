@@ -1,5 +1,5 @@
 {
-  "sync_commit": "15bfa0c",
+  "sync_commit": "7dfca13",
   "covers": [
     {
       "file": "annalist/read.py",
@@ -58,13 +58,13 @@
     {
       "file": "annalist/state.py",
       "function": "Knowledge.apply",
-      "fingerprint": "5994078386aad6e9",
+      "fingerprint": "134f17e830bdda6d",
       "model": "View (with_unchecked applies out to a kb copy) and SaveMem; assumption: reads out, never writes it"
     },
     {
       "file": "annalist/state.py",
       "function": "Knowledge.upsert_entity",
-      "fingerprint": "0716203a979c8e23",
+      "fingerprint": "c8734dd0d867e017",
       "model": "assumption: reads the entity dicts in out, never writes them"
     },
     {
