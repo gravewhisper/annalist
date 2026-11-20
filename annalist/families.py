@@ -84,6 +84,7 @@ Kinds:
 Rules:
 - Judge what the whole wording means for the relationship between source and target, not single words in it. "colleague and investigation partner of" is alliance: the two investigate together.
 - Judge the wording together with the kinds of entry at its ends: the same verb toward a person, a group, or a thing can be a different kind.
+- Admiration, respect, or gratitude is alliance, not romance. Choose romance only when the wording says love, desire, courtship, marriage, or a former partner.
 - When the wording shows both a friendly tie and an adversarial or investigative one between source and target, choose the friendly kind.
 - When the wording says that the source believes, suspects, or claims something about the target, choose the kind of what is believed; choose investigation only when the suspicion itself is the relationship.
 - Copy each wording and the target's kind exactly as listed.
@@ -148,15 +149,15 @@ def cmd_families(args):
     workdir = Path(args.workdir).resolve()
     kb = load_states(workdir)
     write_derived(workdir, kb)
-    readings = {k: v for k, v in read_families(workdir).items() if k.endswith("]") and len(signals(k[:k.rindex(" [")])) != 1}
+    readings = {k: v for k, v in read_families(workdir).items() if k.endswith("]")}
     types = {e["name"]: kb.types.kind(e["type"]) for e in read_json(workdir / "entities.json", [])}
     ends = {}
     for r in read_jsonl(workdir / "relations.jsonl"):
         ends.setdefault((wording_key(r["type"]), types.get(r["target"], "")), types.get(r["source"], ""))
-    unread = [(w, t, s) for (w, t), s in sorted(ends.items()) if reading_key(w, t) not in readings and len(signals(w)) != 1]
+    unread = [(w, t, s) for (w, t), s in sorted(ends.items()) if reading_key(w, t) not in readings]
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         for reading in pool.map(lambda i: read_batch(workdir, unread[i:i + BATCH]), range(0, len(unread), BATCH)):
             readings.update(reading)
     write_json(workdir / FILE, {"readings": dict(sorted(readings.items()))})
-    log(workdir, f"families: {len(ends)} wordings by target kind, {len(ends) - len(unread)} settled by rules or earlier readings, "
+    log(workdir, f"families: {len(ends)} wordings by target kind, {len(ends) - len(unread)} read before, "
                  f"{len(unread)} read")

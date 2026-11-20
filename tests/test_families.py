@@ -25,7 +25,9 @@ LEDGER_LINE = ("Tomas lit it himself at half past four, trimmed the wick, wrote 
                "and went down to the quay to watch for a red-and-white sail.")
 RELATE_CH2 = {"relations": [{"source": "Tomas Hale", "type": CHANTS, "target": "Salt Ledger", "quote": LEDGER_LINE,
                              "asserted_by": "narrator", "status": "stated"}]}
-THING_READING = {"kinds": READINGS["kinds"] + [{"wording": CHANTS, "target": "artifact", "kind": "ownership"}]}
+MATE = "former mate of"
+THING_READING = {"kinds": READINGS["kinds"] + [{"wording": CHANTS, "target": "artifact", "kind": "ownership"},
+                                             {"wording": MATE, "target": "artifact", "kind": "membership"}]}
 
 
 def families_script():
@@ -82,6 +84,10 @@ class RuleFamilyTest(unittest.TestCase):
         self.assertEqual(relation_family("Acting on news from.", readings, "character"), "alliance")
         self.assertEqual(relation_family(NEWS, readings, "artifact"), "other")
         self.assertEqual(relation_family(NEWS, readings), "other")
+
+    def test_the_reading_prompt_says_admiration_is_not_romance(self):
+        from annalist.families import FAMILY_PROMPT
+        self.assertIn("Admiration, respect, or gratitude is alliance", FAMILY_PROMPT)
 
     def test_admiring_someone_is_alliance_not_romance(self):
         for wording in ("admirer of", "admires", "admired", "formerly admired"):
@@ -154,16 +160,18 @@ class FamiliesMiniTest(unittest.TestCase):
         self.assertEqual([(r["type"], r["family"], r["status"], r["by"]) for r in rows if "courtship" in r["type"]],
                          [("secret courtship with", "romance", "belief", "Odile Marr")])
 
-    def test_rerunning_the_stage_drops_a_stored_reading_of_a_wording_the_rules_now_settle(self):
+    def test_a_wording_one_keyword_would_settle_is_still_read_and_the_reading_colours_the_graph(self):
+        self.assertEqual({r["type"]: r["family"] for r in self.shown("Odile Marr", "Gannet")}, {MATE: "membership"})
+
+    def test_rerunning_the_stage_keeps_every_stored_reading_and_asks_nothing_new(self):
         path = self.book.workdir / "families.json"
         kept = path.read_text(encoding="utf-8")
         try:
-            stale = {**self.book.json("families.json")["readings"], "admirer of [character]": "romance"}
-            path.write_text(json.dumps({"readings": stale}), encoding="utf-8")
+            stored = {**self.book.json("families.json")["readings"], "admirer of [character]": "romance"}
+            path.write_text(json.dumps({"readings": stored}), encoding="utf-8")
             self.book.run_annalist("families", str(self.book.workdir))
-            readings = self.book.json("families.json")["readings"]
-            self.assertNotIn("admirer of [character]", readings)
-            self.assertIn(f"{NEWS} [character]", readings)
+            self.assertEqual(self.book.json("families.json")["readings"], dict(sorted(stored.items())))
+            self.assertEqual(len(self.book.calls("families")), 1)
         finally:
             path.write_text(kept, encoding="utf-8")
 

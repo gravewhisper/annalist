@@ -24,7 +24,7 @@ RATES = {
     "discover": Rate(input_tokens=85.53, output_tokens=14.02, wall_s=0.1265),
     "ending": Rate(input_tokens=2855.32, output_tokens=238.31, wall_s=1.8199),
     "events": Rate(input_tokens=219.48, output_tokens=10.54, wall_s=0.1442),
-    "families": Rate(input_tokens=29.2, output_tokens=15.69, wall_s=0.1103),
+    "families": Rate(input_tokens=54.6, output_tokens=29.34, wall_s=0.2063),
     "extract": Rate(input_tokens=5531.01, output_tokens=1350.29, wall_s=8.2391),
     "judge": Rate(input_tokens=0.0, output_tokens=0.0, wall_s=0.0),
     "history": Rate(input_tokens=226.0, output_tokens=25.0, wall_s=0.35),

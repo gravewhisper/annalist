@@ -166,7 +166,7 @@ def main():
     p.add_argument("workdir")
     p.set_defaults(func=cmd_wordings)
 
-    p = sub.add_parser("families", help="read each relation wording the rules cannot settle once, to colour the graph by kind")
+    p = sub.add_parser("families", help="read each relation wording once, with the kind of its target, to colour the graph by kind")
     p.add_argument("workdir")
     p.add_argument("--jobs", type=int, default=4)
     p.set_defaults(func=cmd_families)
