@@ -4,7 +4,6 @@ import re
 import unittest
 from pathlib import Path
 
-from annalist.families import NAMES
 
 ROOT = Path(__file__).resolve().parent.parent
 CSS = (ROOT / "annalist" / "site" / "app.css").read_text(encoding="utf-8")
@@ -14,7 +13,7 @@ MODES = ("light", "dark")
 TEXT = ("fg", "muted", "heading", "link", "accent-text", "side-label")
 SURFACES = (("bg", "bg"), ("card", "card"), ("frame", "frame"), ("top-bg", "frame"), ("side-on", "frame"),
             ("hover", "bg"), ("hover", "card"), ("ib-head-bg", "card"), ("new-bg", "bg"))
-EDGES = NAMES
+EDGES = ("kin", "romance", "alliance", "service", "hostility", "membership", "other")
 
 
 def declared(selector):

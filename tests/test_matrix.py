@@ -124,8 +124,8 @@ class MatrixTest(unittest.TestCase):
 
     def test_hovering_a_cell_names_both_characters_the_kind_now_and_the_history_up_to_the_chapter(self):
         at4, at5 = self.cells(4)[("Ash", "Dov")]["aria-label"], self.cells(5)[("Ash", "Dov")]["aria-label"]
-        self.assertTrue(at4.startswith("Ash and Dov, Allies"), at4)
-        self.assertTrue(at5.startswith("Ash and Dov, Hostility"), at5)
+        self.assertTrue(at4.startswith("Ash and Dov, Friends and allies"), at4)
+        self.assertTrue(at5.startswith("Ash and Dov, Conflict"), at5)
         self.assertIn("ch 2 trusts · ch 5 betrays", at5)
         self.assertNotIn("betrays", at4)
 

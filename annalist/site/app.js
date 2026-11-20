@@ -796,20 +796,14 @@ function renderVolume(id) {
 }
 
 const REL_GROUPS = [
-  {key: 'kin', label: 'Family', says: 'blood or legal family: parent, child, sibling, cousin, heir'},
-  {key: 'romance', label: 'Romance', says: 'marriage, courtship, love, a lover or former partner'},
-  {key: 'alliance', label: 'Allies', says: 'friend, ally, colleague, companion, helper, acquaintance'},
-  {key: 'teaching', label: 'Teaching', says: 'mentor and student, teacher, apprentice'},
-  {key: 'service', label: 'Service', says: 'employer and employee, servant, agent, commander and subordinate'},
-  {key: 'hostility', label: 'Hostility', says: 'enemy, rival, attacker, killer, captor'},
-  {key: 'investigation', label: 'Investigation', says: 'one suspects, questions, follows, or spies on the other'},
-  {key: 'membership', label: 'Membership', says: 'member, leader, or founder of a group'},
-  {key: 'faith', label: 'Faith', says: 'worship, belief in a deity, clergy of a church'},
-  {key: 'place', label: 'Places', says: 'where someone or something is, lives, or goes'},
-  {key: 'ownership', label: 'Belongings', says: 'owning, holding, making, or using a thing'},
-  {key: 'kind', label: 'Kinds and ranks', says: 'a kind, rank, stage, or other name of something'},
-  {key: 'other', label: 'Other', says: 'a tie of no kind above'},
-].map(g => ({...g, fams: [g.key]}));
+  {key: 'kin', label: 'Family', says: 'blood or legal family: parent, child, sibling, cousin, heir', fams: ['kin']},
+  {key: 'romance', label: 'Romance', says: 'marriage, courtship, love, a lover or former partner', fams: ['romance']},
+  {key: 'alliance', label: 'Friends and allies', says: 'friend, ally, colleague, companion, helper, acquaintance', fams: ['alliance']},
+  {key: 'service', label: 'Work and hierarchy', says: 'employer and employee, servant, commander and subordinate, mentor and student', fams: ['service', 'teaching']},
+  {key: 'hostility', label: 'Conflict', says: 'enemy, rival, attacker, killer, captor', fams: ['hostility']},
+  {key: 'membership', label: 'Membership', says: 'member, leader, or founder of a group, worship and clergy of a faith', fams: ['membership', 'faith']},
+  {key: 'other', label: 'Other', says: 'places, belongings, kinds and ranks, suspicions, and any other tie', fams: ['investigation', 'place', 'ownership', 'kind', 'other']},
+];
 const SECTORS = [
   {key: 'close', fams: ['kin', 'romance']},
   {key: 'allies', fams: ['alliance', 'service', 'teaching']},
@@ -818,7 +812,8 @@ const SECTORS = [
   {key: 'things', fams: ['ownership', 'place', 'kind', 'other']},
 ];
 const SECTOR_OF = Object.fromEntries(SECTORS.flatMap(s => s.fams.map(f => [f, s.key])));
-const groupOf = fam => REL_GROUPS.some(g => g.key === fam) ? fam : 'other';
+const GROUP_OF = Object.fromEntries(REL_GROUPS.flatMap(g => g.fams.map(f => [f, g.key])));
+const groupOf = fam => GROUP_OF[fam] || 'other';
 const sectorFor = fam => SECTOR_OF[groupOf(fam)];
 const swatch = group => `<i class="swatch" style="background:var(--r-${group})"></i>`;
 function pairGroup(rows) {

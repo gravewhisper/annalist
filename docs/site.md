@@ -28,7 +28,7 @@ The Graph page has these tabs:
 
 A Whole book switch next to the tabs shows every entry type at once.
 
-Each line colour stands for one kind of tie from the `families` stage, such as family, romance, allies, or hostility, and no two kinds share a colour. The Lines legend names each colour, says what it covers on hover, and hides or shows that kind. A wording with exactly one rule signal in `annalist/families.py` takes that kind, and the stage drops a reading an older build stored for it; only the rest are read by the model.
+The `families` stage gives each tie one of thirteen kinds, and the graph draws them in seven colours: Family, Romance, Friends and allies, Work and hierarchy (service and teaching), Conflict, Membership (groups and faith), and a grey Other for places, belongings, kinds and ranks, suspicions, and the rest. Family and romance never share a colour. The Lines legend names each colour, says what it covers on hover, and hides or shows its kinds. A wording with exactly one rule signal in `annalist/families.py` takes that kind, and the stage drops a reading an older build stored for it; only the rest are read by the model.
 
 The site never shows anything from a chapter past the slider. Annalist enforces this in four places:
 

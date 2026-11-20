@@ -175,7 +175,7 @@ class PathFinderTest(SiteCase):
         heads = [plain(re.sub(r'<button.*', "", h, flags=re.S)) for h in hops]
         self.assertEqual(heads, ["Audrey Hall is a follower of Klein Moretti since Ch 1", "Old Neil is a mentor of Klein Moretti since Ch 3"])
         self.assertIn("var(--r-alliance)", hops[0])
-        self.assertIn("var(--r-teaching)", hops[1])
+        self.assertIn("var(--r-service)", hops[1])
         self.assertRegex(hops[1], r'<div class="discbody" id="\w+" hidden>.*<blockquote>Old Neil taught Klein the rituals\.</blockquote>')
         at2 = self.pair("Audrey Hall", "Alger Wilson", 2)
         self.assertIn("<blockquote>Audrey watched Alger closely.</blockquote>", at2["html"])
