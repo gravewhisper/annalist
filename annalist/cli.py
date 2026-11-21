@@ -3,7 +3,7 @@ import sys
 
 from .backends import ConfigError
 from .llm import BudgetSpent
-from .apply import cmd_apply
+from .apply import cmd_apply, cmd_vet
 from .build import cmd_build, cmd_export_built
 from .epub import cmd_extract
 from .leads import cmd_leads
@@ -161,6 +161,13 @@ def main():
     p.add_argument("workdir")
     p.add_argument("--jobs", type=int, default=4)
     p.set_defaults(func=cmd_link)
+
+    p = sub.add_parser("vet", help="check each relation relate and link added against the passage around its quote, and leave out the wrong ones")
+    p.add_argument("workdir")
+    p.add_argument("--jobs", type=int, default=4)
+    p.add_argument("--dry-run", action="store_true", help="print the price and stop")
+    p.add_argument("--budget", type=float, help="never start a call that could take the spend past this many dollars")
+    p.set_defaults(func=cmd_vet)
 
     p = sub.add_parser("wordings", help="split each older one-piece relation wording once into its predicate and the detail after the target")
     p.add_argument("workdir")

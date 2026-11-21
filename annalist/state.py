@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -521,11 +522,13 @@ class Knowledge:
             if canonical and self.entities[canonical]["type"] == m["from"] and m["to"] in added:
                 self.entities[canonical].update(type=m["to"], retyped={"from": m["from"], "chapter": m["chapter"]})
 
-    def apply_filled(self, chapters, until, prefix):
+    def apply_filled(self, chapters, until, prefix, vetoed=frozenset()):
         for n, entry in sorted(chapters.items(), key=lambda c: int(c[0])):
             if until is not None and int(n) > until:
                 break
             for k, row in enumerate(entry["relations"], 1):
+                if relation_key(row) in vetoed:
+                    continue
                 ends = {end: self.resolve(row[end]) for end in ("source", "target")}
                 wording = worded(row, self.wordings)
                 if None in ends.values() or ends["source"] == ends["target"] or not wording["type"]:
@@ -633,6 +636,13 @@ def question_events(workdir, answers_before=None):
 
 
 FILLED = {"relate.json": "RF", "link.json": "RL"}
+VET_FILE = "vet.json"
+LEFT_OUT = ("wrong", "unsupported")
+
+
+def relation_key(row):
+    fields = [row["chapter"], row["source"], row["type"], row["target"], row.get("detail") or "", row["quotes"]]
+    return hashlib.sha1(json.dumps(fields, ensure_ascii=False).encode()).hexdigest()[:12]
 
 
 def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FILLED), discovered=True, answers_before=None, ladders=False,
@@ -673,8 +683,9 @@ def load_states(workdir, until=None, merges=True, retypes=True, filled=tuple(FIL
                         known_from(kb.corrections) if PAGES in corrections else None)
     if retypes and added:
         kb.apply_added_types(added_types(workdir, until), type_moves(workdir, until))
+    vetoed = {k for k, v in read_json(Path(workdir) / VET_FILE, {"verdicts": {}})["verdicts"].items() if v["verdict"] in LEFT_OUT}
     for name in filled:
-        kb.apply_filled(read_json(Path(workdir) / name, {"chapters": {}})["chapters"], until, FILLED[name])
+        kb.apply_filled(read_json(Path(workdir) / name, {"chapters": {}})["chapters"], until, FILLED[name], vetoed)
     if merges:
         kb.apply_disguises()
     if ladders:

@@ -53,6 +53,7 @@ RATES = {
     "mystery": Rate(input_tokens=75.32, output_tokens=10.0, wall_s=0.1123),
     "tiers": Rate(input_tokens=75.32, output_tokens=15.23, wall_s=0.1123),
     "timelines": Rate(input_tokens=3525.82, output_tokens=212.46, wall_s=2.1874),
+    "vet": Rate(input_tokens=1100.0, output_tokens=180.0, wall_s=1.5),
     "volume": Rate(input_tokens=149.07, output_tokens=4.15, wall_s=0.039),
     "wordings": Rate(input_tokens=29.2, output_tokens=15.69, wall_s=0.1103),
 }

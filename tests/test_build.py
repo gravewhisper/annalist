@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "tests" / "data" / "cache"
 MINI = ROOT / "tests" / "data" / "mini.epub"
 MINI_WORDS = 3896
-STAGE_ORDER = ["extract", "book", "read", "timelines", "wordings", "retype", "discover", "resolve", "newtypes", "relate", "link", "leads", "sweep", "tiers", "profile", "ladders", "families", "answers", "ending", "volumes",
+STAGE_ORDER = ["extract", "book", "read", "timelines", "wordings", "retype", "discover", "resolve", "newtypes", "relate", "link", "vet", "leads", "sweep", "tiers", "profile", "ladders", "families", "answers", "ending", "volumes",
                "proofread", "render", "export", "review"]
 
 BOOK_REPLY = {"power_system": "", "power_types": [{"type": "ward", "parent": "artifact", "description": "a protective charm a keeper sets"}],
@@ -38,6 +38,7 @@ LATER_REPLIES = {
     "discover": {"entries": []},
     "relate": {"relations": []},
     "link": {"labels": []},
+    "vet": {"verdicts": []},
     "families": {"kinds": []},
     "repeats": {"pairs": []},
     "leads": {"items": []},

@@ -9,6 +9,7 @@ from .export import cmd_export
 from .files import read_json, run_lock
 from .llm import Budget, BudgetSpent, cached_reply, LLMError, LLMUnavailable, must_hit, Unpriced
 from .render import ask_all, prepare, write_view
+from .vet import vet
 
 APPLIED = ("render", "export")
 UNREAD = ("extract",)
@@ -134,3 +135,16 @@ def cmd_apply(args):
         for name in APPLIED:
             stamp(run, stages[name], before[name])
         print(f"annalist apply: done, {dollars(budget.spent)} spent; site {workdir / 'site'}")
+
+
+def cmd_vet(args):
+    workdir = Path(args.workdir).resolve()
+    if not args.dry_run and args.budget is None:
+        sys.exit("annalist vet: pass --budget to spend, or --dry-run to only see the price")
+    with run_lock(workdir, "vet"):
+        run = built_run(workdir, args.jobs)
+        stage = next(s for s in STAGES if s.name == "vet")
+        before = inputs_digest(run, stage)
+        vet(workdir, args.jobs, args.dry_run, args.budget)
+        if not args.dry_run:
+            stamp(run, stage, before)
