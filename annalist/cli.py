@@ -176,6 +176,8 @@ def main():
     p = sub.add_parser("families", help="read each relation wording once, with the kind of its target, to colour the graph by kind")
     p.add_argument("workdir")
     p.add_argument("--jobs", type=int, default=4)
+    p.add_argument("--dry-run", action="store_true", help="print the price of the wordings not read yet and ask nothing")
+    p.add_argument("--budget", type=float, help="stop before spending more than this many dollars")
     p.set_defaults(func=cmd_families)
 
     p = sub.add_parser("profile")

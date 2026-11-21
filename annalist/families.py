@@ -1,10 +1,13 @@
 import re
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import sys
 from pathlib import Path
 
+from .backends import load_settings
+from .estimate import prompt_pricer
 from .files import log, read_json, read_jsonl, write_json
-from .llm import llm
+from .llm import Budget, BudgetSpent, cached_llm, cached_reply, UNLIMITED
 from .state import load_states, relation_key, write_derived
 
 FAMILIES = (
@@ -170,9 +173,11 @@ def check_kinds(field):
     return check
 
 
-def read_batch(workdir, lines):
-    prompt = FAMILY_PROMPT.format(kinds=kind_list(), wordings="\n".join(f"- source [{s}] {w} target [{t}]" for w, t, s in lines))
-    reply = llm(workdir, "families", prompt, check=check_kinds("kinds"))
+def wording_prompt(lines):
+    return FAMILY_PROMPT.format(kinds=kind_list(), wordings="\n".join(f"- source [{s}] {w} target [{t}]" for w, t, s in lines))
+
+
+def wording_kinds(reply, lines):
     given = {reading_key(wording_key(k.get("wording")), str(k.get("target") or "").strip().lower()): k["kind"]
              for k in reply["kinds"] if isinstance(k, dict)}
     return {reading_key(w, t): given.get(reading_key(w, t)) or rule_family(w) for w, t, _ in lines}
@@ -184,11 +189,32 @@ def line_item(row):
     return f"id: {relation_key(row)}\nLine: \"{row['source']}\" {row['type']} \"{row['target']}\"{detail}\n{quotes}"
 
 
-def read_lines_batch(workdir, rows):
-    prompt = ROMANCE_PROMPT.format(kinds=kind_list(), lines="\n\n".join(line_item(r) for r in rows))
-    reply = llm(workdir, "romance", prompt, check=check_kinds("lines"))
+def line_prompt(rows):
+    return ROMANCE_PROMPT.format(kinds=kind_list(), lines="\n\n".join(line_item(r) for r in rows))
+
+
+def line_kinds(reply, rows):
     keys = {relation_key(r) for r in rows}
     return {str(k["id"]): k["kind"] for k in reply["lines"] if isinstance(k, dict) and str(k.get("id")) in keys}
+
+
+def batches(items, size):
+    return [items[i:i + size] for i in range(0, len(items), size)]
+
+
+def ask(workdir, args, purpose, asks, field, spent):
+    settings = load_settings(workdir)
+    price = prompt_pricer(workdir, settings)
+    misses = {p: price(purpose, p) for p, _ in asks if cached_reply(workdir, purpose, p, settings) is None}
+    cost = None if None in misses.values() else sum(misses.values())
+    print(f"{purpose}: {len(asks)} prompts, {len(misses)} not answered yet, price: {'unknown' if cost is None else f'${cost:,.2f}'}")
+    if getattr(args, "dry_run", False):
+        return None, spent
+    cap = getattr(args, "budget", None)
+    gate = UNLIMITED if cap is None else Budget(cap - spent, {(purpose, p): c or 0.0 for p, c in misses.items()})
+    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        replies = list(pool.map(lambda a: cached_llm(workdir, purpose, a[0], check=check_kinds(field), settings=settings, gate=gate), asks))
+    return replies, spent + (0.0 if gate is UNLIMITED else gate.spent)
 
 
 def cmd_families(args):
@@ -198,22 +224,35 @@ def cmd_families(args):
     saved = read_json(workdir / FILE, {"readings": {}})
     current = saved.get("prompt") == prompt_version()
     readings = {k: v for k, v in saved["readings"].items() if k.endswith("]")} if current else {}
+    lines = dict(saved.get("lines") or {}) if current else {}
     types = {e["name"]: kb.types.kind(e["type"]) for e in read_json(workdir / "entities.json", [])}
     rows = read_jsonl(workdir / "relations.jsonl")
     ends = {}
     for r in rows:
         ends.setdefault((wording_key(r["type"]), types.get(r["target"], "")), types.get(r["source"], ""))
     unread = [(w, t, s) for (w, t), s in sorted(ends.items()) if reading_key(w, t) not in readings]
-    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        for reading in pool.map(lambda i: read_batch(workdir, unread[i:i + BATCH]), range(0, len(unread), BATCH)):
-            readings.update(reading)
-    pink = [r for r in rows if relation_family(r["type"], readings, types.get(r["target"], "")) == "romance"]
-    keys = {relation_key(r) for r in pink}
-    lines = {k: v for k, v in (saved.get("lines") or {}).items() if k in keys} if current else {}
-    unchecked = [r for r in pink if relation_key(r) not in lines]
-    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        for found in pool.map(lambda i: read_lines_batch(workdir, unchecked[i:i + LINE_BATCH]), range(0, len(unchecked), LINE_BATCH)):
-            lines.update(found)
-    write_json(workdir / FILE, {"prompt": prompt_version(), "readings": dict(sorted(readings.items())), "lines": dict(sorted(lines.items()))})
+
+    def save():
+        write_json(workdir / FILE, {"prompt": prompt_version(), "readings": dict(sorted(readings.items())), "lines": dict(sorted(lines.items()))})
+    try:
+        asks = [(wording_prompt(b), b) for b in batches(unread, BATCH)]
+        replies, spent = ask(workdir, args, "families", asks, "kinds", 0.0)
+        if replies is None:
+            print("romance: the lines read as romance are priced once the wordings are read")
+            return
+        for reply, (_, b) in zip(replies, asks):
+            readings.update(wording_kinds(reply, b))
+        pink = [r for r in rows if relation_family(r["type"], readings, types.get(r["target"], "")) == "romance"]
+        keys = {relation_key(r) for r in pink}
+        lines = {k: v for k, v in lines.items() if k in keys}
+        unchecked = [r for r in pink if relation_key(r) not in lines]
+        asks = [(line_prompt(b), b) for b in batches(unchecked, LINE_BATCH)]
+        replies, spent = ask(workdir, args, "romance", asks, "lines", spent)
+        for reply, (_, b) in zip(replies, asks):
+            lines.update(line_kinds(reply, b))
+    except BudgetSpent as exc:
+        save()
+        sys.exit(f"annalist families: {exc}; the readings paid for are kept")
+    save()
     log(workdir, f"families: {len(ends)} wordings by target kind, {len(ends) - len(unread)} read before, "
                  f"{len(unread)} read; {len(pink)} romance lines, {len(unchecked)} checked against their quotes")

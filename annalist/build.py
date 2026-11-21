@@ -236,7 +236,7 @@ STAGES = (
           code=("ladders", "resolve")),
     Stage("families", lambda run: cmd_families(namespace(run)),
           STATE + (*TYPED, "merges.json", "discover.json", "relate.json", "link.json", "vet.json", "ladders.json"), lambda run: ["families.json"],
-          ("families",), code=("families",)),
+          ("families", "romance"), code=("families",)),
     Stage("answers", lambda run: cmd_answers(namespace(run, batch=3, to=run.last)),
           STATE + ("chapters.json", *TYPED, "merges.json", "discover.json", "relate.json", "link.json", "vet.json", "leads.json", "sweep.json", "tiers.json", "profiles.json",
                    "volumes.json", "answers.json", "corrections.json#questions"),

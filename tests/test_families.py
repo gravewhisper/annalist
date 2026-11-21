@@ -217,15 +217,26 @@ class FamiliesPromptChangeTest(unittest.TestCase):
     def tearDownClass(cls):
         cls.book.close()
 
+    def test_a_dry_run_prices_the_reading_and_asks_and_writes_nothing(self):
+        path = self.book.workdir / "families.json"
+        kept = path.read_text(encoding="utf-8")
+        try:
+            path.write_text(json.dumps({"prompt": "an older prompt", "readings": {}}), encoding="utf-8")
+            before = len(self.book.calls())
+            out = self.book.run_annalist("families", str(self.book.workdir), "--dry-run").stdout
+            self.assertIn("price:", out)
+            self.assertEqual(len(self.book.calls()), before)
+            self.assertEqual(self.book.json("families.json"), {"prompt": "an older prompt", "readings": {}})
+        finally:
+            path.write_text(kept, encoding="utf-8")
+
     def test_readings_made_under_another_prompt_are_read_again(self):
         path = self.book.workdir / "families.json"
         saved = self.book.json("families.json")
         stale = {"prompt": "an older prompt", "readings": {**saved["readings"], "admirer of [character]": "romance"}}
         path.write_text(json.dumps(stale), encoding="utf-8")
-        before = len(self.book.calls("families"))
         self.book.run_annalist("families", str(self.book.workdir))
-        self.assertEqual(len(self.book.calls("families")), before + 1)
-        self.assertNotIn("admirer of [character]", self.book.json("families.json")["readings"])
+        self.assertEqual(self.book.json("families.json")["readings"], saved["readings"])
         self.assertEqual(self.book.json("families.json")["prompt"], saved["prompt"])
 
 
