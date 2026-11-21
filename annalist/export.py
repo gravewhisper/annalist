@@ -9,7 +9,7 @@ from pathlib import Path
 from .book import added_types
 from .checks import site_checks
 from .corrections import correct_profiles, EVERY_CORRECTION, kept_deaths
-from .families import read_families, relation_family
+from .families import line_family, read_families, read_lines
 from .files import read_json, review_tools
 from .llm import cached_reply
 from .names import is_stub, name_key
@@ -219,7 +219,7 @@ def build(workdir, theme):
         for page in ends.values():
             present.setdefault(page, set()).add(r["chapter"])
     tiers = read_json(workdir / "tiers.json", {"questions": {}})["questions"]
-    readings = read_families(workdir)
+    readings, lines = read_families(workdir), read_lines(workdir)
     arcs = closed_arcs(workdir, last)
     ties = {}
     for r in relations:
@@ -298,7 +298,7 @@ def build(workdir, theme):
                    **({} if f["quote_ok"] else {"unverified": True})}
                   for f in facts if f["entity"] in ids],
         "relations": [{"chapter": r["chapter"], "source": ids[ends["source"]], "target": ids[ends["target"]], "type": r["type"],
-                       "family": r.get("family") or relation_family(r["type"], readings, types.get(r["target"], "")), "status": r["status"],
+                       "family": r.get("family") or line_family(r, readings, lines, types.get(r["target"], "")), "status": r["status"],
                        "by": r["asserted_by"],
                        "quotes": r["quotes"], **timeline(r), **({"detail": r["detail"]} if r["detail"] else {}),
                        **({} if r["quote_ok"] else {"unverified": True})}

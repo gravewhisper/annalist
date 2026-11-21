@@ -1,16 +1,17 @@
 import re
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 from pathlib import Path
 
 from .files import log, read_json, read_jsonl, write_json
 from .llm import llm
-from .state import load_states, write_derived
+from .state import load_states, relation_key, write_derived
 
 FAMILIES = (
     ("kin", r"nephew|niece|uncle|aunt|sons?|daughter|father|mother|brother|sister|sibling|parents?|child|children|cousin"
             r"|grand\w*|descendant|ancestor|relatives?|kin|family|heir|inherit\w*|legatee|twin"),
-    ("romance", r"married|marry|husband|wife|spouse|widow\w*|suitor|lover?s?|loves|court\w*|engaged|betrothed|fianc\w*"
-                r"|girlfriend|boyfriend|dating|ex|romantic\w*|intimate|marriage|attracted"),
+    ("romance", r"married|marry|husband|wife|spouse|widow\w*|suitor|lover?s?|loves|courted|courting|courtship|engaged|betrothed|fianc\w*"
+                r"|girlfriend|boyfriend|dating|ex|romantic\w*|intimate|marriage"),
     ("faith", r"worship\w*|prays?|prayed|praying|devot\w*|believes in|believers?|faithful|pious|cult|cultists?|deacon"
               r"|priest\w*|cardinal|bishop|pope|clergy|cleric|saint|blessed|chosen|favou?red by|angel of|oracle|prophet\w*"
               r"|deity|god of|goddess of"),
@@ -84,7 +85,8 @@ Kinds:
 Rules:
 - Judge what the whole wording means for the relationship between source and target, not single words in it. "colleague and investigation partner of" is alliance: the two investigate together.
 - Judge the wording together with the kinds of entry at its ends: the same verb toward a person, a group, or a thing can be a different kind.
-- Admiration, respect, or gratitude is alliance, not romance. Choose romance only when the wording says love, desire, courtship, marriage, or a former partner.
+- Admiration, respect, or gratitude is alliance, not romance. Grief, worry, care, or a gift is not romance either, and neither is a romance the source hopes for, arranges, or fears for someone else. Choose romance only when the wording says love, desire, courtship, marriage, sex, or a former partner between source and target themselves.
+- When a wording could mean romance or something plain, such as being involved with someone, sleeping with someone, or spending the night with someone, choose romance: each such line is then checked against its quote.
 - When the wording shows both a friendly tie and an adversarial or investigative one between source and target, choose the friendly kind.
 - When the wording says that the source believes, suspects, or claims something about the target, choose the kind of what is believed; choose investigation only when the suspicion itself is the relationship.
 - Copy each wording and the target's kind exactly as listed.
@@ -94,6 +96,20 @@ LINES:
 
 Reply with one JSON object: {{"kinds": [{{"wording": "...", "target": "the target's kind", "kind": "..."}}]}}
 """
+
+ROMANCE_PROMPT = """A wiki about a novel colours a line of its graph as romance when it shows romance between the two entries at its ends. The wording of each line below could mean romance, but it may mean something plain: being involved in an event together, a soul or avatar sleeping inside someone, grief, care, or a gift. Read each line together with its quote from the book.
+
+Kinds:
+{kinds}
+
+LINES:
+{lines}
+
+Give romance only when the line shows love, desire, courtship, marriage, sex, or a former partner between source and target themselves. Otherwise give the one other kind that says what the relationship between source and target is.
+
+Reply with one JSON object: {{"lines": [{{"id": "...", "kind": "..."}}]}}, one entry per line.
+"""
+LINE_BATCH = 20
 
 
 def wording_key(rtype):
@@ -125,39 +141,79 @@ def relation_family(rtype, readings=None, target_type=None):
     return (readings or {}).get(reading_key(key, target_type)) or rule_family(key)
 
 
+def kind_list():
+    return "\n".join(f"- {f}: {DESCRIPTIONS[f]}" for f in NAMES)
+
+
+def prompt_version():
+    return hashlib.sha1((FAMILY_PROMPT + ROMANCE_PROMPT + kind_list()).encode("utf-8")).hexdigest()[:12]
+
+
 def read_families(workdir):
     return read_json(Path(workdir) / FILE, {"readings": {}})["readings"]
 
 
-def check_reading(reply):
-    if not isinstance(reply.get("kinds"), list):
-        return "no kinds list"
-    unknown = [k.get("kind") for k in reply["kinds"] if isinstance(k, dict) and k.get("kind") not in NAMES]
-    return f"unknown kinds {unknown}; use only {', '.join(NAMES)}" if unknown else None
+def read_lines(workdir):
+    return read_json(Path(workdir) / FILE, {"lines": {}}).get("lines") or {}
+
+
+def line_family(row, readings, lines, target_type):
+    return lines.get(relation_key(row)) or relation_family(row["type"], readings, target_type)
+
+
+def check_kinds(field):
+    def check(reply):
+        if not isinstance(reply.get(field), list):
+            return f"no {field} list"
+        unknown = [k.get("kind") for k in reply[field] if isinstance(k, dict) and k.get("kind") not in NAMES]
+        return f"unknown kinds {unknown}; use only {', '.join(NAMES)}" if unknown else None
+    return check
 
 
 def read_batch(workdir, lines):
-    prompt = FAMILY_PROMPT.format(kinds="\n".join(f"- {f}: {DESCRIPTIONS[f]}" for f in NAMES),
-                                  wordings="\n".join(f"- source [{s}] {w} target [{t}]" for w, t, s in lines))
-    reply = llm(workdir, "families", prompt, check=check_reading)
+    prompt = FAMILY_PROMPT.format(kinds=kind_list(), wordings="\n".join(f"- source [{s}] {w} target [{t}]" for w, t, s in lines))
+    reply = llm(workdir, "families", prompt, check=check_kinds("kinds"))
     given = {reading_key(wording_key(k.get("wording")), str(k.get("target") or "").strip().lower()): k["kind"]
              for k in reply["kinds"] if isinstance(k, dict)}
     return {reading_key(w, t): given.get(reading_key(w, t)) or rule_family(w) for w, t, _ in lines}
+
+
+def line_item(row):
+    detail = f" {row['detail']}" if row.get("detail") else ""
+    quotes = "\n".join(f"Quote: {q}" for q in row["quotes"][:2])
+    return f"id: {relation_key(row)}\nLine: \"{row['source']}\" {row['type']} \"{row['target']}\"{detail}\n{quotes}"
+
+
+def read_lines_batch(workdir, rows):
+    prompt = ROMANCE_PROMPT.format(kinds=kind_list(), lines="\n\n".join(line_item(r) for r in rows))
+    reply = llm(workdir, "romance", prompt, check=check_kinds("lines"))
+    keys = {relation_key(r) for r in rows}
+    return {str(k["id"]): k["kind"] for k in reply["lines"] if isinstance(k, dict) and str(k.get("id")) in keys}
 
 
 def cmd_families(args):
     workdir = Path(args.workdir).resolve()
     kb = load_states(workdir)
     write_derived(workdir, kb)
-    readings = {k: v for k, v in read_families(workdir).items() if k.endswith("]")}
+    saved = read_json(workdir / FILE, {"readings": {}})
+    current = saved.get("prompt") == prompt_version()
+    readings = {k: v for k, v in saved["readings"].items() if k.endswith("]")} if current else {}
     types = {e["name"]: kb.types.kind(e["type"]) for e in read_json(workdir / "entities.json", [])}
+    rows = read_jsonl(workdir / "relations.jsonl")
     ends = {}
-    for r in read_jsonl(workdir / "relations.jsonl"):
+    for r in rows:
         ends.setdefault((wording_key(r["type"]), types.get(r["target"], "")), types.get(r["source"], ""))
     unread = [(w, t, s) for (w, t), s in sorted(ends.items()) if reading_key(w, t) not in readings]
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         for reading in pool.map(lambda i: read_batch(workdir, unread[i:i + BATCH]), range(0, len(unread), BATCH)):
             readings.update(reading)
-    write_json(workdir / FILE, {"readings": dict(sorted(readings.items()))})
+    pink = [r for r in rows if relation_family(r["type"], readings, types.get(r["target"], "")) == "romance"]
+    keys = {relation_key(r) for r in pink}
+    lines = {k: v for k, v in (saved.get("lines") or {}).items() if k in keys} if current else {}
+    unchecked = [r for r in pink if relation_key(r) not in lines]
+    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        for found in pool.map(lambda i: read_lines_batch(workdir, unchecked[i:i + LINE_BATCH]), range(0, len(unchecked), LINE_BATCH)):
+            lines.update(found)
+    write_json(workdir / FILE, {"prompt": prompt_version(), "readings": dict(sorted(readings.items())), "lines": dict(sorted(lines.items()))})
     log(workdir, f"families: {len(ends)} wordings by target kind, {len(ends) - len(unread)} read before, "
-                 f"{len(unread)} read")
+                 f"{len(unread)} read; {len(pink)} romance lines, {len(unchecked)} checked against their quotes")

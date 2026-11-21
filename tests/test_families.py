@@ -2,23 +2,30 @@ import json
 import unittest
 
 from annalist.families import relation_family
-from annalist.state import Knowledge
+from annalist.state import Knowledge, relation_key
 from tests.test_build import MiniBuild
 from tests.test_relate import TOMAS_ODILE, relate_script
 
 COURTSHIP = "suspects a secret courtship between Ines Varro and"
 PARTNER = "colleague and investigation partner of"
 NEWS = "acting on news from"
+NIGHT = "spent the morning with"
 
 RELATE_EXTRA = [
     {"source": "Odile Marr", "type": COURTSHIP, "target": "Tomas Hale", "quote": TOMAS_ODILE,
      "asserted_by": "narrator", "status": "belief"},
     {"source": "Tomas Hale", "type": PARTNER, "target": "Odile Marr", "quote": TOMAS_ODILE,
      "asserted_by": "narrator", "status": "stated"},
+    {"source": "Tomas Hale", "type": NIGHT, "target": "Odile Marr", "quote": TOMAS_ODILE,
+     "asserted_by": "narrator", "status": "stated"},
 ]
 
 READINGS = {"kinds": [{"wording": PARTNER, "target": "character", "kind": "alliance"},
-                      {"wording": NEWS, "target": "character", "kind": "alliance"}]}
+                      {"wording": NEWS, "target": "character", "kind": "alliance"},
+                      {"wording": NIGHT, "target": "character", "kind": "romance"}]}
+
+NIGHT_ROW = {"chapter": 3, "source": "Tomas Hale", "type": NIGHT, "target": "Odile Marr", "detail": "", "quotes": [TOMAS_ODILE]}
+NIGHT_LINE = {"lines": [{"id": relation_key(NIGHT_ROW), "kind": "alliance"}]}
 
 CHANTS = "chants from"
 LEDGER_LINE = ("Tomas lit it himself at half past four, trimmed the wick, wrote the hour in the Salt Ledger, "
@@ -37,6 +44,7 @@ def families_script():
     script["replies"][0]["reply"] = {"relations": script["replies"][0]["reply"]["relations"] + RELATE_EXTRA}
     script["replies"].insert(0, {"purpose": "families", "contains": f"source [character] {CHANTS} target [artifact]", "reply": THING_READING})
     script["replies"].insert(0, {"purpose": "relate", "contains": "CHAPTER 2: Nine Winters Ago", "reply": RELATE_CH2})
+    script["replies"].insert(0, {"purpose": "romance", "contains": f'"Tomas Hale" {NIGHT} "Odile Marr"\nQuote: {TOMAS_ODILE}', "reply": NIGHT_LINE})
     return script
 
 
@@ -89,6 +97,19 @@ class RuleFamilyTest(unittest.TestCase):
         from annalist.families import FAMILY_PROMPT
         self.assertIn("Admiration, respect, or gratitude is alliance", FAMILY_PROMPT)
 
+    def test_the_reading_prompt_says_grief_care_and_someone_elses_romance_are_not_romance(self):
+        from annalist.families import FAMILY_PROMPT
+        self.assertIn("Grief, worry, care, or a gift", FAMILY_PROMPT)
+        self.assertIn("between source and target themselves", FAMILY_PROMPT)
+        self.assertIn("could mean romance or something plain", FAMILY_PROMPT)
+
+    def test_a_place_named_a_court_is_not_courtship(self):
+        self.assertNotEqual(relation_family("explores the Salt Court with"), "romance")
+        self.assertNotEqual(relation_family("waits in the court of"), "romance")
+        self.assertNotEqual(relation_family("attracted to the harbour city"), "romance")
+        for wording in ("courting", "courted", "courtship with"):
+            self.assertEqual(relation_family(wording), "romance", wording)
+
     def test_admiring_someone_is_alliance_not_romance(self):
         for wording in ("admirer of", "admires", "admired", "formerly admired"):
             self.assertEqual(relation_family(wording), "alliance", wording)
@@ -140,7 +161,7 @@ class FamiliesMiniTest(unittest.TestCase):
 
     def test_wordings_the_rules_cannot_settle_are_read_once_and_the_reading_colours_the_graph(self):
         self.assertEqual({r["type"]: r["family"] for r in self.shown("Tomas Hale", "Odile Marr")},
-                         {"confided in by": "other", NEWS: "alliance", PARTNER: "alliance"})
+                         {"confided in by": "other", NEWS: "alliance", PARTNER: "alliance", NIGHT: "alliance"})
         asked = self.book.calls("families")
         self.assertEqual(len(asked), 1)
         self.book.run_annalist("families", str(self.book.workdir))
@@ -160,6 +181,12 @@ class FamiliesMiniTest(unittest.TestCase):
         self.assertEqual([(r["type"], r["family"], r["status"], r["by"]) for r in rows if "courtship" in r["type"]],
                          [("secret courtship with", "romance", "belief", "Odile Marr")])
 
+    def test_a_line_whose_wording_reads_as_romance_is_coloured_by_its_quote(self):
+        self.assertEqual({r["type"]: r["family"] for r in self.shown("Tomas Hale", "Odile Marr")}[NIGHT], "alliance")
+        self.assertEqual(len(self.book.calls("romance")), 1)
+        rows = self.shown("Ines Varro", "Tomas Hale")
+        self.assertEqual([r["family"] for r in rows if "courtship" in r["type"]], ["romance"])
+
     def test_a_wording_one_keyword_would_settle_is_still_read_and_the_reading_colours_the_graph(self):
         self.assertEqual({r["type"]: r["family"] for r in self.shown("Odile Marr", "Gannet")}, {MATE: "membership"})
 
@@ -167,8 +194,9 @@ class FamiliesMiniTest(unittest.TestCase):
         path = self.book.workdir / "families.json"
         kept = path.read_text(encoding="utf-8")
         try:
-            stored = {**self.book.json("families.json")["readings"], "admirer of [character]": "romance"}
-            path.write_text(json.dumps({"readings": stored}), encoding="utf-8")
+            saved = self.book.json("families.json")
+            stored = {**saved["readings"], "admirer of [character]": "romance"}
+            path.write_text(json.dumps({**saved, "readings": stored}), encoding="utf-8")
             self.book.run_annalist("families", str(self.book.workdir))
             self.assertEqual(self.book.json("families.json")["readings"], dict(sorted(stored.items())))
             self.assertEqual(len(self.book.calls("families")), 1)
@@ -177,6 +205,28 @@ class FamiliesMiniTest(unittest.TestCase):
 
     def test_every_relation_says_who_asserts_it(self):
         self.assertTrue(all("by" in r for r in self.wiki["relations"]))
+
+
+class FamiliesPromptChangeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.book = MiniBuild(families_script())
+        cls.book.build()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.book.close()
+
+    def test_readings_made_under_another_prompt_are_read_again(self):
+        path = self.book.workdir / "families.json"
+        saved = self.book.json("families.json")
+        stale = {"prompt": "an older prompt", "readings": {**saved["readings"], "admirer of [character]": "romance"}}
+        path.write_text(json.dumps(stale), encoding="utf-8")
+        before = len(self.book.calls("families"))
+        self.book.run_annalist("families", str(self.book.workdir))
+        self.assertEqual(len(self.book.calls("families")), before + 1)
+        self.assertNotIn("admirer of [character]", self.book.json("families.json")["readings"])
+        self.assertEqual(self.book.json("families.json")["prompt"], saved["prompt"])
 
 
 if __name__ == "__main__":

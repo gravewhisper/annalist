@@ -40,6 +40,7 @@ LATER_REPLIES = {
     "link": {"labels": []},
     "vet": {"verdicts": []},
     "families": {"kinds": []},
+    "romance": {"lines": []},
     "repeats": {"pairs": []},
     "leads": {"items": []},
     "sweep": {"answers": []},
