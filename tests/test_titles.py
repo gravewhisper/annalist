@@ -207,6 +207,18 @@ class TitleTest(unittest.TestCase):
         self.assertIn("As understood at chapter 2", pages[f"{neve['id']}@3"])
 
 
+class PageTitleTest(unittest.TestCase):
+    def test_two_people_named_together_never_title_the_page_of_one(self):
+        from annalist.titles import page_title
+        texts = {1: "Ada and Bram went home. Ada and Bram slept.", 2: "Ada and Bram woke. Ada laughed."}
+        self.assertEqual(page_title("Ada", [], ["Ada and Bram went home."], texts)[0], "Ada")
+
+    def test_a_title_with_of_still_takes_its_and_part(self):
+        from annalist.titles import page_title
+        texts = {1: "The God of Brine and Salt was silent.", 2: "She swore by the God of Brine and Salt."}
+        self.assertEqual(page_title("God of Brine", [], ["She swore by the God of Brine and Salt."], texts)[0], "God of Brine and Salt")
+
+
 class FullTitleDiscoverTest(unittest.TestCase):
     def test_a_title_joined_by_and_or_for_is_found_whole(self):
         shrine = Shrine()

@@ -4,7 +4,10 @@ from .names import content_words, is_stub, name_stems, plain_words, ROLE_WORDS, 
 
 WORD = r"[A-Z][\w'’-]+"
 POSSESSIVE = re.compile(r"['’]s\b")
-LONGER = rf"(?:\s(?:of|and|for|de)\s(?:the\s)?{WORD}(?:\s{WORD})*)+"
+PART = rf"\s(?:the\s)?{WORD}(?:\s{WORD})*"
+TITLED = rf"(?:\s(?:of|and|for|de){PART})+"
+PLAIN = rf"\s(?:of|for|de){PART}(?:\s(?:of|and|for|de){PART})*"
+JOINED = re.compile(r"\s(?:of|for|de)\s")
 
 
 def close_spelling(x, y):
@@ -32,7 +35,7 @@ def fuller(x, than):
 
 
 def longer_forms(name, own_texts):
-    pattern = re.compile(r"(?<![\w])" + re.escape(name) + LONGER)
+    pattern = re.compile(r"(?<![\w])" + re.escape(name) + (TITLED if JOINED.search(name) else PLAIN))
     return {m.group(0) for text in own_texts for m in pattern.finditer(text)}
 
 
